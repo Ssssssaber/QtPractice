@@ -1,9 +1,0 @@
-# ninja log v5
-2	272	1719308835354185829	QtPractice_autogen/timestamp	1897fd4c9806194c
-272	1995	1719308837079180158	CMakeFiles/QtPractice.dir/mainwindow.cpp.o	cbb3716934b422eb
-2	272	1719308835354185829	QtPractice_autogen/mocs_compilation.cpp	1897fd4c9806194c
-2	272	1719308835354185829	/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/QtPractice_autogen/timestamp	1897fd4c9806194c
-2	272	1719308835354185829	/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/QtPractice_autogen/mocs_compilation.cpp	1897fd4c9806194c
-272	1947	1719308837031180316	CMakeFiles/QtPractice.dir/main.cpp.o	c508f1d1b54c8b16
-272	1950	1719308837035180303	CMakeFiles/QtPractice.dir/QtPractice_autogen/mocs_compilation.cpp.o	6ae05febc0eb6989
-1995	2264	1719308837346179281	QtPractice	67996d0b158e9998
