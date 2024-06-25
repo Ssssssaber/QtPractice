@@ -1,0 +1,9 @@
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/QtPractice.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/edit_cache.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/rebuild_cache.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/list_install_components.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/install.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/install/local.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/install/strip.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/QtPractice_autogen_timestamp_deps.dir
+/home/vladimir/Code/QtPractice/QtPractice/build/Unnamed-Debug/CMakeFiles/QtPractice_autogen.dir
