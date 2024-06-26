@@ -22,6 +22,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(QtPractice
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        udpserver.h udpserver.cpp
+        udpclient.h udpclient.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtPractice APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -99,3 +101,11 @@ include_directories(/home/vladimir/Code/cpp-libs/libP7Client_v5.6/Headers)
 
 # include_directories({SD2_INCLUDE_DIRS})
 # target_link_libraries(${PROJECT_NAME} PRIVATE {SDL2_LIBARARIES)
+
+# adding network components
+find_package(Qt6 REQUIRED COMPONENTS Network)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
+
+# adding charts
+find_package(Qt6 REQUIRED COMPONENTS Charts)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Charts)
