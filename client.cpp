@@ -1,6 +1,6 @@
-#include "udpclient.h"
+#include "client.h"
 
-UdpClient::UdpClient(QWidget* pwgt) : QTextEdit(pwgt)
+Client::Client(QWidget* pwgt) : QTextEdit(pwgt)
 {
     setWindowTitle("UdpClient");
 
@@ -11,7 +11,7 @@ UdpClient::UdpClient(QWidget* pwgt) : QTextEdit(pwgt)
     connect(m_udp, SIGNAL(readyRead()), SLOT(slotProcessDatagrams()));
 }
 
-void UdpClient::slotProcessDatagrams()
+void Client::slotProcessDatagrams()
 {
     QByteArray baDatagram;
     do {

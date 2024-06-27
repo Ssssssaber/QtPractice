@@ -1,16 +1,15 @@
 #include <QApplication>
-#include "dataprocessor.h"
-#include "udpclient.h"
-#include "udpserver.h"
+#include "client.h"
+#include "server.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    UdpServer server = UdpServer();
+    Server server = Server();
     server.show();
 
-    UdpClient client = UdpClient();
+    Client client = Client();
     client.show();
 
 

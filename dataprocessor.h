@@ -5,26 +5,30 @@
 
 #include <QFile>
 #include <QDebug>
-
+#include "xyzcircuitdata.h"
 
 class DataProcessor : public QObject
 {
     Q_OBJECT
 private:
     // UdpServer* server;
+    const float aConstant = 9.81f;
+    const float gConstant = 1.0f;
+    const float mConstant = 1.0f;
+
     QMap<QString, int> dataMap;
-    QList<QList<QByteArray>> aData;
-    QList<QList<QByteArray>> gData;
-    QList<QList<QByteArray>> mData;
-    void processLine(QByteArray line);
+    QList<xyzCircuitData> aData;
+    QList<xyzCircuitData> gData;
+    QList<xyzCircuitData> mData;
+    void processLine(QString line);
+    xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
 public:
     DataProcessor();
     void readDataFromTestFile();
 
-
 signals:
-    void kekeSignal();
-    void signalLineProcessed(QString line);
+    void signalLineReceived(QString data);
+    void signalLineProcessed(xyzCircuitData data);
 };
 
 // #endif // DATAPROCESSOR_H
