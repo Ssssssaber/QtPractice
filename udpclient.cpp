@@ -20,9 +20,10 @@ void UdpClient::slotProcessDatagrams()
     } while (m_udp->hasPendingDatagrams());
 
     QDateTime dateTime;
+    QString data;
     QDataStream in(&baDatagram, QIODevice::ReadOnly);
     in.setVersion(QDataStream::Qt_5_12);
-    in >> dateTime;
-    append("Received: " + dateTime.toString());
+    in >> dateTime >> data;
+    append("Received: " + dateTime.toString() + "\n" + data);
 }
 

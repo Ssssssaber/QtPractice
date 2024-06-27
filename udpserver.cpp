@@ -6,9 +6,13 @@ UdpServer::UdpServer(QWidget* pwgt) : QTextEdit(pwgt)
     m_udp = new QUdpSocket(this);
 
     QTimer* ptimer = new QTimer(this);
-    ptimer->setInterval(500);
+    ptimer->setInterval(100);
     ptimer->start();
-    // connect(dataProcessor, SIGNAL(slotLineProcessed(QByteArray)), this, SLOT(slotDataAdded(QString)));
+
+    dataProcessor = new DataProcessor();
+    connect(dataProcessor, SIGNAL(signalLineProcessed(QString)), this, SLOT(slotDataAdded(QString)));
+    dataProcessor->readDataFromTestFile();
+
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
 }
 
@@ -18,8 +22,10 @@ void UdpServer::slotSendDatagram()
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
-    append("Sent: " + dt.toString());
-    out << dt;
+    if (dataToSend.isEmpty()) return;
+    QString data = dataToSend.dequeue();
+    append("Sent: " + dt.toString() + "\n" + data);
+    out << dt << data;
     m_udp->writeDatagram(baDatagram, QHostAddress::LocalHost, 2424);
 }
 
@@ -27,4 +33,9 @@ void UdpServer::slotSendDatagram()
 void UdpServer::slotDataAdded(QString dataString)
 {
     dataToSend.enqueue(dataString);
+}
+
+void UdpServer::kekeSlot()
+{
+    qDebug() << "IDK" << "\n";
 }

@@ -1,22 +1,28 @@
-#ifndef UDPSERVER_H
-#define UDPSERVER_H
+// #ifndef UDPSERVER_H
+// #define UDPSERVER_H
 
-#include "dataprocessor.h"
+#pragma once
+
+
 #include <QtWidgets>
 #include <QUdpSocket>
+#include "dataprocessor.h"
 
 class UdpServer : public QTextEdit
 {
     Q_OBJECT
 private:
     QQueue<QString> dataToSend;
-    DataProcessor dataProcessor;
+    DataProcessor* dataProcessor;
     QUdpSocket* m_udp;
 public:
     UdpServer(QWidget* pwgt = 0);
-private slots:
-    void slotSendDatagram();
+
+public slots:
+    void kekeSlot();
     void slotDataAdded(QString dataString);
+    void slotSendDatagram();
+
 };
 
-#endif // UDPSERVER_H
+// #endif // UDPSERVER_H

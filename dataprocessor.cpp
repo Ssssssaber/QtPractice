@@ -20,7 +20,7 @@ void DataProcessor::readDataFromTestFile()
         // QList<QByteArray> tokens = line.split(' ');
         if (line != "")
         {
-            slotLineProcessed(line);
+            processLine(line);
             line = file.readLine();
         }
     }
@@ -30,10 +30,10 @@ void DataProcessor::readDataFromTestFile()
     qDebug() << mData << "\n";
 }
 
-QString DataProcessor::slotLineProcessed(QByteArray line)
+void DataProcessor::processLine(QByteArray line)
 {
     QString processedLine = line.simplified();
-    QList<QByteArray> tokens = line.split(' ');
+    QList<QByteArray> tokens = line.simplified().split(' ');
 
     QString dataSource = tokens.data()[0];
     switch (dataMap[dataSource]) {
@@ -51,6 +51,9 @@ QString DataProcessor::slotLineProcessed(QByteArray line)
     default:
         break;
     }
-
-    return processedLine;
+    // QObject::dumpObjectInfo();
+    emit kekeSignal();
+    emit signalLineProcessed(processedLine);
+    // server->slotDataAdded(processedLine);
 }
+
