@@ -96,7 +96,7 @@ include(FetchContent)
 # target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
 # include_directories(/home/vladimir/Code/cpp-libs/libP7Client_v5.6/Headers)
 
-find_library(LIBP7 libp7.a libp7/)
+find_library(LIBP7 libp7.a /usr/local/lib/)
 if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
     message(FATAL_ERROR "no libp7")
 else()
