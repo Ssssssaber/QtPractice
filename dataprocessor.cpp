@@ -1,5 +1,6 @@
 #include "dataprocessor.h"
-
+#include <QApplication>
+#include <QDir>
 DataProcessor::DataProcessor()
 {
     dataMap["A"] = 1;
@@ -10,7 +11,20 @@ DataProcessor::DataProcessor()
 
 void DataProcessor::readDataFromTestFile()
 {
-    QFile file("/home/vladimir/Code/QtPractice/circuit_data/all_data.txt");
+    QString appPath = QDir().absolutePath();
+    qInfo() << appPath;
+
+    QDir dir(appPath);
+
+    bool ok;
+    ok = dir.cdUp();
+    assert(ok);
+    ok = dir.cdUp();
+    assert(ok);
+
+    qInfo() << dir.path();
+    auto keke = dir.path() + "/circuit_data/all_data.txt";
+    QFile file(keke);
 
     if (!file.open(QIODevice::ReadOnly)) return;
 
