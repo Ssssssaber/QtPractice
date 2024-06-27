@@ -1,6 +1,11 @@
 #include "dataprocessor.h"
 #include <QApplication>
 #include <QDir>
+#include <QtEndian>
+
+
+
+
 DataProcessor::DataProcessor()
 {
     dataMap["A"] = 1;
@@ -28,7 +33,7 @@ void DataProcessor::readDataFromTestFile()
 
     if (!file.open(QIODevice::ReadOnly)) return;
 
-    QByteArray line = file.readLine().simplified();
+    QString line = file.readLine().simplified();
     while (file.canReadLine()) {
         // QByteArray line = file.readLine().simplified();
         // QList<QByteArray> tokens = line.split(' ');
@@ -39,26 +44,28 @@ void DataProcessor::readDataFromTestFile()
         }
     }
 
-    qDebug() << aData << "\n";
-    qDebug() << gData << "\n";
-    qDebug() << mData << "\n";
+    qDebug() << &aData << "\n";
+    qDebug() << &gData << "\n";
+    qDebug() << &mData << "\n";
 }
 
-void DataProcessor::processLine(QByteArray line)
+void DataProcessor::processLine(QString line)
 {
+
     QString processedLine = line.simplified();
-    QList<QByteArray> tokens = line.simplified().split(' ');
+    emit signalLineReceived(processedLine);
+    QList<QString> tokens = line.simplified().split(' ');
 
     QString dataSource = tokens.data()[0];
     switch (dataMap[dataSource]) {
     case 1:
-        aData.append(tokens);
+        aData.append(stringDataToStruct(tokens, aConstant));
         break;
     case 2:
-        gData.append(tokens);
+        gData.append(stringDataToStruct(tokens, gConstant));
         break;
     case 3:
-        mData.append(tokens);
+        mData.append(stringDataToStruct(tokens, mConstant));
         break;
     case 4:
         break;
@@ -66,8 +73,19 @@ void DataProcessor::processLine(QByteArray line)
         break;
     }
     // QObject::dumpObjectInfo();
-    emit kekeSignal();
-    emit signalLineProcessed(processedLine);
+
     // server->slotDataAdded(processedLine);
 }
 
+
+xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
+{
+    xyzCircuitData data;
+    data.id = tokens[1].toInt();
+    data.x = tokens[2].toInt() * transitionConst;
+    data.y = tokens[3].toInt() * transitionConst;
+    data.z = tokens[4].toInt() * transitionConst;
+    data.timestamp = tokens[5].toLong();
+    emit signalLineProcessed(data);
+    return data;
+}
