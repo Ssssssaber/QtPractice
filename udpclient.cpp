@@ -7,6 +7,7 @@ UdpClient::UdpClient(QWidget* pwgt) : QTextEdit(pwgt)
     m_udp = new QUdpSocket(this);
     m_udp->bind(2424);
     // connect(m_udp, &QUdpSocket::readyRead, &UdpClient::slotProcessDatagrams);
+    // connect
     connect(m_udp, SIGNAL(readyRead()), SLOT(slotProcessDatagrams()));
 }
 
@@ -24,3 +25,4 @@ void UdpClient::slotProcessDatagrams()
     in >> dateTime;
     append("Received: " + dateTime.toString());
 }
+

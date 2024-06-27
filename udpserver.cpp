@@ -8,6 +8,7 @@ UdpServer::UdpServer(QWidget* pwgt) : QTextEdit(pwgt)
     QTimer* ptimer = new QTimer(this);
     ptimer->setInterval(500);
     ptimer->start();
+    // connect(dataProcessor, SIGNAL(slotLineProcessed(QByteArray)), this, SLOT(slotDataAdded(QString)));
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
 }
 
@@ -20,4 +21,10 @@ void UdpServer::slotSendDatagram()
     append("Sent: " + dt.toString());
     out << dt;
     m_udp->writeDatagram(baDatagram, QHostAddress::LocalHost, 2424);
+}
+
+
+void UdpServer::slotDataAdded(QString dataString)
+{
+    dataToSend.enqueue(dataString);
 }

@@ -24,6 +24,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         udpserver.h udpserver.cpp
         udpclient.h udpclient.cpp
+        dataprocessor.h dataprocessor.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtPractice APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -83,10 +84,19 @@ include(FetchContent)
 # set(BUILD_EXAMPLES OFF CACHE INTERVAL "")
 # FetchContent_MakeAvailable(p7lib)
 # target_link_libraries(${PROJECT_NAME} PRIVATE p7lib)
-# include_directories(${P7_INCLUDE_DIRS})
 
 # the only working solution
-find_library(LIBP7 libp7.a /usr/local/lib/)
+# find_library(LIBP7 libp7.a /usr/local/lib/)
+# if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
+#     message(FATAL_ERROR "no libp7")
+# else()
+#     message(STATUS "libp7 found")
+# endif()
+
+# target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
+# include_directories(/home/vladimir/Code/cpp-libs/libP7Client_v5.6/Headers)
+
+find_library(LIBP7 libp7.a libp7/)
 if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
     message(FATAL_ERROR "no libp7")
 else()
@@ -94,7 +104,7 @@ else()
 endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
-include_directories(/home/vladimir/Code/cpp-libs/libP7Client_v5.6/Headers)
+include_directories(libp7/Headers)
 
 # tried with another package to check if cmake is correct
 # find_package(SDL2 REQUIRED)
