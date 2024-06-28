@@ -16,6 +16,7 @@ private:
     QLineSeries *serX; // line with X-axis
     QLineSeries *serY;
     QLineSeries *serZ;
+    QChartView* cView;
 
 
 public:

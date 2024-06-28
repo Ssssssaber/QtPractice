@@ -86,7 +86,7 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     data.x = tokens[2].toInt() * transitionConst;
     data.y = tokens[3].toInt() * transitionConst;
     data.z = tokens[4].toInt() * transitionConst;
-    data.timestamp = tokens[5].toLong() / timeConstant;
+    data.timestamp = (tokens[5].toLong() / timeConstant);
     emit signalLineProcessed(data);
     return data;
 }

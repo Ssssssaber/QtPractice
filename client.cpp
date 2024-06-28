@@ -8,8 +8,8 @@ Client::Client(QWidget* pwgt) : QWidget(pwgt)
     chartManager = new ChartManager();
 
     QGridLayout* boxLayout = new QGridLayout;
-    boxLayout->addWidget(receivedData);
-    boxLayout->addWidget(chartManager);
+    boxLayout->addWidget(receivedData, 9, 0, 2, 5);
+    boxLayout->addWidget(chartManager, 0, 0, 8, 10);
     setLayout(boxLayout);
 
     m_udp = new QUdpSocket(this);
