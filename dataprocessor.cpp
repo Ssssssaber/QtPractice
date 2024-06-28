@@ -81,11 +81,12 @@ void DataProcessor::processLine(QString line)
 xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
 {
     xyzCircuitData data;
+    data.group = tokens[0];
     data.id = tokens[1].toInt();
     data.x = tokens[2].toInt() * transitionConst;
     data.y = tokens[3].toInt() * transitionConst;
     data.z = tokens[4].toInt() * transitionConst;
-    data.timestamp = tokens[5].toLong();
+    data.timestamp = tokens[5].toLong() / timeConstant;
     emit signalLineProcessed(data);
     return data;
 }

@@ -20,11 +20,10 @@ Server::Server(QWidget* pwgt) : QWidget(pwgt)
     setLayout(boxLayout);
 
     QTimer* ptimer = new QTimer(this);
-    ptimer->setInterval(100);
+    ptimer->setInterval(150);
     ptimer->start();
 
     dataProcessor = new DataProcessor();
-    // connect(dataProcessor, SIGNAL(signalLineProcessed(QString)), this, SLOT(slotDataAdded(QString)));
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
     dataProcessor->readDataFromTestFile();
