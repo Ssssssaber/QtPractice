@@ -1,12 +1,15 @@
 #pragma once
 
+#include "chartmanager.h"
 #include <QtWidgets>
 #include <QUdpSocket>
 
-class Client : public QTextEdit
+class Client : public QWidget
 {
     Q_OBJECT
 private:
+    ChartManager* chartManager;
+    QTextEdit* receivedData;
     QUdpSocket* m_udp;
 
 public:
@@ -14,6 +17,8 @@ public:
 
 private slots:
     void slotProcessDatagrams();
-};
+    xyzCircuitData parseReceivedData(QString stringData);
 
-// #endif // UDPCLIENT_H
+signals:
+    void signalClientReceivedData(xyzCircuitData data);
+};

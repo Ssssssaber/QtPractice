@@ -26,6 +26,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         client.h client.cpp
         dataprocessor.h dataprocessor.cpp
         xyzcircuitdata.h
+        chartwidget.h chartwidget.cpp
+        chartmanager.h chartmanager.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtPractice APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -73,30 +75,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
 endif()
 include(FetchContent)
 
-# tried with git
-# FetchContent_Declare(
-#     p7lib
-#     # URL https://baical.net/files/libP7Client_v5.6.zip
-#     URL https://github.com/CMakePorts/libp7-baical/archive/refs/tags/v5.2.tar.gz
-#     # GIT_REPOSITORY https://github.com/CMakePorts/libp7-baical.git
-#     GIT_TAG cmake
-# )
-
-# set(BUILD_EXAMPLES OFF CACHE INTERVAL "")
-# FetchContent_MakeAvailable(p7lib)
-# target_link_libraries(${PROJECT_NAME} PRIVATE p7lib)
-
-# the only working solution
-# find_library(LIBP7 libp7.a /usr/local/lib/)
-# if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
-#     message(FATAL_ERROR "no libp7")
-# else()
-#     message(STATUS "libp7 found")
-# endif()
-
-# target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
-# include_directories(/home/vladimir/Code/cpp-libs/libP7Client_v5.6/Headers)
-
 find_library(LIBP7 libp7.a /usr/local/lib/)
 if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
     message(FATAL_ERROR "no libp7")
@@ -106,12 +84,6 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
 include_directories(libp7/Headers)
-
-# tried with another package to check if cmake is correct
-# find_package(SDL2 REQUIRED)
-
-# include_directories({SD2_INCLUDE_DIRS})
-# target_link_libraries(${PROJECT_NAME} PRIVATE {SDL2_LIBARARIES)
 
 # adding network components
 find_package(Qt6 REQUIRED COMPONENTS Network)

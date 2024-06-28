@@ -11,10 +11,10 @@ class DataProcessor : public QObject
 {
     Q_OBJECT
 private:
-    // UdpServer* server;
     const float aConstant = 9.81f;
     const float gConstant = 1.0f;
     const float mConstant = 1.0f;
+    const long timeConstant = 1000.0f;
 
     QMap<QString, int> dataMap;
     QList<xyzCircuitData> aData;
@@ -31,4 +31,3 @@ signals:
     void signalLineProcessed(xyzCircuitData data);
 };
 
-// #endif // DATAPROCESSOR_H
