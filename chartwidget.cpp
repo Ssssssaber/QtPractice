@@ -10,16 +10,10 @@ ChartWidget::ChartWidget(QWidget* pwgt) : QWidget(pwgt)
     serX->setName("X-axis"); // setting the name
     serY->setName("Y-axis");
     serZ->setName("Z-axis");
-    // works
-    // serX->append(2,2);
-    // serX->append(20,20);
 
     chart->addSeries(serX);
     chart->addSeries(serY);
     chart->addSeries(serZ);
-
-    // doesnt work
-    serX->append(2,3);
 
     chart->createDefaultAxes(); // adding DefaultAxes lines to chart
 
@@ -28,9 +22,6 @@ ChartWidget::ChartWidget(QWidget* pwgt) : QWidget(pwgt)
     QGridLayout* boxLayout = new QGridLayout; // grid
     boxLayout->addWidget(cView);
     setLayout(boxLayout);
-    // doesnt work
-    serX->append(2,5);
-    serX->clear();
 }
 
 void ChartWidget::slotAddData(xyzCircuitData data)

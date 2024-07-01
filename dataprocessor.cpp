@@ -12,10 +12,13 @@ DataProcessor::DataProcessor()
     dataMap["G"] = 2;
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
+
+    connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 }
 
 void DataProcessor::readDataFromTestFile()
 {
+
     QString appPath = QDir().absolutePath();
     qInfo() << appPath;
 
@@ -34,9 +37,8 @@ void DataProcessor::readDataFromTestFile()
     if (!file.open(QIODevice::ReadOnly)) return;
 
     QString line = file.readLine().simplified();
-    while (file.canReadLine()) {
-        // QByteArray line = file.readLine().simplified();
-        // QList<QByteArray> tokens = line.split(' ');
+    while (file.canReadLine())
+    {
         if (line != "")
         {
             processLine(line);
@@ -48,6 +50,13 @@ void DataProcessor::readDataFromTestFile()
     qDebug() << &gData << "\n";
     qDebug() << &mData << "\n";
 }
+
+void DataProcessor::changeWindowSize(int newSize)
+{
+    windowSize = newSize;
+    emit signalWindowSizeChanged(newSize);
+}
+
 
 void DataProcessor::processLine(QString line)
 {
@@ -77,9 +86,32 @@ void DataProcessor::processLine(QString line)
     // server->slotDataAdded(processedLine);
 }
 
+void DataProcessor::checkCanAnalyze(QList<xyzCircuitData> dataList)
+{
+    if (dataList.length() > windowSize)
+    {
+        // emit startAnalysis();
+    }
+}
+
+QList<xyzCircuitData> DataProcessor::createWindowDataSlice(QList<xyzCircuitData> dataList)
+{
+    // double check later
+    int initial = dataList.length() - 1;
+    if (initial < windowSize)
+    {
+        return dataList;
+    }
+    for (int i = initial; i < initial - windowSize; i--)
+    {
+
+    }
+}
+
 
 xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
 {
+
     xyzCircuitData data;
     data.group = tokens[0];
     data.id = tokens[1].toInt();
@@ -87,6 +119,22 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     data.y = tokens[3].toInt() * transitionConst;
     data.z = tokens[4].toInt() * transitionConst;
     data.timestamp = (tokens[5].toLong() / timeConstant);
+    if (lastReceivedId + 1 == data.id)
+    {
+        QString message =  QString("no packages lost");
+        emit signalLossDetected(message);
+    }
+    else
+    {
+        QString message =  QString("packages from %1 to %2 were lost").arg(lastReceivedId).arg(data.id);
+        emit signalLossDetected(message);
+    }
+    lastReceivedId = data.id;
     emit signalLineProcessed(data);
     return data;
+}
+
+void DataProcessor::slotOnPackageLoss(QString message)
+{
+    qDebug() << message;
 }
