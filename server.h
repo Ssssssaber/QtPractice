@@ -3,6 +3,7 @@
 
 #include <QtWidgets>
 #include <QUdpSocket>
+#include "dataanalyzer.h"
 #include "dataprocessor.h"
 
 class Server : public QWidget
@@ -12,7 +13,8 @@ private:
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
     QQueue<xyzCircuitData> dataToSend;
-    DataProcessor* dataProcessor;
+    DataProcessor *dataProcessor;
+    DataAnalyzer *dataAnalyzer;
     QUdpSocket* m_udp;
 public:
     Server(QWidget* pwgt = 0);

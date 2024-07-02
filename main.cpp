@@ -6,7 +6,7 @@
 #include <QtCharts/QLegend> // to add legend to charts
 #include <QtCharts/QLineSeries> // to draw line-chart
 #include <QtCharts/QCategoryAxis> // to change names of axis
-
+#define QT_FATAL_WARNINGS
 
 int main(int argc, char *argv[])
 {

@@ -4,7 +4,7 @@ Server::Server(QWidget* pwgt) : QWidget(pwgt)
 {
     setWindowTitle("UdpServer");
 
-    m_udp = new QUdpSocket(this);
+    circuitDataSocket = new QUdpSocket(this);
 
     receivedDataText = new QTextEdit("Received data");
     sentDataText = new QTextEdit("Sent Data");
@@ -26,8 +26,12 @@ Server::Server(QWidget* pwgt) : QWidget(pwgt)
     dataProcessor = new DataProcessor();
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
-    dataProcessor->readDataFromTestFile();
 
+
+    dataAnalyzer = new DataAnalyzer(dataProcessor);
+
+    // DISABLE WHEN NOT DEBUGGING
+    dataProcessor->readDataFromTestFile();
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
 }
 
@@ -41,7 +45,7 @@ void Server::slotSendDatagram()
     xyzCircuitData data = dataToSend.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
     out << dt << data.toString();
-    m_udp->writeDatagram(baDatagram, QHostAddress::LocalHost, 2424);
+    circuitDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, 2424);
 }
 
 void Server::slotStringReceived(QString string)

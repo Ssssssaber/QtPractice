@@ -28,6 +28,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         xyzcircuitdata.h
         chartwidget.h chartwidget.cpp
         chartmanager.h chartmanager.cpp
+        dataanalyzer.h dataanalyzer.cpp
+        windowworker.h windowworker.cpp
+        xyzworker.h xyzworker.cpp
+
+        xyzworkercontroller.h xyzworkercontroller.cpp
 
 
     )

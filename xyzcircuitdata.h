@@ -18,4 +18,19 @@ public:
     }
 };
 
+struct xyz
+{
+    float x = 0;
+    float y = 0;
+    float z = 0;
+
+    QString toString()
+    {
+        return QString("%1 %2 %3").arg(x).arg(y).arg(z);
+    }
+};
+
+
+enum class WorkerTypes {WindowWorker, FilterWorker};
+
 #endif // XYZCIRCUITDATA_H

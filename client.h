@@ -10,7 +10,7 @@ class Client : public QWidget
 private:
     ChartManager* chartManager;
     QTextEdit* receivedData;
-    QUdpSocket* m_udp;
+    QUdpSocket* circuitDataSocket;
 
 public:
     Client(QWidget* pwgt = 0);
