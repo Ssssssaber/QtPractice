@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    Server server = Server();
+    Server server = Server(2323, 2424);
     server.show();
 
     Client client = Client();

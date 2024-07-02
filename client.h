@@ -3,6 +3,7 @@
 #include "chartmanager.h"
 #include <QtWidgets>
 #include <QUdpSocket>
+#include <QTcpSocket>
 
 class Client : public QWidget
 {
@@ -11,6 +12,7 @@ private:
     ChartManager* chartManager;
     QTextEdit* receivedData;
     QUdpSocket* circuitDataSocket;
+    QTcpSocket* userActionSocket;
 
 public:
     Client(QWidget* pwgt = 0);

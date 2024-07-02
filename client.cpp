@@ -7,15 +7,18 @@ Client::Client(QWidget* pwgt) : QWidget(pwgt)
 
     chartManager = new ChartManager();
 
+    // QPushButton *windowButton = new QPushButton();
+
+
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(receivedData, 9, 0, 2, 5);
     boxLayout->addWidget(chartManager, 0, 0, 8, 10);
     setLayout(boxLayout);
 
-    m_udp = new QUdpSocket(this);
-    m_udp->bind(2424);
+    circuitDataSocket = new QUdpSocket(this);
+    circuitDataSocket->bind(2424);
     connect(this, &Client::signalClientReceivedData, chartManager, &ChartManager::slotDataReceived);
-    connect(m_udp, SIGNAL(readyRead()), SLOT(slotProcessDatagrams()));
+    connect(circuitDataSocket, SIGNAL(readyRead()), SLOT(slotProcessDatagrams()));
 }
 
 xyzCircuitData Client::parseReceivedData(QString stringData)
@@ -35,9 +38,9 @@ void Client::slotProcessDatagrams()
 {
     QByteArray baDatagram;
     do {
-        baDatagram.resize(m_udp->pendingDatagramSize());
-        m_udp->readDatagram(baDatagram.data(), baDatagram.size());
-    } while (m_udp->hasPendingDatagrams());
+        baDatagram.resize(circuitDataSocket->pendingDatagramSize());
+        circuitDataSocket->readDatagram(baDatagram.data(), baDatagram.size());
+    } while (circuitDataSocket->hasPendingDatagrams());
 
     QDateTime dateTime;
     QString data;
