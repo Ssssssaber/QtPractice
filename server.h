@@ -1,8 +1,9 @@
 #pragma once
 
-
 #include <QtWidgets>
 #include <QUdpSocket>
+#include <QTcpServer>
+#include "dataanalyzer.h"
 #include "dataprocessor.h"
 
 class Server : public QWidget
@@ -11,17 +12,22 @@ class Server : public QWidget
 private:
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
-    QQueue<xyzCircuitData> dataToSend;
-    DataProcessor* dataProcessor;
-    QUdpSocket* m_udp;
+    QQueue<xyzCircuitData> circuitDataQueue;
+    DataProcessor *dataProcessor;
+    DataAnalyzer *dataAnalyzer;
+    QUdpSocket* circuitDataSocket;
+    QTcpServer* userActionsServer;
+    void sendToClient(QTcpSocket* socket, const QString);
 public:
-    Server(QWidget* pwgt = 0);
+    Server(int tcpPort, int udpPort, QWidget* pwgt = 0);
 
 public slots:
     void slotStringReceived(QString string);
+    void slotClientConnected();
+    void slotReadClient();
     void slotDataToSendAdded(xyzCircuitData data);
+    // void slotWindowSizeChanged(int newSize);
     void slotSendDatagram();
-
 };
 
 // #endif // UDPSERVER_H

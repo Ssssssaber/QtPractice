@@ -28,6 +28,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         xyzcircuitdata.h
         chartwidget.h chartwidget.cpp
         chartmanager.h chartmanager.cpp
+        dataanalyzer.h dataanalyzer.cpp
+        windowworker.h windowworker.cpp
+        xyzworker.h xyzworker.cpp
+
+        xyzworkercontroller.h xyzworkercontroller.cpp
 
 
     )
@@ -86,6 +91,16 @@ endif()
 
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
 include_directories(libp7/Headers)
+
+find_library(LIBNII libnii.a /usr/local/lib/)
+if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
+    message(FATAL_ERROR "no libii")
+else()
+    message(STATUS "libnii found")
+endif()
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBNII})
+include_directories(libnii/Headers)
 
 # adding network components
 find_package(Qt6 REQUIRED COMPONENTS Network)

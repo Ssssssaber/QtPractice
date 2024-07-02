@@ -1,10 +1,6 @@
 #include "dataprocessor.h"
 #include <QApplication>
 #include <QDir>
-#include <QtEndian>
-
-
-
 
 DataProcessor::DataProcessor()
 {
@@ -46,16 +42,16 @@ void DataProcessor::readDataFromTestFile()
         }
     }
 
-    qDebug() << &aData << "\n";
-    qDebug() << &gData << "\n";
-    qDebug() << &mData << "\n";
+    // qDebug() << &aData << "\n";
+    // qDebug() << &gData << "\n";
+    // qDebug() << &mData << "\n";
 }
 
-void DataProcessor::changeWindowSize(int newSize)
-{
-    windowSize = newSize;
-    emit signalWindowSizeChanged(newSize);
-}
+// void DataProcessor::changeWindowSize(int newSize)
+// {
+//     windowSize = newSize;
+//     emit signalWindowSizeChanged(newSize);
+// }
 
 
 void DataProcessor::processLine(QString line)
@@ -68,43 +64,21 @@ void DataProcessor::processLine(QString line)
     QString dataSource = tokens.data()[0];
     switch (dataMap[dataSource]) {
     case 1:
-        aData.append(stringDataToStruct(tokens, aConstant));
+        // aData.append(stringDataToStruct(tokens, aConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
         break;
     case 2:
-        gData.append(stringDataToStruct(tokens, gConstant));
+        // gData.append(stringDataToStruct(tokens, gConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
         break;
     case 3:
-        mData.append(stringDataToStruct(tokens, mConstant));
+        // mData.append(stringDataToStruct(tokens, mConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
         break;
     case 4:
         break;
     default:
         break;
-    }
-    // QObject::dumpObjectInfo();
-
-    // server->slotDataAdded(processedLine);
-}
-
-void DataProcessor::checkCanAnalyze(QList<xyzCircuitData> dataList)
-{
-    if (dataList.length() > windowSize)
-    {
-        // emit startAnalysis();
-    }
-}
-
-QList<xyzCircuitData> DataProcessor::createWindowDataSlice(QList<xyzCircuitData> dataList)
-{
-    // double check later
-    int initial = dataList.length() - 1;
-    if (initial < windowSize)
-    {
-        return dataList;
-    }
-    for (int i = initial; i < initial - windowSize; i--)
-    {
-
     }
 }
 
@@ -130,7 +104,7 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
         emit signalLossDetected(message);
     }
     lastReceivedId = data.id;
-    emit signalLineProcessed(data);
+
     return data;
 }
 
