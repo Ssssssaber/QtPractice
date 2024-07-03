@@ -10,6 +10,10 @@ DataProcessor::DataProcessor()
     dataMap["p1"] = 4;
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
+    readTimer = new QTimer(this);
+    readTimer->setSingleShot(false);
+    readTimer->setInterval(1050);
+    connect(readTimer, &QTimer::timeout, this, &DataProcessor::readLine);
 }
 
 void DataProcessor::readDataFromTestFile()
@@ -28,31 +32,27 @@ void DataProcessor::readDataFromTestFile()
 
     qInfo() << dir.path();
     auto keke = dir.path() + "/circuit_data/all_data.txt";
-    QFile file(keke);
+    file = new QFile(keke);
+    if (!file->open(QIODevice::ReadOnly)) return;
 
-    if (!file.open(QIODevice::ReadOnly)) return;
+    QString line = file->readLine().simplified();
+    processLine(line);
 
-    QString line = file.readLine().simplified();
-    while (file.canReadLine())
+
+    readTimer->start();
+}
+
+void DataProcessor::readLine()
+{
+    if (file->canReadLine())
     {
+        QString line = file->readLine().simplified();
         if (line != "")
         {
             processLine(line);
-            line = file.readLine();
         }
     }
-
-    // qDebug() << &aData << "\n";
-    // qDebug() << &gData << "\n";
-    // qDebug() << &mData << "\n";
 }
-
-// void DataProcessor::changeWindowSize(int newSize)
-// {
-//     windowSize = newSize;
-//     emit signalWindowSizeChanged(newSize);
-// }
-
 
 void DataProcessor::processLine(QString line)
 {
@@ -64,15 +64,12 @@ void DataProcessor::processLine(QString line)
     QString dataSource = tokens.data()[0];
     switch (dataMap[dataSource]) {
     case 1:
-        // aData.append(stringDataToStruct(tokens, aConstant));
         emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
         break;
     case 2:
-        // gData.append(stringDataToStruct(tokens, gConstant));
         emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
         break;
     case 3:
-        // mData.append(stringDataToStruct(tokens, mConstant));
         emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
         break;
     case 4:

@@ -19,7 +19,7 @@ XyzWorkerController::XyzWorkerController(WorkerTypes workerType)
 
     worker->moveToThread(&workerThread);
     connect(&workerThread, &QThread::finished, worker, &QObject::deleteLater);
-    connect(this, &XyzWorkerController::signalOperate, worker, &XyzWorker::slotdoWork);
+    // connect(this, &XyzWorkerController::signalOperate, worker, &::XyzWorker::slotDoWork);
     connect(worker, &XyzWorker::signalResultReady, this, &XyzWorkerController::slotHandleResults);
     workerThread.start();
 }
@@ -32,10 +32,11 @@ XyzWorkerController::~XyzWorkerController()
 
 void XyzWorkerController::startOperating(QList<xyzCircuitData> dataList)
 {
-    emit signalOperate(dataList);
+    worker->slotDoWork(dataList);
 }
 
-void XyzWorkerController::slotHandleResults(xyz result)
+void XyzWorkerController::slotHandleResults(xyzAnalysisResult result)
 {
     qDebug() << result.toString();
+    emit signalResultReady(result.toString());
 }

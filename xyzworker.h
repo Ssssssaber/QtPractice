@@ -9,10 +9,10 @@ class XyzWorker : public QObject
     Q_OBJECT
 public:
     XyzWorker();
-public slots:
-    virtual void slotdoWork(QList<xyzCircuitData> data);
+public:
+    virtual void slotDoWork(QList<xyzCircuitData> data);
 signals:
-    void signalResultReady(xyz result);
+    void signalResultReady(xyzAnalysisResult result);
 };
 
 #endif // XYZWORKER_H
