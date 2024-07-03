@@ -1,36 +1,51 @@
 #include "server.h"
 #include <QTcpSocket>
 
-Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt)
+
+
+Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     setWindowTitle("UdpServer");
 
-    userActionsServer = new QTcpServer(this);
-    if (!userActionsServer->listen(QHostAddress::Any, 2323))
+    this->tcpPort = tcpPort;
+    this->udpPort = udpPort;
+
+    tcpServer = new QTcpServer(this);
+    if (!tcpServer->listen(QHostAddress::Any, tcpPort))
     {
         QMessageBox::critical(
             0,
             "Server Error",
             "Unable to start the server:"
-                + userActionsServer->errorString()
+                + tcpServer->errorString()
             );
+        tcpServer->close();
+        return;
     }
-    connect(userActionsServer, &QTcpServer::newConnection, this, &Server::slotClientConnected);
+    connect(tcpServer, &QTcpServer::newConnection, this, &Server::slotNewConnection);
 
 
-    circuitDataSocket = new QUdpSocket(this);
 
     receivedDataText = new QTextEdit("Received data");
-    sentDataText = new QTextEdit("Sent Data");
+    receivedDataText->setReadOnly(true);
 
-    QLabel* receivedLabel = new QLabel();
-    QLabel* sentLabel = new QLabel();
+    sentDataText = new QTextEdit("Sent Data");
+    sentDataText->setReadOnly(true);
+
+    clientResponseText = new QTextEdit("Client response");
+    clientResponseText->setReadOnly(true);
+
+    QLabel *receivedLabel = new QLabel("Received Data");
+    QLabel *sentLabel = new QLabel("Sent Data");
+    QLabel *clientLabel = new QLabel("Client response label");
 
     QGridLayout* boxLayout = new QGridLayout;
-    boxLayout->addWidget(receivedLabel, 0, 0, 2, 1);
-    boxLayout->addWidget(sentLabel, 0, 2, 2, 1);
+    boxLayout->addWidget(receivedLabel, 0, 0, 1, 3);
+    boxLayout->addWidget(sentLabel, 0, 4, 1, 3);
+    boxLayout->addWidget(clientLabel, 0, 8, 1, 3);
     boxLayout->addWidget(receivedDataText, 1, 0, 2, 3);
-    boxLayout->addWidget(sentDataText, 1, 3, 2, 3);
+    boxLayout->addWidget(sentDataText, 1, 4, 2, 3);
+    boxLayout->addWidget(clientResponseText, 1, 7, 2, 3);
     setLayout(boxLayout);
 
     dataProcessor = new DataProcessor();
@@ -38,14 +53,17 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt)
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
+    connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
+    // connect(this, )
 
     // DISABLE WHEN NOT DEBUGGING
     dataProcessor->readDataFromTestFile();
 
+    udpSocket = new QUdpSocket(this);
     QTimer* ptimer = new QTimer(this);
     ptimer->setInterval(150);
-    ptimer->start();
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
+    ptimer->start();
 }
 
 void Server::slotSendDatagram()
@@ -54,11 +72,11 @@ void Server::slotSendDatagram()
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
-    if (circuitDataQueue.isEmpty()) return;
-    xyzCircuitData data = circuitDataQueue.dequeue();
+    if (dataToSendQueue.isEmpty() || !clientConnected) return;
+    xyzCircuitData data = dataToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
     out << dt << data.toString();
-    circuitDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, 2424);
+    udpSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
 }
 
 void Server::slotStringReceived(QString string)
@@ -66,19 +84,90 @@ void Server::slotStringReceived(QString string)
     receivedDataText->append(string);
 }
 
-void Server::slotClientConnected()
+void Server::slotNewConnection()
 {
-    QTcpSocket* clientSocket = userActionsServer->nextPendingConnection();
-    connect(clientSocket, &QTcpSocket::disconnected, this, &Server::slotReadClient);
+    QTcpSocket* clientSocket = tcpServer->nextPendingConnection();
+    connect(clientSocket, &QTcpSocket::disconnected, this, &QTcpSocket::deleteLater);
+    connect(clientSocket, &QTcpSocket::readyRead, this, &Server::slotReadClient);
+    clientConnected = true;
+    sendToClient(clientSocket, "Server Response: Connected!");
 }
 
 void Server::slotReadClient()
 {
+    QTcpSocket *clientSocket = (QTcpSocket*)sender();
+    QDataStream in(clientSocket);
+    in.setVersion(QDataStream::Qt_5_12);
+    for (;;)
+    {
+        if (!nextBlockSize)
+        {
+            if (clientSocket->bytesAvailable() < sizeof(quint16))
+            {
+                break;
+            }
+            in >> nextBlockSize;
+        }
 
+        if (clientSocket->bytesAvailable() < nextBlockSize)
+        {
+            break;
+        }
+
+        QTime time;
+        QString message;
+        QString messageType;
+        in >> time >> messageType >> message;
+
+        QString strMessage =
+            time.toString() + " " + "Client has sent - "+ messageType + ": " + message;
+        clientResponseText->append(strMessage);
+
+        if (processClientResponse(messageType, message))
+        {
+            sendToClient(clientSocket, "Server Response: Received \"" + messageType + ": " + message + "\"");
+        }
+        else
+        {
+            sendToClient(clientSocket, "Server cannot process that message - \"" + messageType + ": " + message + "\"");
+        }
+
+        nextBlockSize = 0;
+
+
+    }
+}
+
+void Server::sendToClient(QTcpSocket *socket, const QString& str)
+{
+    QByteArray arrBlock;
+    QDataStream out(&arrBlock, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_12);
+    out << quint16() << QTime::currentTime() << str;
+
+    out.device() -> seek(0);
+    out << quint16(arrBlock.size() - sizeof(quint16));
+
+    socket->write(arrBlock);
+}
+
+bool Server::processClientResponse(QString messageType, QString message)
+{
+    bool result = false;
+    if (messageType == "window")
+    {
+        int newSize = message.toInt();
+        result = newSize >= 2 && newSize <=1024;
+        if (result)
+        {
+            emit signalWindowSizeChanged(newSize);
+        }
+    }
+    return result;
 }
 
 
 void Server::slotDataToSendAdded(xyzCircuitData data)
 {
-    circuitDataQueue.enqueue(data);
+    dataToSendQueue.enqueue(data);
 }
