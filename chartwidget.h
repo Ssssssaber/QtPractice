@@ -12,11 +12,14 @@ class ChartWidget : public QWidget
 {
     Q_OBJECT
 private:
-    QChart *chart; // creating chart for accelerator with all axies
+    QHBoxLayout *hlayout; // horisontal lay out
+    QChartView* cViewX; // creating chart with 1 axies
+    QChartView* cViewY;
+    QChartView* cViewZ;
     QLineSeries *serX; // line with X-axis
     QLineSeries *serY;
     QLineSeries *serZ;
-    QChartView* cView;
+
 
 
 public:

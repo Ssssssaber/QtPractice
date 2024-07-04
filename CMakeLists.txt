@@ -99,7 +99,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBP7})
 include_directories(libp7/Headers)
 
 find_library(LIBNII libnii.a /usr/local/lib/)
-if (${LIBP7} STREQUAL LIBP7-NOTFOUND)
+if (${LIBNII} STREQUAL LIBP7-NOTFOUND)
     message(FATAL_ERROR "no libii")
 else()
     message(STATUS "libnii found")

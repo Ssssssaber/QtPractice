@@ -6,19 +6,23 @@
 class XyzWorkerController : public QObject
 {
     Q_OBJECT
-    XyzWorker* worker;
-    QThread workerThread;
-    // QThread xThread;
-    // QThread yThread;
-    // QThread zThread;
+    // XyzWorker* worker;
+    XyzWorker* aWorker;
+    XyzWorker* gWorker;
+    XyzWorker* mWorker;
+
+    // QThread workerThread;
+    QThread aWorkerThread;
+    QThread gWorkerThread;
+    QThread mWorkerThread;
 public:
     XyzWorkerController(WorkerTypes workerType);
     ~XyzWorkerController();
-    void startOperating(QList<xyzCircuitData> dataList);
+    Q_INVOKABLE void startOperating(QList<xyzCircuitData> dataList);
 public slots:
-    void slotHandleResults(xyz result);
+    void slotHandleResults(xyzAnalysisResult result);
 signals:
-    void signalOperate(QList<xyzCircuitData> dataList);
+    void signalResultReady(xyzAnalysisResult analysis);
 };
 
 #endif // XYZWORKERCONTROLLER_H

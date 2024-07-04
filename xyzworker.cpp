@@ -2,7 +2,7 @@
 
 XyzWorker::XyzWorker() {}
 
-void XyzWorker::slotdoWork(QList<xyzCircuitData> data)
+void XyzWorker::slotDoWork(QList<xyzCircuitData> data)
 {
     qDebug() << "USING AN ABSTRACT CLASS";
 }

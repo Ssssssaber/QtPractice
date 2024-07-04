@@ -10,24 +10,35 @@ class Server : public QWidget
 {
     Q_OBJECT
 private:
-    QTextEdit* receivedDataText;
-    QTextEdit* sentDataText;
-    QQueue<xyzCircuitData> circuitDataQueue;
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
-    QUdpSocket* circuitDataSocket;
-    QTcpServer* userActionsServer;
-    void sendToClient(QTcpSocket* socket, const QString);
+    // DataReceiver *dataReceiver;
+    int udpPort;
+    QUdpSocket* udpSocket;
+    QTextEdit* receivedDataText;
+    QTextEdit* sentDataText;
+    QQueue<xyzCircuitData> dataToSendQueue;
+    QQueue<QString> stringsToSendQueue;
+
+    int tcpPort;
+    bool clientConnected = false;
+    QTcpServer* tcpServer;
+    QTextEdit *clientResponseText;
+    quint16 nextBlockSize;
+    void sendToClient(QTcpSocket* socket, const QString &str);
+    bool processClientResponse(QString messageType, QString message);
 public:
     Server(int tcpPort, int udpPort, QWidget* pwgt = 0);
 
 public slots:
     void slotStringReceived(QString string);
-    void slotClientConnected();
+    void slotNewConnection();
     void slotReadClient();
     void slotDataToSendAdded(xyzCircuitData data);
-    // void slotWindowSizeChanged(int newSize);
+    void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
     void slotSendDatagram();
+signals:
+    void signalWindowSizeChanged(int newSize);
 };
 
 // #endif // UDPSERVER_H

@@ -10,17 +10,23 @@ class DataAnalyzer : public QObject
 {
     Q_OBJECT
 private:
-    int windowSize = 2;
+    int windowSize = 10;
     DataProcessor *dataProcessor;
     XyzWorkerController *windowWorkerController;
     QList<xyzCircuitData> aData;
     QList<xyzCircuitData> gData;
     QList<xyzCircuitData> mData;
-    void AddDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
+    void addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
+    QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
 public:
     DataAnalyzer(DataProcessor *dataProcessor = 0);
 public slots:
     void slotInfoReceived(xyzCircuitData data);
+    void slotWindowSizeChanged(int newSize);
+private slots:
+    void slotResultReceived(xyzAnalysisResult analysis);
+signals:
+    void signalAnalysisReady(xyzAnalysisResult analysis);
 };
 
 #endif // DATAANALYZER_H

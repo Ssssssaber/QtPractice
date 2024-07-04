@@ -19,28 +19,21 @@ private:
     const long timeConstant = 10000000.0f;
     QTimer *readTimer;
 
+    QFile *file;
+    QTimer* readTimer;
+
     int lastReceivedId = 0;
-
-
-
     QMap<QString, int> dataMap;
-    // QList<xyzCircuitData> aData;
-    // QList<xyzCircuitData> gData;
-    // QList<xyzCircuitData> mData;
 
     void processLine(QString line);
     xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
     void readData();
 
-    // void checkCanAnalyze(QList<xyzCircuitData> dataList);
-    // QList<xyzCircuitData> createWindowDataSlice(QList<xyzCircuitData> dataList);
-
 public:
     DataProcessor();
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(QString);
-    // void changeWindowSize(int newSize);
-
+    void readLine();
 private slots:
     void slotOnPackageLoss(QString message);
 
@@ -48,8 +41,6 @@ public slots:
     void slotDataFromDataReceiver(QString data);
 
 signals:
-    // void signalWindowSizeChanged(int newSize);
-    // void signalWindowAnalysisStart(QList<xyzCircuitData>);
     void signalLossDetected(QString data);
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
