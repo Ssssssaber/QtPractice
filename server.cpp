@@ -54,7 +54,11 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
+    connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
     // connect(this, )
+
+    //dataReceiver = new DataReceiver();
+    // connect(dataReceiver, &DataReceiver::signalDataReceived, dataProcessor, &DataProcessor::slotProcessLine);
 
     // DISABLE WHEN NOT DEBUGGING
     dataProcessor->readDataFromTestFile();
@@ -72,10 +76,12 @@ void Server::slotSendDatagram()
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
-    if (dataToSendQueue.isEmpty() || !clientConnected) return;
-    xyzCircuitData data = dataToSendQueue.dequeue();
-    sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
-    out << dt << data.toString();
+    // if (dataToSendQueue.isEmpty() || !clientConnected) return;
+    // xyzCircuitData data = dataToSendQueue.dequeue();
+    if (stringsToSendQueue.isEmpty() | !clientConnected) return;
+    QString data = stringsToSendQueue.dequeue();
+    sentDataText->append("Sent: " + dt.toString() + "\n" + data);
+    out << dt << data;
     udpSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
 }
 
@@ -138,6 +144,16 @@ void Server::slotReadClient()
     }
 }
 
+void Server::slotDataToSendAdded(xyzCircuitData data)
+{
+    stringsToSendQueue.enqueue(data.toString());
+}
+
+void Server::slotAnalysisToSendAdded(xyzAnalysisResult analysis)
+{
+    stringsToSendQueue.enqueue(analysis.toString());
+}
+
 void Server::sendToClient(QTcpSocket *socket, const QString& str)
 {
     QByteArray arrBlock;
@@ -167,7 +183,3 @@ bool Server::processClientResponse(QString messageType, QString message)
 }
 
 
-void Server::slotDataToSendAdded(xyzCircuitData data)
-{
-    dataToSendQueue.enqueue(data);
-}

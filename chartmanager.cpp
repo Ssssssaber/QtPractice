@@ -7,6 +7,7 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     chartG = new ChartWidget();
     chartM = new ChartWidget();
 
+
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(chartA, 0, 0, 5, 5);
     boxLayout->addWidget(chartG, 0, 5, 5, 5);

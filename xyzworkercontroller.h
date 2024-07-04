@@ -15,7 +15,7 @@ public:
 public slots:
     void slotHandleResults(xyzAnalysisResult result);
 signals:
-    void signalResultReady(QString resultString);
+    void signalResultReady(xyzAnalysisResult analysis);
 };
 
 #endif // XYZWORKERCONTROLLER_H

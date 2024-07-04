@@ -82,6 +82,7 @@ void Client::parseStringData(QString stringData)
         analysis.x = tokens[3].toInt();
         analysis.y = tokens[4].toInt();
         analysis.z = tokens[5].toInt();
+        emit signalReceivedAnalysis(analysis);
     }
 
 }

@@ -7,6 +7,7 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
     this->dataProcessor = dataProcessor;
     windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &DataAnalyzer::slotInfoReceived);
+    connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataAnalyzer::slotResultReceived);
 }
 
 void DataAnalyzer::slotInfoReceived(xyzCircuitData data)
@@ -34,13 +35,18 @@ void DataAnalyzer::slotWindowSizeChanged(int newSize)
     windowSize = newSize;
 }
 
+void DataAnalyzer::slotResultReceived(xyzAnalysisResult analysis)
+{
+    emit signalAnalysisReady(analysis);
+}
+
 void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData)
 {
     dataList->append(newData);
-    if (dataList->length() > windowSize)
-    {
+    // if (dataList->length() > windowSize)
+    // {
         windowWorkerController->startOperating(createListSlice(dataList->toList(), windowSize));
-    }
+    // }
 
 }
 
