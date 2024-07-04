@@ -81,9 +81,9 @@ void Client::parseStringData(QString stringData)
         xyzAnalysisResult analysis;
         analysis.method = tokens[1];
         analysis.group = tokens[2];
-        analysis.x = tokens[3].toInt();
-        analysis.y = tokens[4].toInt();
-        analysis.z = tokens[5].toInt();
+        analysis.x = tokens[3].toFloat();
+        analysis.y = tokens[4].toFloat();
+        analysis.z = tokens[5].toFloat();
         emit signalReceivedAnalysis(analysis);
     }
 
