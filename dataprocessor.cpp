@@ -1,10 +1,6 @@
 #include "dataprocessor.h"
 #include <QApplication>
 #include <QDir>
-#include <QtEndian>
-
-
-
 
 DataProcessor::DataProcessor()
 {
@@ -12,10 +8,17 @@ DataProcessor::DataProcessor()
     dataMap["G"] = 2;
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
+
+    connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
+    readTimer = new QTimer(this);
+    readTimer->setSingleShot(false);
+    readTimer->setInterval(1050);
+    connect(readTimer, &QTimer::timeout, this, &DataProcessor::readLine);
 }
 
 void DataProcessor::readDataFromTestFile()
 {
+
     QString appPath = QDir().absolutePath();
     qInfo() << appPath;
 
@@ -29,24 +32,26 @@ void DataProcessor::readDataFromTestFile()
 
     qInfo() << dir.path();
     auto keke = dir.path() + "/circuit_data/all_data.txt";
-    QFile file(keke);
+    file = new QFile(keke);
+    if (!file->open(QIODevice::ReadOnly)) return;
 
-    if (!file.open(QIODevice::ReadOnly)) return;
+    QString line = file->readLine().simplified();
+    processLine(line);
 
-    QString line = file.readLine().simplified();
-    while (file.canReadLine()) {
-        // QByteArray line = file.readLine().simplified();
-        // QList<QByteArray> tokens = line.split(' ');
+
+    readTimer->start();
+}
+
+void DataProcessor::readLine()
+{
+    if (file->canReadLine())
+    {
+        QString line = file->readLine().simplified();
         if (line != "")
         {
             processLine(line);
-            line = file.readLine();
         }
     }
-
-    qDebug() << &aData << "\n";
-    qDebug() << &gData << "\n";
-    qDebug() << &mData << "\n";
 }
 
 void DataProcessor::processLine(QString line)
@@ -59,27 +64,25 @@ void DataProcessor::processLine(QString line)
     QString dataSource = tokens.data()[0];
     switch (dataMap[dataSource]) {
     case 1:
-        aData.append(stringDataToStruct(tokens, aConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
         break;
     case 2:
-        gData.append(stringDataToStruct(tokens, gConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
         break;
     case 3:
-        mData.append(stringDataToStruct(tokens, mConstant));
+        emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
         break;
     case 4:
         break;
     default:
         break;
     }
-    // QObject::dumpObjectInfo();
-
-    // server->slotDataAdded(processedLine);
 }
 
 
 xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
 {
+
     xyzCircuitData data;
     data.group = tokens[0];
     data.id = tokens[1].toInt();
@@ -87,6 +90,22 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     data.y = tokens[3].toInt() * transitionConst;
     data.z = tokens[4].toInt() * transitionConst;
     data.timestamp = (tokens[5].toLong() / timeConstant);
-    emit signalLineProcessed(data);
+    if (lastReceivedId + 1 == data.id)
+    {
+        QString message =  QString("no packages lost");
+        emit signalLossDetected(message);
+    }
+    else
+    {
+        QString message =  QString("packages from %1 to %2 were lost").arg(lastReceivedId).arg(data.id);
+        emit signalLossDetected(message);
+    }
+    lastReceivedId = data.id;
+
     return data;
+}
+
+void DataProcessor::slotOnPackageLoss(QString message)
+{
+    qDebug() << message;
 }

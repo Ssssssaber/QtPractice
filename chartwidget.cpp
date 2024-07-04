@@ -24,12 +24,15 @@ ChartWidget::ChartWidget(QWidget* pwgt) : QWidget(pwgt)
     cViewY->chart()->createDefaultAxes();
     cViewZ->chart()->createDefaultAxes();
 
+
     hlayout->addWidget(cViewX); // adding widget
     hlayout->addWidget(cViewY);
     hlayout->addWidget(cViewZ);
     hlayout->addItem(new QSpacerItem(0,0,QSizePolicy::Expanding, QSizePolicy::Fixed)); // adding spacer for style
 
+
     setLayout(hlayout);
+
 }
 
 void ChartWidget::slotAddData(xyzCircuitData data)
