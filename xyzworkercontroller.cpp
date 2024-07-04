@@ -38,5 +38,5 @@ void XyzWorkerController::startOperating(QList<xyzCircuitData> dataList)
 void XyzWorkerController::slotHandleResults(xyzAnalysisResult result)
 {
     qDebug() << result.toString();
-    emit signalResultReady(result.toString());
+    emit signalResultReady(result);
 }

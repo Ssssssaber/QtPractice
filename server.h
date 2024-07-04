@@ -12,12 +12,13 @@ class Server : public QWidget
 private:
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
-
+    // DataReceiver *dataReceiver;
     int udpPort;
     QUdpSocket* udpSocket;
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
     QQueue<xyzCircuitData> dataToSendQueue;
+    QQueue<QString> stringsToSendQueue;
 
     int tcpPort;
     bool clientConnected = false;
@@ -34,6 +35,7 @@ public slots:
     void slotNewConnection();
     void slotReadClient();
     void slotDataToSendAdded(xyzCircuitData data);
+    void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
     void slotSendDatagram();
 signals:
     void signalWindowSizeChanged(int newSize);

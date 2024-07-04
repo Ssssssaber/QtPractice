@@ -23,6 +23,10 @@ public:
 public slots:
     void slotInfoReceived(xyzCircuitData data);
     void slotWindowSizeChanged(int newSize);
+private slots:
+    void slotResultReceived(xyzAnalysisResult analysis);
+signals:
+    void signalAnalysisReady(xyzAnalysisResult analysis);
 };
 
 #endif // DATAANALYZER_H
