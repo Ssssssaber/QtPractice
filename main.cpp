@@ -1,6 +1,7 @@
 #include <QApplication>
 #include "client.h"
 #include "server.h"
+#include "circuitdatareceiver.h"
 
 #include <QtCharts/QChartView> // to display charts
 #include <QtCharts/QLegend> // to add legend to charts
@@ -18,8 +19,6 @@ int main(int argc, char *argv[])
 
     Client client = Client("localhost", 2323, 2424);
     client.show();
-
-
 
     return a.exec();
 }
