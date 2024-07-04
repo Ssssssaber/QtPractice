@@ -1,5 +1,4 @@
 #include "chartmanager.h"
-#include "qgridlayout.h"
 
 ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 {
@@ -8,11 +7,11 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     chartM = new ChartWidget();
 
 
-    QGridLayout* boxLayout = new QGridLayout;
-    boxLayout->addWidget(chartA, 0, 0, 5, 5);
-    boxLayout->addWidget(chartG, 0, 5, 5, 5);
-    boxLayout->addWidget(chartM, 0, 11, 5, 5);
-    setLayout(boxLayout);
+    QVBoxLayout* vlayout = new QVBoxLayout();
+    vlayout->addWidget(chartA);
+    vlayout->addWidget(chartG);
+    vlayout->addWidget(chartM);
+    setLayout(vlayout);
 
 
     connect(this, &ChartManager::signalAData, chartA, &ChartWidget::slotAddData);
