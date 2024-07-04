@@ -40,7 +40,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt)
     dataAnalyzer = new DataAnalyzer(dataProcessor);
 
     // DISABLE WHEN NOT DEBUGGING
-    dataProcessor->readDataFromTestFile();
+    //dataProcessor->readDataFromTestFile();
 
     QTimer* ptimer = new QTimer(this);
     ptimer->setInterval(150);

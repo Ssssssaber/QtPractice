@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(QtPractice VERSION 0.1 LANGUAGES CXX)
+project(QtPractice VERSION 0.1 LANGUAGES C CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -33,6 +33,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         xyzworker.h xyzworker.cpp
 
         xyzworkercontroller.h xyzworkercontroller.cpp
+        nii_test.cpp
+        nii_test.h
+        cmake/FindLibUdev.cmake cmake/FindUSB1.cmake
+        circuitdatareceiver.cpp
+        circuitdatareceiver.h
+        test.h test.cpp
 
 
     )
@@ -109,3 +115,27 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
 # adding charts
 find_package(Qt6 REQUIRED COMPONENTS Charts)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Charts)
+
+# adding libusb components
+SET(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+
+find_package(Threads REQUIRED)
+find_package(USB1 REQUIRED)
+find_package(LibUdev)
+
+target_include_directories( ${PROJECT_NAME}
+                            PUBLIC ${LIBUSB_INCLUDE_DIR}
+                            PRIVATE . ${NII_INCLUDE_DIR} )
+
+target_link_libraries( ${PROJECT_NAME}
+                       PRIVATE
+                           nii
+                       PUBLIC
+                           ${LIBUSB_LIBRARIES}
+                           ${LIBUDEV_LIBRARIES}
+                           pthread rt )

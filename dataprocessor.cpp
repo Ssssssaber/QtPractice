@@ -2,6 +2,8 @@
 #include <QApplication>
 #include <QDir>
 
+QQueue<QString> DataProcessor::dataQueue;
+
 DataProcessor::DataProcessor()
 {
     dataMap["A"] = 1;
@@ -9,7 +11,16 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
+    CircuitDataReceiver *cdr = new CircuitDataReceiver();
+
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
+
+    readTimer = new QTimer(this);
+    readTimer->setSingleShot(false);
+    readTimer->setInterval(0);
+    connect(readTimer, &QTimer::timeout, this, &DataProcessor::readData);
+
+    readTimer->start();
 }
 
 void DataProcessor::readDataFromTestFile()
@@ -111,4 +122,21 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
 void DataProcessor::slotOnPackageLoss(QString message)
 {
     qDebug() << message;
+}
+
+void DataProcessor::slotDataFromDataReceiver(QString data)
+{
+    processLine(data);
+}
+
+void DataProcessor::receiveDataFromDataReceiver(QString data)
+{
+    dataQueue.enqueue(data);
+}
+
+void DataProcessor::readData()
+{
+    if(DataProcessor::dataQueue.isEmpty())
+        return;
+    processLine(DataProcessor::dataQueue.dequeue());
 }

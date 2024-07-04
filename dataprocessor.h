@@ -6,15 +6,18 @@
 #include <QFile>
 #include <QDebug>
 #include "xyzcircuitdata.h"
+#include "circuitdatareceiver.h"
 class DataProcessor : public QObject
 {
     Q_OBJECT
 
 private:
+    static QQueue<QString> dataQueue;
     const float aConstant = 9.81f;
     const float gConstant = 1.0f;
     const float mConstant = 1.0f;
     const long timeConstant = 10000000.0f;
+    QTimer *readTimer;
 
     int lastReceivedId = 0;
 
@@ -27,6 +30,7 @@ private:
 
     void processLine(QString line);
     xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
+    void readData();
 
     // void checkCanAnalyze(QList<xyzCircuitData> dataList);
     // QList<xyzCircuitData> createWindowDataSlice(QList<xyzCircuitData> dataList);
@@ -34,10 +38,14 @@ private:
 public:
     DataProcessor();
     void readDataFromTestFile();
+    static void receiveDataFromDataReceiver(QString);
     // void changeWindowSize(int newSize);
 
 private slots:
     void slotOnPackageLoss(QString message);
+
+public slots:
+    void slotDataFromDataReceiver(QString data);
 
 signals:
     // void signalWindowSizeChanged(int newSize);
