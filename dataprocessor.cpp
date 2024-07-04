@@ -23,10 +23,10 @@ DataProcessor::DataProcessor()
 
     readTimer->start();
 
-    readTimer = new QTimer(this);
-    readTimer->setSingleShot(false);
-    readTimer->setInterval(0);
-    connect(readTimer, &QTimer::timeout, this, &DataProcessor::readLine);
+    fileTimer = new QTimer(this);
+    fileTimer->setSingleShot(false);
+    fileTimer->setInterval(0);
+    connect(fileTimer, &QTimer::timeout, this, &DataProcessor::readLine);
 
 }
 
@@ -53,7 +53,7 @@ void DataProcessor::readDataFromTestFile()
     processLine(line);
 
 
-    readTimer->start();
+    fileTimer->start();
 }
 
 void DataProcessor::readLine()

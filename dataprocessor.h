@@ -20,7 +20,7 @@ private:
     QTimer *readTimer;
 
     QFile *file;
-    QTimer* readTimer;
+    QTimer* fileTimer;
 
     int lastReceivedId = 0;
     QMap<QString, int> dataMap;
