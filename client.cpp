@@ -30,6 +30,8 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     receivedCircuitData->setReadOnly(true);
     chartManager = new ChartManager();
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
+    connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
+
 
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(receivedCircuitData, 9, 0, 2, 5);
@@ -79,9 +81,9 @@ void Client::parseStringData(QString stringData)
         xyzAnalysisResult analysis;
         analysis.method = tokens[1];
         analysis.group = tokens[2];
-        analysis.x = tokens[3].toInt();
-        analysis.y = tokens[4].toInt();
-        analysis.z = tokens[5].toInt();
+        analysis.x = tokens[3].toFloat();
+        analysis.y = tokens[4].toFloat();
+        analysis.z = tokens[5].toFloat();
         emit signalReceivedAnalysis(analysis);
     }
 
