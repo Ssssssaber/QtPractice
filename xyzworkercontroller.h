@@ -6,8 +6,15 @@
 class XyzWorkerController : public QObject
 {
     Q_OBJECT
-    XyzWorker* worker;
-    QThread workerThread;
+    // XyzWorker* worker;
+    XyzWorker* aWorker;
+    XyzWorker* gWorker;
+    XyzWorker* mWorker;
+
+    // QThread workerThread;
+    QThread aWorkerThread;
+    QThread gWorkerThread;
+    QThread mWorkerThread;
 public:
     XyzWorkerController(WorkerTypes workerType);
     ~XyzWorkerController();

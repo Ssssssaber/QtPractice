@@ -12,7 +12,7 @@ DataProcessor::DataProcessor()
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
     readTimer = new QTimer(this);
     readTimer->setSingleShot(false);
-    readTimer->setInterval(1050);
+    readTimer->setInterval(0);
     connect(readTimer, &QTimer::timeout, this, &DataProcessor::readLine);
 }
 
