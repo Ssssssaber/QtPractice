@@ -2,35 +2,48 @@
 
 ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 {
-    chartA = new ChartWidget();
-    chartG = new ChartWidget();
-    chartM = new ChartWidget();
+    chartA = new ChartWidget("A");
+    chartG = new ChartWidget("G");
+    chartM = new ChartWidget("M");
 
 
     QVBoxLayout* vlayout = new QVBoxLayout();
     vlayout->addWidget(chartA);
     vlayout->addWidget(chartG);
     vlayout->addWidget(chartM);
+    vlayout->setSpacing(0);
     setLayout(vlayout);
-
-
-    connect(this, &ChartManager::signalAData, chartA, &ChartWidget::slotAddData);
-    connect(this, &ChartManager::signalGData, chartG, &ChartWidget::slotAddData);
-    connect(this, &ChartManager::signalMData, chartM, &ChartWidget::slotAddData);
 }
 
 void ChartManager::slotDataReceived(xyzCircuitData data)
 {
     if (data.group == "A")
     {
-        emit signalAData(data);
+        chartA->setChartData(data);
     }
     if (data.group == "G")
     {
-        emit signalGData(data);
+        chartG->setChartData(data);
     }
     if (data.group == "M")
     {
-        emit signalMData(data);
+        chartM->setChartData(data);
     }
 }
+
+void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
+{
+    if (data.group == "A")
+    {
+        chartA->setWindowResult(data);
+    }
+    if (data.group == "G")
+    {
+        chartG->setWindowResult(data);
+    }
+    if (data.group == "M")
+    {
+        chartM->setWindowResult(data);
+    }
+}
+

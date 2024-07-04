@@ -19,10 +19,10 @@ public:
 
 public slots:
     void slotDataReceived(xyzCircuitData);
+    void slotAnalysisRecived(xyzAnalysisResult);
+
 signals:
-    void signalAData(xyzCircuitData);
-    void signalGData(xyzCircuitData);
-    void signalMData(xyzCircuitData);
+
 };
 
 #endif // CHARTMANAGER_H

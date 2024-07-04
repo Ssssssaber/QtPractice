@@ -30,6 +30,8 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     receivedCircuitData->setReadOnly(true);
     chartManager = new ChartManager();
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
+    connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
+
 
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(receivedCircuitData, 9, 0, 2, 5);
