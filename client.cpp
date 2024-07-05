@@ -180,7 +180,13 @@ void Client::slotServerToggleWindow()
 void Client::slotServerChangeTimeToCleanup()
 {
     // change cleanup time
-    sendToTcpServer("change cleanup time", timeToClearInput->text());
+    int newTime = timeToClearInput->text().toInt();
+    if (newTime >= 10 && newTime <= 60)
+    {
+        chartManager->changeDataLifeSpan(newTime);
+        sendToTcpServer("change cleanup time", timeToClearInput->text());
+    }
+
 }
 
 void Client::slotConnected()

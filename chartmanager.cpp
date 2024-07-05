@@ -21,6 +21,11 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     cleanupTimer->start();
 }
 
+void ChartManager::changeDataLifeSpan(int newTime)
+{
+    dataLifespanInSeconds = newTime;
+}
+
 void ChartManager::slotDataReceived(xyzCircuitData data)
 {
     if (data.group == "A")
