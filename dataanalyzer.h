@@ -16,6 +16,13 @@ private:
     QList<xyzCircuitData> aData;
     QList<xyzCircuitData> gData;
     QList<xyzCircuitData> mData;
+
+    int dataLifespanInSeconds = 10;
+    int timeToTimeout = 5000; // miliseconds
+    QTimer *cleanupTimer;
+    void cleanup();
+    void cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds);
+
     void addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
     QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
 public:

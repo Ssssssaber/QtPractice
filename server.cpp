@@ -61,7 +61,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     // connect(dataReceiver, &DataReceiver::signalDataReceived, dataProcessor, &DataProcessor::slotProcessLine);
 
     // DISABLE WHEN NOT DEBUGGING
-    //dataProcessor->readDataFromTestFile();
+    // dataProcessor->readDataFromTestFile();
 
     udpSocket = new QUdpSocket(this);
     QTimer* ptimer = new QTimer(this);
