@@ -42,6 +42,24 @@ void DataAnalyzer::slotWindowSizeChanged(int newSize)
     windowSize = newSize;
 }
 
+void DataAnalyzer::slotTimeToCleanChanged(int newTime)
+{
+    dataLifespanInSeconds = newTime;
+}
+
+void DataAnalyzer::slotAnalysisToggled(QString analysisType)
+{
+    if (analysisType == "window")
+    {
+        windowWorkerController->isEnabled = !windowWorkerController->isEnabled;
+    }
+    // else (analysisType = "")
+    else
+    {
+        qDebug() << "method not Implemented";
+    }
+}
+
 void DataAnalyzer::slotResultReceived(xyzAnalysisResult analysis)
 {
     emit signalAnalysisReady(analysis);
@@ -72,6 +90,7 @@ void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyz
     dataList->append(newData);
     // if (dataList->length() > windowSize)
     // {
+    if (windowWorkerController->isEnabled)
         windowWorkerController->startOperating(createListSlice(dataList->toList(), windowSize));
     // }
 

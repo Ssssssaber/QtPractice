@@ -19,8 +19,10 @@ private:
     QTcpSocket* tcpSocket;
     quint16 nextBlockSize;
     QLineEdit *windowInput;
+    QLineEdit *timeToClearInput;
     QTextEdit *serverResponseText;
     void parseStringData(QString stringData);
+    void sendToTcpServer(QString messageType, QString message);
     // void parseReceivedData(QList<QString> stringData);
     // void parseReceivedAnalysis(QList<QString> stringData);
 
@@ -31,7 +33,9 @@ private slots:
     void slotProcessDatagrams();
     void slotReadyRead();
     void slotError(QAbstractSocket::SocketError error);
-    void slotSendToServer();
+    void slotServerChangeWindowSize();
+    void slotServerToggleWindow();
+    void slotServerChangeTimeToCleanup();
     void slotConnected();
 
 signals:

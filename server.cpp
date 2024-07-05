@@ -54,11 +54,9 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
+    connect(this, &Server::signalTimeToClearChanged, dataAnalyzer, &DataAnalyzer::slotTimeToCleanChanged);
+    connect(this, &Server::signalAnalysisToggle, dataAnalyzer, &DataAnalyzer::slotAnalysisToggled);
     connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
-    // connect(this, )
-
-    //dataReceiver = new DataReceiver();
-    // connect(dataReceiver, &DataReceiver::signalDataReceived, dataProcessor, &DataProcessor::slotProcessLine);
 
     // DISABLE WHEN NOT DEBUGGING
     // dataProcessor->readDataFromTestFile();
@@ -177,6 +175,24 @@ bool Server::processClientResponse(QString messageType, QString message)
         if (result)
         {
             emit signalWindowSizeChanged(newSize);
+        }
+    }
+    else if (messageType == "change cleanup time")
+    {
+        int newTime = message.toInt();
+        result = newTime >= 10 && newTime <= 60;
+        if (result)
+        {
+            emit signalTimeToClearChanged(newTime);
+        }
+    }
+    else if (messageType == "toggle analysis")
+    {
+        QString analysisType = message;
+        result = analysisType == "window"; // || analysisType == "filter";
+        if (result)
+        {
+            emit signalAnalysisToggle(message);
         }
     }
     return result;
