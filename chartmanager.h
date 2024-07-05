@@ -14,6 +14,12 @@ private:
     ChartWidget* chartG;
     ChartWidget* chartM;
 
+    int dataLifespanInSeconds = 10;
+    int timeToTimeout = 1000; // miliseconds
+    QTimer *cleanupTimer; // cleaner timer
+    void cleanup(); // clean all
+    void cleanSeriesList(QList<QPoint>* dataToClean, int timeInSeconds); // clean Series
+
 public:
     ChartManager(QWidget* pwgt = 0);
 

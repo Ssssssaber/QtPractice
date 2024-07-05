@@ -6,6 +6,9 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     chartG = new ChartWidget("G");
     chartM = new ChartWidget("M");
 
+    cleanupTimer = new QTimer(this);
+    cleanupTimer->setSingleShot(false);
+    cleanupTimer->setInterval(timeToTimeout);
 
     QVBoxLayout* vlayout = new QVBoxLayout();
     vlayout->addWidget(chartA);
@@ -13,6 +16,9 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     vlayout->addWidget(chartM);
     vlayout->setSpacing(0);
     setLayout(vlayout);
+
+    connect(cleanupTimer, &QTimer::timeout, this, &ChartManager::cleanup);
+    cleanupTimer->start();
 }
 
 void ChartManager::slotDataReceived(xyzCircuitData data)
@@ -47,3 +53,9 @@ void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
     }
 }
 
+void ChartManager::cleanup()
+{
+    chartA->cleanAllSeries(dataLifespanInSeconds);
+    chartG->cleanAllSeries(dataLifespanInSeconds);
+    chartM->cleanAllSeries(dataLifespanInSeconds);
+}
