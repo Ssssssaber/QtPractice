@@ -100,3 +100,32 @@ void ChartWidget::setChartData(xyzCircuitData data)
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
     cViewZ->chart()->addSeries(serZ);
 }
+
+void ChartWidget::cleanAllSeries(int timeInSeconds)
+{
+    cViewX->chart()->removeSeries(serX); // removing series from view
+    cViewY->chart()->removeSeries(serY);
+    cViewZ->chart()->removeSeries(serZ);
+
+    cleanSeries(serX, timeInSeconds); // clean first points (no relatable)
+    cleanSeries(serY, timeInSeconds);
+    cleanSeries(serZ, timeInSeconds);
+
+    cViewX->chart()->addSeries(serX); // restoring series
+    cViewY->chart()->addSeries(serY);
+    cViewZ->chart()->addSeries(serZ);
+}
+
+void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
+{
+    QList<QPointF> data = datasource->points();
+    int initial = data.length();
+    foreach(QPointF point, data.toList()){
+        if (data.last().x() - point.x() <= timeInSeconds)
+            break;
+        data.pop_front();
+    }
+    qDebug() << " before and after " << initial << data.length();
+    datasource->clear();
+    datasource->append(data);
+}
