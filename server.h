@@ -39,6 +39,8 @@ public slots:
     void slotSendDatagram();
 signals:
     void signalWindowSizeChanged(int newSize);
+    void signalTimeToClearChanged(int newTime);
+    void signalAnalysisToggle(QString analysisType);
 };
 
 // #endif // UDPSERVER_H

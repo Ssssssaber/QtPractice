@@ -30,6 +30,8 @@ public:
 public slots:
     void slotInfoReceived(xyzCircuitData data);
     void slotWindowSizeChanged(int newSize);
+    void slotTimeToCleanChanged(int newTime);
+    void slotAnalysisToggled(QString analysisType);
 private slots:
     void slotResultReceived(xyzAnalysisResult analysis);
 signals:

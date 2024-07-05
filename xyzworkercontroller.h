@@ -6,6 +6,8 @@
 class XyzWorkerController : public QObject
 {
     Q_OBJECT
+
+
     // XyzWorker* worker;
     XyzWorker* aWorker;
     XyzWorker* gWorker;
@@ -19,6 +21,8 @@ public:
     XyzWorkerController(WorkerTypes workerType);
     ~XyzWorkerController();
     Q_INVOKABLE void startOperating(QList<xyzCircuitData> dataList);
+    bool isEnabled = true;
+
 public slots:
     void slotHandleResults(xyzAnalysisResult result);
 signals:
