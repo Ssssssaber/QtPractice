@@ -99,7 +99,7 @@ void Client::parseStringData(QString stringData)
         data.x = tokens[3].toInt();
         data.y = tokens[4].toInt();
         data.z = tokens[5].toInt();
-        data.timestamp = tokens[6].toLong();
+        data.timestamp = tokens[6].toFloat();
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
