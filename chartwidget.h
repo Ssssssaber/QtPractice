@@ -38,10 +38,13 @@ private:
         int zmin;
     } axisrn;
 
+    void cleanSeries(QLineSeries* data, int timeInSeconds);
+
 public:
     ChartWidget(const QString title = "", QWidget* pwgt = 0);
     void setWindowResult(xyzAnalysisResult);
     void setChartData(xyzCircuitData);
+    void cleanAllSeries(int timeInSeconds);
 public slots:
 
 };
