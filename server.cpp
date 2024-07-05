@@ -1,11 +1,14 @@
 #include "server.h"
+#include "P7_Trace.h"
 #include <QTcpSocket>
 
 
 
 Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
+
     setWindowTitle("UdpServer");
+
 
     this->tcpPort = tcpPort;
     this->udpPort = udpPort;
@@ -66,6 +69,10 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     ptimer->setInterval(0);
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
     ptimer->start();
+
+    p7Client = P7_Get_Shared("MyChannel");
+    IP7_Trace *p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
+    p7Trace->P7_TRACE(0, TM("Server started"));
 }
 
 void Server::slotSendDatagram()

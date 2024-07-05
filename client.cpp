@@ -1,4 +1,5 @@
 #include "client.h"
+#include "P7_Trace.h"
 
 
 Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
@@ -62,6 +63,10 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     boxLayout->addWidget(timeToClearChangeButton, 12, 10, 1, 2);
 
     setLayout(boxLayout);
+
+    p7Client = P7_Get_Shared("MyChannel");
+    IP7_Trace *p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
+    p7Trace->P7_TRACE(0, TM("Server started"));
 }
 
 void Client::slotProcessDatagrams()
