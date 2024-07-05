@@ -16,13 +16,13 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     serY = new QLineSeries();
     serZ = new QLineSeries();
 
-    // serX->setName("X-axis"); // setting the names
-    // serY->setName("Y-axis");
-    // serZ->setName("Z-axis");
-
     cViewX = new QChartView(); // creating chart-views
     cViewY = new QChartView();
     cViewZ = new QChartView();
+
+    cViewX->chart()->legend()->hide();
+    cViewY->chart()->legend()->hide();
+    cViewZ->chart()->legend()->hide();
 
     resX = new QLabel("Windowing result: None");
     resY = new QLabel("Windowing result: None");
