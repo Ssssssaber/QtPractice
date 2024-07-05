@@ -74,6 +74,8 @@ void DataAnalyzer::cleanup()
 
 void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds)
 {
+    if (dataToClean->isEmpty()) return;
+
     int initial = dataToClean->length();
     foreach (xyzCircuitData data, dataToClean->toList())
     {
