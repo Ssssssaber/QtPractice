@@ -27,13 +27,17 @@ void ChartManager::slotDataReceived(xyzCircuitData data)
     {
         chartA->setChartData(data);
     }
-    if (data.group == "G")
+    else if (data.group == "G")
     {
         chartG->setChartData(data);
     }
-    if (data.group == "M")
+    else if (data.group == "M")
     {
         chartM->setChartData(data);
+    }
+    else
+    {
+        qDebug() << "Wrong data received by chart";
     }
 }
 
@@ -43,13 +47,17 @@ void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
     {
         chartA->setWindowResult(data);
     }
-    if (data.group == "G")
+    else if (data.group == "G")
     {
         chartG->setWindowResult(data);
     }
-    if (data.group == "M")
+    else if (data.group == "M")
     {
         chartM->setWindowResult(data);
+    }
+    else
+    {
+        qDebug() << "Wrong data received by chart";
     }
 }
 

@@ -16,6 +16,13 @@ private:
     QList<xyzCircuitData> aData;
     QList<xyzCircuitData> gData;
     QList<xyzCircuitData> mData;
+
+    int dataLifespanInSeconds = 10;
+    int timeToTimeout = 5000; // miliseconds
+    QTimer *cleanupTimer;
+    void cleanup();
+    void cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds);
+
     void addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
     QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
 public:
@@ -23,6 +30,8 @@ public:
 public slots:
     void slotInfoReceived(xyzCircuitData data);
     void slotWindowSizeChanged(int newSize);
+    void slotTimeToCleanChanged(int newTime);
+    void slotAnalysisToggled(QString analysisType);
 private slots:
     void slotResultReceived(xyzAnalysisResult analysis);
 signals:

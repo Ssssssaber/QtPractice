@@ -8,6 +8,13 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
     windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &DataAnalyzer::slotInfoReceived);
     connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataAnalyzer::slotResultReceived);
+
+    cleanupTimer = new QTimer(this);
+    cleanupTimer->setSingleShot(false);
+    cleanupTimer->setInterval(timeToTimeout);
+    connect(cleanupTimer, &QTimer::timeout, this, &DataAnalyzer::cleanup);
+
+    cleanupTimer->start();
 }
 
 void DataAnalyzer::slotInfoReceived(xyzCircuitData data)
@@ -35,9 +42,49 @@ void DataAnalyzer::slotWindowSizeChanged(int newSize)
     windowSize = newSize;
 }
 
+void DataAnalyzer::slotTimeToCleanChanged(int newTime)
+{
+    dataLifespanInSeconds = newTime;
+}
+
+void DataAnalyzer::slotAnalysisToggled(QString analysisType)
+{
+    if (analysisType == "window")
+    {
+        windowWorkerController->isEnabled = !windowWorkerController->isEnabled;
+    }
+    // else (analysisType = "")
+    else
+    {
+        qDebug() << "method not Implemented";
+    }
+}
+
 void DataAnalyzer::slotResultReceived(xyzAnalysisResult analysis)
 {
     emit signalAnalysisReady(analysis);
+}
+
+void DataAnalyzer::cleanup()
+{
+    cleanDataListToTime(&aData, dataLifespanInSeconds);
+    cleanDataListToTime(&gData, dataLifespanInSeconds);
+    cleanDataListToTime(&mData, dataLifespanInSeconds);
+}
+
+void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds)
+{
+    if (dataToClean->isEmpty()) return;
+
+    int initial = dataToClean->length();
+    foreach (xyzCircuitData data, dataToClean->toList())
+    {
+        if (dataToClean->last().timestamp - data.timestamp <= timeInSeconds)
+            break;
+        dataToClean->pop_back();
+    }
+
+    qDebug() << " before and after " << initial << dataToClean->length();
 }
 
 void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData)
@@ -45,6 +92,7 @@ void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyz
     dataList->append(newData);
     // if (dataList->length() > windowSize)
     // {
+    if (windowWorkerController->isEnabled)
         windowWorkerController->startOperating(createListSlice(dataList->toList(), windowSize));
     // }
 

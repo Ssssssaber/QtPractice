@@ -1,4 +1,5 @@
 #include "client.h"
+#include "P7_Trace.h"
 
 
 Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
@@ -18,12 +19,7 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     udpSocket->bind(udpPort);
     connect(udpSocket, &QUdpSocket::readyRead, this, &Client::slotProcessDatagrams);
 
-    QPushButton *windowChangeButton = new QPushButton("&Send");
-    connect(windowChangeButton, &QPushButton::clicked, this, &Client::slotSendToServer);
-
     serverResponseText = new QTextEdit();
-    windowInput = new QLineEdit();
-    // connect(windowChangeButton, SLOT(returnPressed()), this, SLOT(slotSendToServer()));
 
 
     receivedCircuitData = new QTextEdit();
@@ -33,14 +29,44 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
 
 
+
+
+
+
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(receivedCircuitData, 9, 0, 2, 5);
     boxLayout->addWidget(chartManager, 0, 0, 8, 10);
     boxLayout->addWidget(serverResponseText, 9, 5, 2, 1);
+
+    // window part
+    windowInput = new QLineEdit();
+
+    QPushButton *windowChangeButton = new QPushButton("&Send");
+    connect(windowChangeButton, &QPushButton::clicked, this, &Client::slotServerChangeWindowSize);
+
+    QPushButton *windowToggleButton = new QPushButton("&Toggle windowing");
+    connect(windowToggleButton, &QPushButton::clicked, this, &Client::slotServerToggleWindow);
+
+    boxLayout->addWidget(new QLabel("ChangeWindow"), 8, 7, 1, 2);
     boxLayout->addWidget(windowInput, 9, 7, 1, 2);
     boxLayout->addWidget(windowChangeButton, 9, 10, 1, 2);
-    boxLayout->addWidget(new QLabel("ChangeWindow"), 8, 7, 1, 2);
+    boxLayout->addWidget(windowToggleButton, 10, 10, 1, 2);
+
+    // time part
+    timeToClearInput = new QLineEdit();
+
+    QPushButton *timeToClearChangeButton = new QPushButton("&Set new time");
+    connect(timeToClearChangeButton, &QPushButton::clicked, this, &Client::slotServerChangeTimeToCleanup);
+
+    boxLayout->addWidget(new QLabel("Change time to cleanup"), 11, 7, 1, 2);
+    boxLayout->addWidget(timeToClearInput, 12, 7, 1, 2);
+    boxLayout->addWidget(timeToClearChangeButton, 12, 10, 1, 2);
+
     setLayout(boxLayout);
+
+    p7Client = P7_Get_Shared("MyChannel");
+    IP7_Trace *p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
+    p7Trace->P7_TRACE(0, TM("Server started"));
 }
 
 void Client::slotProcessDatagrams()
@@ -89,6 +115,19 @@ void Client::parseStringData(QString stringData)
 
 }
 
+void Client::sendToTcpServer(QString messageType, QString message)
+{
+    QByteArray arrBlock;
+    QDataStream out(&arrBlock, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_12);
+    out << quint16(0) << QTime::currentTime() << messageType << message;
+
+    out.device()->seek(0);
+    out << quint16(arrBlock.size() - sizeof(quint16));
+
+    tcpSocket->write(arrBlock);
+}
+
 
 void Client::slotReadyRead()
 {
@@ -128,18 +167,20 @@ void Client::slotError(QAbstractSocket::SocketError err)
 }
 
 
-void Client::slotSendToServer()
+void Client::slotServerChangeWindowSize()
 {
-    QByteArray arrBlock;
-    QString messageType = "window";
-    QDataStream out(&arrBlock, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_12);
-    out << quint16(0) << QTime::currentTime() << messageType << windowInput->text();
+    sendToTcpServer("window", windowInput->text());
+}
 
-    out.device()->seek(0);
-    out << quint16(arrBlock.size() - sizeof(quint16));
+void Client::slotServerToggleWindow()
+{
+    sendToTcpServer("toggle analysis", "window");
+}
 
-    tcpSocket->write(arrBlock);
+void Client::slotServerChangeTimeToCleanup()
+{
+    // change cleanup time
+    sendToTcpServer("change cleanup time", timeToClearInput->text());
 }
 
 void Client::slotConnected()

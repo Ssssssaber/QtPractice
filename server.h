@@ -5,11 +5,13 @@
 #include <QTcpServer>
 #include "dataanalyzer.h"
 #include "dataprocessor.h"
+#include "P7_Client.h"
 
 class Server : public QWidget
 {
     Q_OBJECT
 private:
+    IP7_Client *p7Client;
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
     // DataReceiver *dataReceiver;
@@ -39,6 +41,8 @@ public slots:
     void slotSendDatagram();
 signals:
     void signalWindowSizeChanged(int newSize);
+    void signalTimeToClearChanged(int newTime);
+    void signalAnalysisToggle(QString analysisType);
 };
 
 // #endif // UDPSERVER_H
