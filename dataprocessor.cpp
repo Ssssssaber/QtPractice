@@ -11,7 +11,15 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-    CircuitDataReceiver *cdr = new CircuitDataReceiver();
+
+    CircuitDataReceiver::connectCircuit();
+    //CircuitDataReceiver::disconnectCircuit();
+    // QString ans = CircuitDataReceiver::handleUserMagnetParams(3, 0);
+    // if (ans != "")
+    //     qDebug().noquote() << ans;
+    // ans = CircuitDataReceiver::setCircuitParams();
+    // if (ans != "")
+    //     qDebug().noquote() << ans;
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 
