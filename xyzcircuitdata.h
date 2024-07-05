@@ -9,7 +9,7 @@ struct xyzCircuitData {
     int x;
     int y;
     int z;
-    int timestamp;
+    float timestamp;
 
 public:
     QString toString()

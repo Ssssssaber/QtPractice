@@ -22,7 +22,7 @@ private:
 
 public:
     ChartManager(QWidget* pwgt = 0);
-
+    void changeDataLifeSpan(int newTime);
 public slots:
     void slotDataReceived(xyzCircuitData);
     void slotAnalysisRecived(xyzAnalysisResult);

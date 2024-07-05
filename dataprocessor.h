@@ -16,7 +16,7 @@ private:
     const float aConstant = 9.81f;
     const float gConstant = 1.0f;
     const float mConstant = 1.0f;
-    const long timeConstant = 1000000000;
+    const float timeConstant = 1000000000;
     QTimer *readTimer;
 
     QFile *file;
