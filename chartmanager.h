@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QWidget>
+#include "P7_Trace.h"
 #include "chartwidget.h"
 #include "xyzcircuitdata.h"
 
@@ -10,6 +11,8 @@ class ChartManager : public QWidget
 {
     Q_OBJECT
 private:
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
     ChartWidget* chartA;
     ChartWidget* chartG;
     ChartWidget* chartM;

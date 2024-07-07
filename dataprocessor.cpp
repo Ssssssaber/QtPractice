@@ -6,20 +6,22 @@ QQueue<QString> DataProcessor::dataQueue;
 
 DataProcessor::DataProcessor()
 {
+    p7Trace = P7_Get_Shared_Trace("ServerChannel");
+
+    if (!p7Trace)
+    {
+        qDebug() << "data processor is not tracing";
+    }
+    else
+    {
+        p7Trace->Register_Module(TM("DProc"), &moduleName);
+    }
     dataMap["A"] = 1;
     dataMap["G"] = 2;
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-
-    CircuitDataReceiver::connectCircuit();
-    //CircuitDataReceiver::disconnectCircuit();
-    // QString ans = CircuitDataReceiver::handleUserMagnetParams(3, 0);
-    // if (ans != "")
-    //     qDebug().noquote() << ans;
-    // ans = CircuitDataReceiver::setCircuitParams();
-    // if (ans != "")
-    //     qDebug().noquote() << ans;
+    // CircuitDataReceiver *cdr = new CircuitDataReceiver();
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 
@@ -112,16 +114,21 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     data.y = tokens[3].toInt() * transitionConst;
     data.z = tokens[4].toInt() * transitionConst;
     data.timestamp = (tokens[5].toLong() / timeConstant);
+
+    QString message;
     if (lastReceivedId + 1 == data.id)
     {
-        QString message =  QString("no packages lost");
+        message =  QString("no packages lost");
         emit signalLossDetected(message);
     }
     else
     {
-        QString message =  QString("packages from %1 to %2 were lost").arg(lastReceivedId).arg(data.id);
+        message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
         emit signalLossDetected(message);
     }
+
+    p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
+    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
     lastReceivedId = data.id;
 
     return data;

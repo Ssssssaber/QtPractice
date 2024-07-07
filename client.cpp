@@ -1,9 +1,21 @@
 #include "client.h"
-#include "P7_Trace.h"
+#include "P7_Client.h"
 
 
 Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
+    IP7_Client *p7Client = P7_Get_Shared("MyChannel");
+    if (p7Client)
+    {
+        p7Trace = P7_Create_Trace(p7Client, TM("ClientChannel"));
+        p7Trace->Share("ClientChannel");
+        p7Trace->Register_Module(TM("Client"), &moduleName);
+    }
+    else
+    {
+        qDebug() << "trace server channel not started";
+    }
+
     setWindowTitle("UdpClient");
 
     this->udpPort = udpPort;
@@ -13,7 +25,6 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     tcpSocket->connectToHost(strHost, tcpPort);
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::slotConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::slotReadyRead);
-    // connect(userActionSocket, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT (slotError(QAbstractSocket::SocketError))); // not found
 
     udpSocket = new QUdpSocket(this);
     udpSocket->bind(udpPort);
@@ -27,11 +38,6 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     chartManager = new ChartManager();
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
-
-
-
-
-
 
     QGridLayout* boxLayout = new QGridLayout;
     boxLayout->addWidget(receivedCircuitData, 9, 0, 2, 5);
@@ -64,9 +70,7 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
 
     setLayout(boxLayout);
 
-    p7Client = P7_Get_Shared("MyChannel");
-    IP7_Trace *p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
-    p7Trace->P7_TRACE(0, TM("Server started"));
+    p7Trace->P7_TRACE(moduleName, TM("Client started"));
 }
 
 void Client::slotProcessDatagrams()
@@ -84,7 +88,8 @@ void Client::slotProcessDatagrams()
     in >> dateTime >> stringData;
     // xyzCircuitData parsedData = parseReceivedData(stringData);
     parseStringData(stringData);
-    receivedCircuitData->append("Received: " + dateTime.toString() + "\n" + stringData);
+    QString result = "Received: " + dateTime.toString() + " - " + stringData;
+    receivedCircuitData->append(result);
 }
 
 
@@ -100,6 +105,7 @@ void Client::parseStringData(QString stringData)
         data.y = tokens[4].toInt();
         data.z = tokens[5].toInt();
         data.timestamp = tokens[6].toFloat();
+        p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
@@ -110,6 +116,7 @@ void Client::parseStringData(QString stringData)
         analysis.x = tokens[3].toFloat();
         analysis.y = tokens[4].toFloat();
         analysis.z = tokens[5].toFloat();
+        p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), analysis.toString().toStdString().data());
         emit signalReceivedAnalysis(analysis);
     }
 
@@ -126,6 +133,8 @@ void Client::sendToTcpServer(QString messageType, QString message)
     out << quint16(arrBlock.size() - sizeof(quint16));
 
     tcpSocket->write(arrBlock);
+
+    p7Trace->P7_INFO(moduleName, TM("Client sent: \" %s: %s \""), messageType.toStdString().data(), message.toStdString().data());
 }
 
 
@@ -153,7 +162,10 @@ void Client::slotReadyRead()
         QString str;
         in >> time >> str;
 
-        serverResponseText->append(time.toString() + " " + str);
+        QString response = time.toString() + " " + str;
+
+        serverResponseText->append(response);
+        p7Trace->P7_INFO(moduleName, TM("%s"), response.toStdString().data());
         nextBlockSize = 0;
     }
 }
@@ -164,6 +176,7 @@ void Client::slotError(QAbstractSocket::SocketError err)
                                    err == QAbstractSocket::RemoteHostClosedError ? "The remote host is closed." :
                                    QString(tcpSocket->errorString()));
     serverResponseText->append(strError);
+    p7Trace->P7_ERROR(moduleName, TM("%s"), strError.toStdString().data());
 }
 
 

@@ -5,13 +5,14 @@
 #include <QtWidgets>
 #include <QUdpSocket>
 #include <QTcpSocket>
-#include "P7_Client.h"
-
+#include "P7_Trace.h"
 class Client : public QWidget
 {
     Q_OBJECT
 private:
-    IP7_Client *p7Client;
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
+
     ChartManager* chartManager;
     QTextEdit* receivedCircuitData;
 
