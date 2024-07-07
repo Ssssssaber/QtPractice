@@ -7,6 +7,9 @@ class XyzWorkerController : public QObject
 {
     Q_OBJECT
 
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
+
 
     // XyzWorker* worker;
     XyzWorker* aWorker;

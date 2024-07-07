@@ -1,6 +1,7 @@
 #ifndef CHARTWIDGET_H
 #define CHARTWIDGET_H
 #include <QtCore>
+#include "P7_Trace.h"
 #include "xyzcircuitdata.h"
 #include <QBoxLayout>
 #include <QtCharts/QChartView> // to display charts
@@ -13,11 +14,12 @@ class ChartWidget : public QWidget
 {
     Q_OBJECT
 private:
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
+
     QChartView* cViewX; // creating chart with 1 axies
     QChartView* cViewY;
     QChartView* cViewZ;
-
-
 
     QLineSeries *serX; // line with X-axis
     QLineSeries *serY;

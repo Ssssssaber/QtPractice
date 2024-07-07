@@ -3,6 +3,17 @@
 
 ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 {
+    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+
+    if (!p7Trace)
+    {
+        qDebug() << "chart widget is not tracing";
+    }
+    else
+    {
+        p7Trace->Register_Module(TM("CWgt"), &moduleName);
+    }
+
     QVBoxLayout* vlayout = new QVBoxLayout(); // main layout
     QHBoxLayout* hlayout = new QHBoxLayout(); // sub layout
 
@@ -16,13 +27,13 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     serY = new QLineSeries();
     serZ = new QLineSeries();
 
+    // serX->setName("X-axis"); // setting the names
+    // serY->setName("Y-axis");
+    // serZ->setName("Z-axis");
+
     cViewX = new QChartView(); // creating chart-views
     cViewY = new QChartView();
     cViewZ = new QChartView();
-
-    cViewX->chart()->legend()->hide();
-    cViewY->chart()->legend()->hide();
-    cViewZ->chart()->legend()->hide();
 
     resX = new QLabel("Windowing result: None");
     resY = new QLabel("Windowing result: None");
@@ -89,15 +100,15 @@ void ChartWidget::setChartData(xyzCircuitData data)
     axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
 
     cViewX->chart()->axes(Qt::Vertical).back()->setRange(axisrn.xmin,axisrn.xmax); // setting chart axies range
-    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
+    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp); // setting chart axies range
     cViewX->chart()->addSeries(serX); // restoring series
 
     cViewY->chart()->axes(Qt::Vertical).back()->setRange(axisrn.ymin,axisrn.ymax);
-    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp);
+    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
     cViewY->chart()->addSeries(serY);
 
     cViewZ->chart()->axes(Qt::Vertical).back()->setRange(axisrn.zmin,axisrn.zmax);
-    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp);
+    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
     cViewZ->chart()->addSeries(serZ);
 }
 
@@ -125,7 +136,8 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
             break;
         data.pop_front();
     }
-    qDebug() << " before and after " << initial << data.length();
+    p7Trace->P7_TRACE(moduleName, TM("Cleared chart arrays: from %d to %d"), initial, data.length());
+
     datasource->clear();
     datasource->append(data);
 }

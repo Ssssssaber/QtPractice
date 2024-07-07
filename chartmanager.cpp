@@ -2,6 +2,17 @@
 
 ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 {
+    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+
+    if (!p7Trace)
+    {
+        qDebug() << "chart manager is not tracing";
+    }
+    else
+    {
+        p7Trace->Register_Module(TM("CMan"), &moduleName);
+    }
+
     chartA = new ChartWidget("A");
     chartG = new ChartWidget("G");
     chartM = new ChartWidget("M");
@@ -21,6 +32,11 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     cleanupTimer->start();
 }
 
+void ChartManager::changeDataLifeSpan(int newTime)
+{
+    dataLifespanInSeconds = newTime;
+}
+
 void ChartManager::slotDataReceived(xyzCircuitData data)
 {
     if (data.group == "A")
@@ -37,8 +53,10 @@ void ChartManager::slotDataReceived(xyzCircuitData data)
     }
     else
     {
-        qDebug() << "Wrong data received by chart";
+        p7Trace->P7_ERROR(moduleName, TM("Wrong data received by chart"));
+        return;
     }
+    p7Trace->P7_TRACE(moduleName, TM("%s chart set data"), data.group.toStdString().data());
 }
 
 void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
@@ -57,7 +75,7 @@ void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
     }
     else
     {
-        qDebug() << "Wrong data received by chart";
+        p7Trace->P7_ERROR(moduleName, TM("Wrong data received by chart"));
     }
 }
 

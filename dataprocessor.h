@@ -6,17 +6,20 @@
 #include <QFile>
 #include <QDebug>
 #include "xyzcircuitdata.h"
-#include "circuitdatareceiver.h"
+#include "P7_Trace.h"
+
 class DataProcessor : public QObject
 {
     Q_OBJECT
 
 private:
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
     static QQueue<QString> dataQueue;
     const float aConstant = 9.81f;
     const float gConstant = 1.0f;
     const float mConstant = 1.0f;
-    const long timeConstant = 1000000000;
+    const float timeConstant = 1000000000;
     QTimer *readTimer;
 
     QFile *file;

@@ -4,12 +4,15 @@
 #include "dataprocessor.h"
 #include "xyzcircuitdata.h"
 #include "xyzworkercontroller.h"
+#include "P7_Trace.h"
 #include <QtCore>
 
 class DataAnalyzer : public QObject
 {
     Q_OBJECT
 private:
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
     int windowSize = 10;
     DataProcessor *dataProcessor;
     XyzWorkerController *windowWorkerController;
