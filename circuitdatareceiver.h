@@ -15,6 +15,7 @@
 #include <string.h>
 #include <assert.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <time.h>
 #include <errno.h>
 #include <ctype.h>
@@ -35,7 +36,6 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 */
-#include <unistd.h>
 #include <libusb-1.0/libusb.h>
 #include "libnii.h"
 #include <QApplication>
@@ -51,25 +51,16 @@ class CircuitDataReceiver : public QObject
     Q_OBJECT
 
 private:
-    static libnii_device *handle;
-    static uint64_t accel_duration, gyro_duration, accel_ts, gyro_ts;
-    static struct libnii_params params;
-
+    libnii_device *handle = NULL;
     static void receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *data);
     static void handleError(void *user_ptr, int error_code);
-    static void printError(QString format, uint64_t diff);
-    static void printError(QString format, const char *libnii_strerror);
-    static void printError(QString format, int error_code, const char *libnii_strerror);
 
 public:
-    static void connectCircuit();
-    static void disconnectCircuit();
-    static QString handleUserMagnetParams(int freq, int avr);
-    static void handleUserParams(char type, int freq, int range, int avr);
-    static QString setCircuitParams();
-    static int calcDuration(int freq, int avr, int d);
+    explicit CircuitDataReceiver();
+    ~CircuitDataReceiver();
 
 signals:
+    void signalSentData(QString data);
 };
 
 #endif // CIRCUITDATARECEIVER_H
