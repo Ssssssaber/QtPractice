@@ -10,6 +10,10 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
     if (p7Client)
     {
+        p7Telemetry = P7_Create_Telemetry(p7Client, TM("Telemetry channel 1"), NULL);
+        p7Telemetry->Create(TM("System/CPU"), 0, -1, 100, 90, 1, &l_wCpuId);
+        p7Telemetry->Create(TM("System/Mem(mb)"), 0, -1, 500, 450, 1, &l_wMemId);
+
         p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
         p7Trace->Share("ServerChannel");
         p7Trace->Register_Module(TM("Server"), &moduleName);
@@ -100,6 +104,9 @@ void Server::slotSendDatagram()
     udpSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
 
     p7Trace->P7_TRACE(moduleName, TM("Datagram sent: %s"), data.toStdString().data());
+
+    p7Telemetry->Add(l_wCpuId, l_dbCPU);
+    p7Telemetry->Add(l_wMemId, l_dbMem);
 }
 
 void Server::slotStringReceived(QString stringData)

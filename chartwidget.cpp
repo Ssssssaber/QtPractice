@@ -81,8 +81,6 @@ void ChartWidget::setWindowResult(xyzAnalysisResult data)
 
 void ChartWidget::setChartData(xyzCircuitData data)
 {
-    qDebug() << data.timestamp << data.x;
-
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
     cViewZ->chart()->removeSeries(serZ);
