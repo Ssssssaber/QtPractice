@@ -3,15 +3,16 @@
 #include <QtWidgets>
 #include <QUdpSocket>
 #include <QTcpServer>
+#include "P7_Trace.h"
 #include "dataanalyzer.h"
 #include "dataprocessor.h"
-#include "P7_Client.h"
 
 class Server : public QWidget
 {
     Q_OBJECT
 private:
-    IP7_Client *p7Client;
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
     // DataReceiver *dataReceiver;

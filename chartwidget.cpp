@@ -3,6 +3,17 @@
 
 ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 {
+    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+
+    if (!p7Trace)
+    {
+        qDebug() << "chart widget is not tracing";
+    }
+    else
+    {
+        p7Trace->Register_Module(TM("CWgt"), &moduleName);
+    }
+
     QVBoxLayout* vlayout = new QVBoxLayout(); // main layout
     QHBoxLayout* hlayout = new QHBoxLayout(); // sub layout
 
@@ -125,7 +136,8 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
             break;
         data.pop_front();
     }
-    qDebug() << " before and after " << initial << data.length();
+    p7Trace->P7_TRACE(moduleName, TM("Cleared chart arrays: from %d to %d"), initial, data.length());
+
     datasource->clear();
     datasource->append(data);
 }
