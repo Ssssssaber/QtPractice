@@ -6,11 +6,13 @@
 #include <QUdpSocket>
 #include <QTcpSocket>
 #include "P7_Trace.h"
+#include "P7_Telemetry.h"
 class Client : public QWidget
 {
     Q_OBJECT
 private:
     IP7_Trace *p7Trace;
+    IP7_Telemetry *p7Telemetry;
     IP7_Trace::hModule moduleName;
 
     ChartManager* chartManager;
@@ -27,8 +29,6 @@ private:
     QTextEdit *serverResponseText;
     void parseStringData(QString stringData);
     void sendToTcpServer(QString messageType, QString message);
-    // void parseReceivedData(QList<QString> stringData);
-    // void parseReceivedAnalysis(QList<QString> stringData);
 
 public:
     Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt = 0);

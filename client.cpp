@@ -5,8 +5,10 @@
 Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
+
     if (p7Client)
     {
+
         p7Trace = P7_Create_Trace(p7Client, TM("ClientChannel"));
         p7Trace->Share("ClientChannel");
         p7Trace->Register_Module(TM("Client"), &moduleName);
