@@ -5,6 +5,7 @@
 
 #include <QFile>
 #include <QDebug>
+#include "CircuitConfiguration.h"
 #include "xyzcircuitdata.h"
 #include "P7_Trace.h"
 
@@ -37,14 +38,12 @@ public:
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(QString);
     void readLine();
-private slots:
-    void slotOnPackageLoss(QString message);
 
 public slots:
     void slotDataFromDataReceiver(QString data);
+    void slotConfigReceived(cConfig data);
 
 signals:
-    void signalLossDetected(QString data);
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
 };
