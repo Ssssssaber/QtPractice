@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include <QUdpSocket>
 #include <QTcpServer>
+#include "CircuitConfiguration.h"
 #include "P7_Trace.h"
 #include "dataanalyzer.h"
 #include "dataprocessor.h"
@@ -34,7 +35,6 @@ private:
     bool processClientResponse(QString messageType, QString message);
 public:
     Server(int tcpPort, int udpPort, QWidget* pwgt = 0);
-    void serverLoad();
 
 public slots:
     void slotStringReceived(QString string);
@@ -47,6 +47,7 @@ signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);
     void signalAnalysisToggle(QString analysisType);
+    void signalConfigReceived(cConfig config);
 };
 
 // #endif // UDPSERVER_H

@@ -1,4 +1,5 @@
 #include "server.h"
+#include "CircuitConfiguration.h"
 #include "GTypes.h"
 #include "P7_Client.h"
 #include "perfomancechecker.h"
@@ -65,6 +66,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     dataProcessor = new DataProcessor();
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
+    connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
@@ -225,6 +227,15 @@ bool Server::processClientResponse(QString messageType, QString message)
         if (result)
         {
             emit signalAnalysisToggle(message);
+        }
+    }
+    else if (messageType == "config")
+    {
+        cConfig config = parseStructFromString(message);
+        result = true;
+        if (result)
+        {
+            emit signalConfigReceived(config);
         }
     }
     return result;

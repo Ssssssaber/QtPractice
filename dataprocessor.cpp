@@ -24,8 +24,6 @@ DataProcessor::DataProcessor()
 
     CircuitDataReceiver *cdr = new CircuitDataReceiver();
 
-    connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
-
 
     readTimer = new QTimer(this);
     readTimer->setSingleShot(false);
@@ -121,13 +119,11 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     {
         message =  QString("no packages lost");
         p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
-        emit signalLossDetected(message);
     }
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
-        emit signalLossDetected(message);
     }
 
 
@@ -137,14 +133,15 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     return data;
 }
 
-void DataProcessor::slotOnPackageLoss(QString message)
-{
-    qDebug() << message;
-}
 
 void DataProcessor::slotDataFromDataReceiver(QString data)
 {
     processLine(data);
+}
+
+void DataProcessor::slotConfigReceived(cConfig config)
+{
+    qDebug() << "received config: " << config.toString();
 }
 
 void DataProcessor::receiveDataFromDataReceiver(QString data)
@@ -154,6 +151,7 @@ void DataProcessor::receiveDataFromDataReceiver(QString data)
 
 void DataProcessor::readData()
 {
+    // fix queue
     if(DataProcessor::dataQueue.isEmpty())
         return;
     processLine(DataProcessor::dataQueue.dequeue());

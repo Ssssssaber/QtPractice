@@ -41,6 +41,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         test.h test.cpp
         linux-system-usage.hpp
         perfomancechecker.h perfomancechecker.cpp
+        circuitconfiguratorwidget.h circuitconfiguratorwidget.cpp
+        CircuitConfiguration.h
 
 
     )
