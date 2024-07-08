@@ -1,4 +1,5 @@
 #include "dataprocessor.h"
+#include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
 
@@ -21,7 +22,7 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-    // CircuitDataReceiver *cdr = new CircuitDataReceiver();
+    CircuitDataReceiver *cdr = new CircuitDataReceiver();
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 
@@ -119,15 +120,17 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     if (lastReceivedId + 1 == data.id)
     {
         message =  QString("no packages lost");
+        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
         emit signalLossDetected(message);
     }
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
+        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
         emit signalLossDetected(message);
     }
 
-    p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
+
     p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
     lastReceivedId = data.id;
 
