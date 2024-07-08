@@ -47,9 +47,6 @@ public:
     void readLine();
     void setConfig();
 
-private slots:
-    void slotOnPackageLoss(QString message);
-
 public slots:
     void slotDataFromDataReceiver(QString data);
     void slotConfigCompleted(int);

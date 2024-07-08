@@ -51,7 +51,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
 
     rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
     freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
-    avgSlider = createSlider(0, 4, &CircuitConfiguratorWidget::setAvgLabelValue);
+    avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
 
     QPushButton *setButton = new QPushButton("Change config");
     connect(setButton, &QPushButton::clicked, this, &CircuitConfiguratorWidget::prepeareConfig);

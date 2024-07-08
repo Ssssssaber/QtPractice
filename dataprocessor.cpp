@@ -23,10 +23,10 @@ DataProcessor::DataProcessor()
     dataMap["p1"] = 4;
 
     CircuitDataReceiver::connectCircuit();
-    QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
-    if (ans != "")
-        qDebug().noquote() << ans;
-    this->setConfig();
+    // QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
+    // if (ans != "")
+    //     qDebug().noquote() << ans;
+    // this->setConfig();
     //emit signalStopConfigExec();
     //CircuitDataReceiver::disconnectCircuit();
 
@@ -173,7 +173,11 @@ void DataProcessor::slotConfigCompleted(int r)
 
 void DataProcessor::slotConfigReceived(cConfig config)
 {
-    qDebug() << "received config: " << config.toString();
+    QString ans = CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range);
+    if (ans != "")
+        qDebug().noquote() << ans;
+    setConfig();
+    //qDebug() << "received config: " << config.toString();
 }
 
 void DataProcessor::receiveDataFromDataReceiver(QString data)

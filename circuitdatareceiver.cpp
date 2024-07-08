@@ -131,6 +131,8 @@ int CircuitDataReceiver::setCircuitParams()
     }
 
     r = libnii_set_params(handle, &params);
+    if ( LIBNII_SUCCESS != r )
+        printError("failed to set parameters: %s\n", libnii_strerror(r));
     return r;
 }
 
@@ -229,6 +231,7 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     }
     break;
     case LIBNII_MAGNET_DATA:
+    {
         libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) data;
         //print_xyz('M', (libnii_xyz_data_t *) data, packet_number);
         QString data = QString("%1 %2 %3 %4 %5 %6").arg("M", QString::number(packet_number),
@@ -236,9 +239,11 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
                                                         QString::number((unsigned long)(xyz->ts)));
         qDebug() << data;
         DataProcessor::receiveDataFromDataReceiver(data);
+    }
+    break;
+    default:
+        qDebug() << "Other type data were received.";
         break;
-    //default:
-        //qDebug() << "Other type data were received.";
     }
 }
 
@@ -252,9 +257,4 @@ void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
         qDebug() << "Error: code" << error_code << libnii_strerror(error_code);
 
     prev = error_code;
-}
-
-CircuitDataReceiver::~CircuitDataReceiver()
-{
-    libnii_close(handle);
 }
