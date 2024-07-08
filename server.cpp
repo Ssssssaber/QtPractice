@@ -78,7 +78,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
 
     // DISABLE WHEN NOT DEBUGGING
-    dataProcessor->readDataFromTestFile();
+    // dataProcessor->readDataFromTestFile();
 
     udpSocket = new QUdpSocket(this);
     QTimer* ptimer = new QTimer(this);
@@ -105,6 +105,9 @@ void Server::slotSendDatagram()
 
     p7Trace->P7_TRACE(moduleName, TM("Datagram sent: %s"), data.toStdString().data());
 
+
+    // l_dbCPU = Get_CPU_Utilization();
+    // l_dbMem = Get_Mem_Utilization();
     p7Telemetry->Add(l_wCpuId, l_dbCPU);
     p7Telemetry->Add(l_wMemId, l_dbMem);
 }

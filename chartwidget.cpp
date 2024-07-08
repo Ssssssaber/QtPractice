@@ -51,6 +51,10 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     cViewY->chart()->createDefaultAxes();
     cViewZ->chart()->createDefaultAxes();
 
+    cViewX->chart()->legend()->hide();
+    cViewY->chart()->legend()->hide();
+    cViewZ->chart()->legend()->hide();
+
     vboxX->addWidget(cViewX); // adding widgets to VBox pair
     vboxX->addWidget(resX);
 
@@ -99,14 +103,18 @@ void ChartWidget::setChartData(xyzCircuitData data)
 
     cViewX->chart()->axes(Qt::Vertical).back()->setRange(axisrn.xmin,axisrn.xmax); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp); // setting chart axies range
+    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
     cViewX->chart()->addSeries(serX); // restoring series
 
+
     cViewY->chart()->axes(Qt::Vertical).back()->setRange(axisrn.ymin,axisrn.ymax);
-    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    // cViewY->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
     cViewY->chart()->addSeries(serY);
 
     cViewZ->chart()->axes(Qt::Vertical).back()->setRange(axisrn.zmin,axisrn.zmax);
-    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
     cViewZ->chart()->addSeries(serZ);
 }
 

@@ -1,4 +1,5 @@
 #include "dataprocessor.h"
+#include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
 
@@ -21,7 +22,7 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-    // CircuitDataReceiver *cdr = new CircuitDataReceiver();
+    CircuitDataReceiver *cdr = new CircuitDataReceiver();
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 
