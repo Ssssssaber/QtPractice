@@ -11,15 +11,15 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-
     CircuitDataReceiver::connectCircuit();
+    QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
+    if (ans != "")
+        qDebug().noquote() << ans;
+    this->setConfig();
+    //emit signalStopConfigExec();
     //CircuitDataReceiver::disconnectCircuit();
-    // QString ans = CircuitDataReceiver::handleUserMagnetParams(3, 0);
-    // if (ans != "")
-    //     qDebug().noquote() << ans;
-    // ans = CircuitDataReceiver::setCircuitParams();
-    // if (ans != "")
-    //     qDebug().noquote() << ans;
+
+
 
     connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
 
@@ -74,6 +74,22 @@ void DataProcessor::readLine()
             processLine(line);
         }
     }
+}
+
+void DataProcessor::setConfig()
+{
+    cdrworker = new CDRWorker();
+    thread = new QThread();
+    cdrworker->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), cdrworker, SLOT(process()));
+    connect(cdrworker, SIGNAL(finished(int)), thread, SLOT(quit()));
+    connect(cdrworker, SIGNAL(finished(int)), this, SLOT(slotConfigCompleted(int)));
+    connect(this, SIGNAL(signalStopConfigExec()), cdrworker, SLOT(stop()));
+    connect(cdrworker, SIGNAL(finished(int)), cdrworker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+    thread->start();
 }
 
 void DataProcessor::processLine(QString line)
@@ -135,6 +151,16 @@ void DataProcessor::slotOnPackageLoss(QString message)
 void DataProcessor::slotDataFromDataReceiver(QString data)
 {
     processLine(data);
+}
+
+void DataProcessor::slotConfigCompleted(int r)
+{
+    if ( LIBNII_SUCCESS != r )
+    {
+        QString err = QString("failed to set parameters: %1").arg(libnii_strerror(r));
+        emit signalConfigError(err);
+        qDebug().noquote() << err;
+    }
 }
 
 void DataProcessor::receiveDataFromDataReceiver(QString data)

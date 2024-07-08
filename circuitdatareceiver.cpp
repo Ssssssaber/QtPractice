@@ -5,6 +5,11 @@ uint64_t CircuitDataReceiver::accel_duration = 0,
     CircuitDataReceiver::gyro_duration = 0,
     CircuitDataReceiver::accel_ts = 0,
     CircuitDataReceiver::gyro_ts = 0;
+bool CircuitDataReceiver::configExec = 0;
+std::atomic_bool CircuitDataReceiver::m_terminator = true;
+
+CircuitDataReceiver::CircuitDataReceiver()
+{  }
 
 struct libnii_params CircuitDataReceiver::params = {
     .accel_freq = 0,
@@ -23,6 +28,7 @@ struct libnii_params CircuitDataReceiver::params = {
 
 void CircuitDataReceiver::connectCircuit()
 {
+    // add error enum!
     libnii_open(&handle, VENDOR_ID, PRODUCT_ID, LIBNII_MATCH_ANY, LIBNII_MATCH_ANY,
                 receiveData, handleError, handle);
 }
@@ -32,46 +38,104 @@ void CircuitDataReceiver::disconnectCircuit()
     libnii_close(handle);
 }
 
-QString CircuitDataReceiver::handleUserMagnetParams(int freq, int avr)
+QString CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, int range)
 {
     QString err = "";
-    if ((freq < 0) || (freq > 3))
+    switch (type) {
+    case 'A':
     {
-        err += "Magnet frequency option must be in 0-3 range\n";
-    }
-    else params.magnet_duty = freq;
+        if ((freq < 0) || (freq > 2))
+        {
+            err += "Accelerator frequency option must be in 0-2 range\n";
+        }
+        else params.accel_freq = freq;
 
-    if ((avr < 0) || (avr > 8))
-    {
-        err += "Magnet average option must be in 0-8 range";
-    }
-    else params.magnet_avr = avr;
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Accelerator average option must be in 0-8 range\n";
+        }
+        else params.accel_avr = avr;
 
-    if(err != "")
+        if ((range < 0) || (range > 2))
+        {
+            err += "Accelerator range option must be in 0-2 range\n";
+        }
+        else params.accel_range = range;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+        break;
+    case 'G':
     {
+        if ((freq < 0) || (freq > 2))
+        {
+            err += "Gyroscope frequency option must be in 0-2 range\n";
+        }
+        else params.gyro_freq = freq;
+
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Gyroscope average option must be in 0-8 range\n";
+        }
+        else params.gyro_avr = avr;
+
+        if ((range < 0) || (range > 3))
+        {
+            err += "Gyroscope range option must be in 0-3 range\n";
+        }
+        else params.gyro_range = range;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+        break;
+    case 'M':
+    {
+        if ((freq < 0) || (freq > 3))
+        {
+            err += "Magnet frequency option must be in 0-3 range\n";
+        }
+        else params.magnet_duty = freq;
+
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Magnet average option must be in 0-8 range\n";
+        }
+        else params.magnet_avr = avr;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+        break;
+    default:
+        err += "Unknown sensor type";
         qDebug().noquote() << err;
     }
-
     return err;
 }
 
-QString CircuitDataReceiver::setCircuitParams()
+int CircuitDataReceiver::setCircuitParams()
 {
-    int r;
-    QString err = "";
-    //struct libnii_device *dev = (struct libnii_device *) handle;
+    int r = -1;
 
-    while ( ! libnii_is_connected(handle) ) {
-        usleep(10000);
+    while ( ! libnii_is_connected(handle) && m_terminator) {
+        QThread::sleep(10);
     }
 
     r = libnii_set_params(handle, &params);
-    if ( LIBNII_SUCCESS != r )
-    {
-        err = QString("failed to set parameters: %1").arg(libnii_strerror(r));
-    }
+    return r;
+}
 
-    return err;
+void CircuitDataReceiver::stopConfigExec()
+{
+    m_terminator = false;
 }
 
 int CircuitDataReceiver::calcDuration(int freq, int avr, int d)
