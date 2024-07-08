@@ -75,17 +75,25 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     p7Trace->P7_TRACE(moduleName, TM("Client started"));
 
     // config part
+    QWidget *configs = new QWidget(this);
+    // QGridLayout* configGrid = new QGridLayout;
+    QVBoxLayout *vbox = new QVBoxLayout;
     aConfig = new CircuitConfiguratorWidget('A');
+
     connect(aConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    grid->addWidget(aConfig, 13, 0, 5, 4);
+    vbox->addWidget(aConfig);
 
     gConfig = new CircuitConfiguratorWidget('G');
     connect(gConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    grid->addWidget(gConfig, 13, 5, 5, 4);
+    vbox->addWidget(gConfig);
 
     mConfig = new CircuitConfiguratorWidget('M');
     connect(mConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    grid->addWidget(mConfig, 13, 10, 5, 4);
+    vbox->addWidget(mConfig);
+
+    configs->setLayout(vbox);
+
+    grid->addWidget(configs, 0, 11, 4, 10);
 }
 
 void Client::slotProcessDatagrams()

@@ -101,27 +101,37 @@ void DataProcessor::setConfig()
 
 void DataProcessor::processLine(QString line)
 {
+    try
+    {
+        QString processedLine = line.simplified();
+        emit signalLineReceived(processedLine);
+        QList<QString> tokens = line.simplified().split(' ');
 
-    QString processedLine = line.simplified();
-    emit signalLineReceived(processedLine);
-    QList<QString> tokens = line.simplified().split(' ');
-
-    QString dataSource = tokens.data()[0];
-    switch (dataMap[dataSource]) {
-    case 1:
-        emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
-        break;
-    case 2:
-        emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
-        break;
-    case 3:
-        emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
-        break;
-    case 4:
-        break;
-    default:
-        break;
+        QString dataSource = tokens.data()[0];
+        switch (dataMap[dataSource]) {
+        case 1:
+            emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
+            break;
+        case 2:
+            emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
+            break;
+        case 3:
+            emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
+            break;
+        case 4:
+            break;
+        default:
+            break;
+        }
     }
+    catch (const std::exception& ex) {
+        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+    }
+    catch (...) {
+        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    }
+
+
 }
 
 
