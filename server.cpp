@@ -1,11 +1,26 @@
 #include "server.h"
+#include "CircuitConfiguration.h"
+#include "GTypes.h"
+#include "P7_Client.h"
+#include "perfomancechecker.h"
 #include <QTcpSocket>
-
-
 
 Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
+    IP7_Client *p7Client = P7_Get_Shared("MyChannel");
+    if (p7Client)
+    {
+        p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
+        p7Trace->Share("ServerChannel");
+        p7Trace->Register_Module(TM("Server"), &moduleName);
+    }
+    else
+    {
+        qDebug() << "trace server channel not started";
+    }
+
     setWindowTitle("UdpServer");
+
 
     this->tcpPort = tcpPort;
     this->udpPort = udpPort;
@@ -51,24 +66,31 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     dataProcessor = new DataProcessor();
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
+    connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
+    connect(this, &Server::signalTimeToClearChanged, dataAnalyzer, &DataAnalyzer::slotTimeToCleanChanged);
+    connect(this, &Server::signalAnalysisToggle, dataAnalyzer, &DataAnalyzer::slotAnalysisToggled);
     connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
-    // connect(this, )
-
-    //dataReceiver = new DataReceiver();
-    // connect(dataReceiver, &DataReceiver::signalDataReceived, dataProcessor, &DataProcessor::slotProcessLine);
 
     // DISABLE WHEN NOT DEBUGGING
-    //dataProcessor->readDataFromTestFile();
+    // dataProcessor->readDataFromTestFile();
 
     udpSocket = new QUdpSocket(this);
     QTimer* ptimer = new QTimer(this);
     ptimer->setInterval(0);
     connect(ptimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
     ptimer->start();
+
+
+    p7Trace->P7_TRACE(moduleName, TM("Server started"));
+
+    PerfomanceChecker *pc = new PerfomanceChecker();
+    pc->Start();
 }
+
+
 
 void Server::slotSendDatagram()
 {
@@ -76,18 +98,20 @@ void Server::slotSendDatagram()
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
-    // if (dataToSendQueue.isEmpty() || !clientConnected) return;
-    // xyzCircuitData data = dataToSendQueue.dequeue();
+
     if (stringsToSendQueue.isEmpty() | !clientConnected) return;
     QString data = stringsToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + data);
     out << dt << data;
     udpSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
+
+    p7Trace->P7_TRACE(moduleName, TM("Datagram sent: %s"), data.toStdString().data());
 }
 
-void Server::slotStringReceived(QString string)
+void Server::slotStringReceived(QString stringData)
 {
-    receivedDataText->append(string);
+    receivedDataText->append(stringData);
+    p7Trace->P7_TRACE(moduleName, TM("String received : %s"), stringData.toStdString().data());
 }
 
 void Server::slotNewConnection()
@@ -97,6 +121,8 @@ void Server::slotNewConnection()
     connect(clientSocket, &QTcpSocket::readyRead, this, &Server::slotReadClient);
     clientConnected = true;
     sendToClient(clientSocket, "Server Response: Connected!");
+
+    p7Trace->P7_INFO(moduleName, TM("New connection with client"));
 }
 
 void Server::slotReadClient()
@@ -129,14 +155,18 @@ void Server::slotReadClient()
             time.toString() + " " + "Client has sent - "+ messageType + ": " + message;
         clientResponseText->append(strMessage);
 
+        QString serverResponse;
         if (processClientResponse(messageType, message))
         {
-            sendToClient(clientSocket, "Server Response: Received \"" + messageType + ": " + message + "\"");
+            serverResponse = "Server Response: Received \"" + messageType + ": " + message + "\"";
+            sendToClient(clientSocket, serverResponse);
         }
         else
         {
-            sendToClient(clientSocket, "Server cannot process that message - \"" + messageType + ": " + message + "\"");
+            serverResponse = "Server cannot process that message - \"" + messageType + ": " + message + "\"";
+            sendToClient(clientSocket, serverResponse);
         }
+        // p7Trace->P7_INFO(0, TM("%s"), serverResponse.toStdString().data());
 
         nextBlockSize = 0;
 
@@ -165,6 +195,8 @@ void Server::sendToClient(QTcpSocket *socket, const QString& str)
     out << quint16(arrBlock.size() - sizeof(quint16));
 
     socket->write(arrBlock);
+
+    p7Trace->P7_INFO(moduleName, TM("Server sent: %s"), str.toStdString().data());
 }
 
 bool Server::processClientResponse(QString messageType, QString message)
@@ -177,6 +209,33 @@ bool Server::processClientResponse(QString messageType, QString message)
         if (result)
         {
             emit signalWindowSizeChanged(newSize);
+        }
+    }
+    else if (messageType == "change cleanup time")
+    {
+        int newTime = message.toInt();
+        result = newTime >= 10 && newTime <= 60;
+        if (result)
+        {
+            emit signalTimeToClearChanged(newTime);
+        }
+    }
+    else if (messageType == "toggle analysis")
+    {
+        QString analysisType = message;
+        result = analysisType == "window"; // || analysisType == "filter";
+        if (result)
+        {
+            emit signalAnalysisToggle(message);
+        }
+    }
+    else if (messageType == "config")
+    {
+        cConfig config = parseStructFromString(message);
+        result = true;
+        if (result)
+        {
+            emit signalConfigReceived(config);
         }
     }
     return result;

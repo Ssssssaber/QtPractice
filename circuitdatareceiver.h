@@ -24,6 +24,7 @@ class CircuitDataReceiver : public QObject
     Q_OBJECT
 
 private:
+
     static std::atomic_bool m_terminator;
     static libnii_device *handle;
     static uint64_t accel_duration, gyro_duration, accel_ts, gyro_ts;
@@ -32,9 +33,6 @@ private:
 
     static void receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *data);
     static void handleError(void *user_ptr, int error_code);
-    static void printError(QString format, uint64_t diff);
-    static void printError(QString format, const char *libnii_strerror);
-    static void printError(QString format, int error_code, const char *libnii_strerror);
 
 public:
     CircuitDataReceiver();
@@ -45,7 +43,9 @@ public:
     void stopConfigExec();
     static int calcDuration(int freq, int avr, int d);
 
+
 signals:
+    void signalSentData(QString data);
 };
 
 #endif // CIRCUITDATARECEIVER_H
