@@ -89,6 +89,12 @@ void ChartWidget::setChartData(xyzCircuitData data)
     cViewY->chart()->removeSeries(serY);
     cViewZ->chart()->removeSeries(serZ);
 
+    // if (!serX->points().isEmpty())
+    // {
+    //     double time = serX->points().last().rx();
+    //     qDebug() << data.timestamp << time << data.timestamp - time;
+    // }
+
     serX->append(data.timestamp, data.x); //adding new point to axis-line
     axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
     axisrn.xmin = data.x < axisrn.xmin ? data.x : axisrn.xmin;
@@ -116,6 +122,8 @@ void ChartWidget::setChartData(xyzCircuitData data)
     // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
     cViewZ->chart()->addSeries(serZ);
+
+
 }
 
 void ChartWidget::cleanAllSeries(int timeInSeconds)
@@ -137,6 +145,7 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
 {
     QList<QPointF> data = datasource->points();
     int initial = data.length();
+    // float timeDelta = 0;
     foreach(QPointF point, data.toList()){
         if (data.last().x() - point.x() <= timeInSeconds)
             break;
@@ -144,6 +153,10 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
     }
     p7Trace->P7_TRACE(moduleName, TM("Cleared chart arrays: from %d to %d"), initial, data.length());
 
+    // qDebug() << data.length();
+
     datasource->clear();
     datasource->append(data);
 }
+
+
