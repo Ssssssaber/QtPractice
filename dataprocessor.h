@@ -12,6 +12,7 @@
 #include "cdrworker.h"
 #include "P7_Trace.h"
 
+class CDRWorker;
 class DataProcessor : public QObject
 {
     Q_OBJECT

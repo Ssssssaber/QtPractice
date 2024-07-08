@@ -31,9 +31,6 @@ DataProcessor::DataProcessor()
     //CircuitDataReceiver::disconnectCircuit();
 
 
-
-    connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
-
     readTimer = new QTimer(this);
     readTimer->setSingleShot(false);
     readTimer->setInterval(0);
