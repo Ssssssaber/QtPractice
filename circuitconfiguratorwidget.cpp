@@ -34,7 +34,7 @@ void CircuitConfiguratorWidget::prepeareConfig()
 {
     cConfig config;
     config.type = type;
-    config.range = rangeSlider->value();
+    if (type != 'M') config.range = rangeSlider->value();
     config.freq = freqSlider->value();
     config.avg = avgSlider->value();
 
@@ -49,9 +49,24 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
     freqLabel = new QLabel("Current freq: 0");
     avgLabel = new QLabel("Current avr: 0");
 
-    rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
-    freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
-    avgSlider = createSlider(0, 4, &CircuitConfiguratorWidget::setAvgLabelValue);
+    if (type == 'A')
+    {
+        rangeSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setRangeLabelValue);
+        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+    }
+    else if (type == 'G')
+    {
+        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
+        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+    }
+    else if (type == 'M')
+    {
+        // rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
+        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+    }
 
     QPushButton *setButton = new QPushButton("Change config");
     connect(setButton, &QPushButton::clicked, this, &CircuitConfiguratorWidget::prepeareConfig);
@@ -62,11 +77,14 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
     layout->addWidget(freqLabel, 1, 0, 1, 1);
     layout->addWidget(freqSlider, 1, 2, 1, 3);
 
-    layout->addWidget(rangeLabel, 2, 0, 1, 1);
-    layout->addWidget(rangeSlider, 2, 2, 1, 3);
+    layout->addWidget(avgLabel, 2, 0, 1, 1);
+    layout->addWidget(avgSlider, 2, 2, 1, 3);
 
-    layout->addWidget(avgLabel, 3, 0, 1, 1);
-    layout->addWidget(avgSlider, 3, 2, 1, 3);
+    if (type != 'M')
+    {
+        layout->addWidget(rangeLabel, 3, 0, 1, 1);
+        layout->addWidget(rangeSlider, 3, 2, 1, 3);
+    }
 
     layout->addWidget(setButton, 4, 4, 1, 1);
     setLayout(layout);
