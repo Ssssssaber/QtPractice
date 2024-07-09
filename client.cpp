@@ -145,7 +145,7 @@ void Client::parseStringData(QString stringData)
     if (tokens[0] == "data")
     {
         xyzCircuitData data;
-        data.group = tokens[1];
+        data.group = tokens[1].toStdString()[0];
         data.id = tokens[2].toInt();
         data.x = tokens[3].toInt();
         data.y = tokens[4].toInt();
@@ -153,7 +153,7 @@ void Client::parseStringData(QString stringData)
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         emit signalReceivedData(data);
-        if (data.group != "A") return;
+        if (data.group != 'A') return;
         if (lastReceivedTime == 0)
         {
             lastReceivedTime = receiveTime.elapsed();

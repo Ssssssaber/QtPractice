@@ -31,15 +31,15 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
 
 void DataAnalyzer::slotInfoReceived(xyzCircuitData data)
 {
-    if (data.group == "A")
+    if (data.group == 'A')
     {
         addDataWithAnalysisCheck(&aData, data);
     }
-    else if (data.group == "G")
+    else if (data.group == 'G')
     {
         addDataWithAnalysisCheck(&gData, data);
     }
-    else if (data.group == "M")
+    else if (data.group == 'M')
     {
         addDataWithAnalysisCheck(&mData, data);
     }
@@ -97,8 +97,8 @@ void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int t
     }
 
     // qDebug() << " before and after " << initial << dataToClean->length();
-    p7Trace->P7_TRACE(moduleName, TM("Cleared %s analyzer arrays: from %d to %d"),
-                      dataToClean->back().group.toStdString().data(),
+    p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
+                      dataToClean->back().group,
                       initial, dataToClean->length());
 }
 
