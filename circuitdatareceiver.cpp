@@ -26,99 +26,19 @@ CircuitDataReceiver::CircuitDataReceiver()
 }
 
 void CircuitDataReceiver::connectCircuit()
-
 {
-    // add error enum!
-    libnii_open(&handle, VENDOR_ID, PRODUCT_ID, LIBNII_MATCH_ANY, LIBNII_MATCH_ANY,
+    int err;
+    err = libnii_open(&handle, VENDOR_ID, PRODUCT_ID, LIBNII_MATCH_ANY, LIBNII_MATCH_ANY,
                 receiveData, handleError, handle);
+    if ( LIBNII_SUCCESS != err )
+    {
+        printError("failed to open: %1", libnii_strerror(err));
+    };
 }
 
 void CircuitDataReceiver::disconnectCircuit()
 {
     libnii_close(handle);
-}
-
-QString CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, int range)
-{
-    QString err = "";
-    switch (type) {
-    case 'A':
-    {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Accelerator frequency option must be in 0-2 range\n";
-        }
-        else params.accel_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Accelerator average option must be in 0-8 range\n";
-        }
-        else params.accel_avr = avr;
-
-        if ((range < 0) || (range > 2))
-        {
-            err += "Accelerator range option must be in 0-2 range\n";
-        }
-        else params.accel_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
-    }
-        break;
-    case 'G':
-    {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Gyroscope frequency option must be in 0-2 range\n";
-        }
-        else params.gyro_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Gyroscope average option must be in 0-8 range\n";
-        }
-        else params.gyro_avr = avr;
-
-        if ((range < 0) || (range > 3))
-        {
-            err += "Gyroscope range option must be in 0-3 range\n";
-        }
-        else params.gyro_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
-    }
-        break;
-    case 'M':
-    {
-        if ((freq < 0) || (freq > 3))
-        {
-            err += "Magnet frequency option must be in 0-3 range\n";
-        }
-        else params.magnet_duty = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Magnet average option must be in 0-8 range\n";
-        }
-        else params.magnet_avr = avr;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
-    }
-        break;
-    default:
-        err += "Unknown sensor type";
-        qDebug().noquote() << err;
-    }
-    return err;
 }
 
 int CircuitDataReceiver::setConfigParams()
@@ -130,6 +50,8 @@ int CircuitDataReceiver::setConfigParams()
     }
 
     r = libnii_set_params(handle, &params);
+    if ( LIBNII_SUCCESS != r )
+        printError("failed to set parameters: %1", libnii_strerror(r));
     return r;
 }
 
@@ -159,17 +81,28 @@ int CircuitDataReceiver::calcDuration(int freq, int avr, int d)
 
 void CircuitDataReceiver::printError(QString format, uint64_t diff)
 {
-    qDebug().noquote() << QString(format).arg(diff);
+    QString err = QString(format).arg(diff);
+    qDebug().noquote() << err;
+    sendError(err);
 }
 
 void CircuitDataReceiver::printError(QString format, const char *str_error)
 {
-    qDebug().noquote() << QString(format).arg(str_error);
+    QString err = QString(format).arg(str_error);
+    qDebug().noquote() << err;
+    sendError(err);
 }
 
 void CircuitDataReceiver::printError(QString format, int error_code, const char *str_error)
 {
-    qDebug().noquote() << QString(format).arg(QString::number(error_code), str_error);
+    QString err = QString(format).arg(QString::number(error_code), str_error);
+    qDebug().noquote() << err;
+    sendError(err);
+}
+
+void CircuitDataReceiver::sendError(QString error)
+{
+    DataProcessor::receiveErrorFromDataReceiver(error);
 }
 
 void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *rawData)
@@ -181,13 +114,6 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     {
         xyzCircuitData data = convertToXyzData("A", packet_number, rawData);
         //uint64_t diff, ts = xyz->ts;
-        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("A", QString::number(packet_number),
-        //                                                 QString::number((int)(xyz->x)),
-        //                                                 QString::number((int)(xyz->y)),
-        //                                                 QString::number((int)(xyz->z)),
-        //                                                 QString::number((unsigned long)(xyz->ts)));
-
-
 
         /*
         if ( accel_ts && accel_duration ) {
@@ -205,11 +131,6 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     {
         xyzCircuitData data = convertToXyzData("G", packet_number, rawData);
         //uint64_t diff, ts = xyz->ts;
-        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("G", QString::number(packet_number),
-        //                                                 QString::number((int)(xyz->x)),
-        //                                                 QString::number((int)(xyz->y)),
-        //                                                 QString::number((int)(xyz->z)),
-        //                                                 QString::number((unsigned long)(xyz->ts)));
 
         /*
         if ( gyro_ts && gyro_duration ) {
@@ -226,12 +147,6 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     case LIBNII_MAGNET_DATA:
     {
         xyzCircuitData data = convertToXyzData("M", packet_number, rawData);
-        // libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
-        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("M", QString::number(packet_number),
-        //                                                 QString::number((int)(xyz->x)),
-        //                                                 QString::number((int)(xyz->y)),
-        //                                                 QString::number((int)(xyz->z)),
-        //                                                 QString::number((unsigned long)(xyz->ts)));
         DataProcessor::receiveDataFromDataReceiver(data);
     }
     break;
@@ -263,7 +178,97 @@ void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
 
     if ( LIBNII_SUCCESS != error_code && error_code != prev )
         printError("Error: code %1 %2", error_code, libnii_strerror(error_code));
-        //qDebug() << "Error: code" << error_code << libnii_strerror(error_code);
 
     prev = error_code;
+}
+
+int CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, int range)
+{
+    QString err = "";
+    int r = -1;
+    switch (type) {
+    case 'A':
+    {
+        if ((freq < 0) || (freq > 2))
+        {
+            err += "Accelerator frequency option must be in 0-2 range\n";
+        }
+        else params.accel_freq = freq;
+
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Accelerator average option must be in 0-8 range\n";
+        }
+        else params.accel_avr = avr;
+
+        if ((range < 0) || (range > 2))
+        {
+            err += "Accelerator range option must be in 0-2 range\n";
+        }
+        else params.accel_range = range;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+    break;
+    case 'G':
+    {
+        if ((freq < 0) || (freq > 2))
+        {
+            err += "Gyroscope frequency option must be in 0-2 range\n";
+        }
+        else params.gyro_freq = freq;
+
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Gyroscope average option must be in 0-8 range\n";
+        }
+        else params.gyro_avr = avr;
+
+        if ((range < 0) || (range > 3))
+        {
+            err += "Gyroscope range option must be in 0-3 range\n";
+        }
+        else params.gyro_range = range;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+    break;
+    case 'M':
+    {
+        if ((freq < 0) || (freq > 3))
+        {
+            err += "Magnet frequency option must be in 0-3 range\n";
+        }
+        else params.magnet_duty = freq;
+
+        if ((avr < 0) || (avr > 8))
+        {
+            err += "Magnet average option must be in 0-8 range\n";
+        }
+        else params.magnet_avr = avr;
+
+        if(err != "")
+        {
+            qDebug().noquote() << err;
+        }
+    }
+    break;
+    default:
+        err += "Unknown sensor type";
+        qDebug().noquote() << err;
+    }
+    if(err == "")
+    {
+        err = "Received configuration is valid";
+        r = 0;
+    }
+    sendError(err);
+
+    return r;
 }
