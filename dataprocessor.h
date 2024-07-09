@@ -32,6 +32,10 @@ private:
     QTimer *errorTimer;
 
 
+    QElapsedTimer receiveTime;
+    qint64 lastReceivedTime;
+
+
     QFile *file;
     QTimer* fileTimer;
 
@@ -39,7 +43,7 @@ private:
     QThread *thread;
 
     int lastReceivedId = 0;
-    QMap<QString, int> dataMap;
+    QMap<char, int> dataMap;
 
     void processLine(QString line);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);

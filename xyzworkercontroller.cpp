@@ -70,15 +70,15 @@ void XyzWorkerController::startOperating(QList<xyzCircuitData> dataList)
 {
     // worker->slotDoWork(dataList);
     xyzCircuitData data = dataList[0];
-    if (data.group == "A")
+    if (data.group == 'A')
     {
        aWorker->slotDoWork(dataList);
     }
-    else if (data.group == "G")
+    else if (data.group == 'G')
     {
         gWorker->slotDoWork(dataList);
     }
-    else if (data.group == "M")
+    else if (data.group == 'M')
     {
         mWorker->slotDoWork(dataList);
     }

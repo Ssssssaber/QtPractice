@@ -161,7 +161,7 @@ xyzCircuitData CircuitDataReceiver::convertToXyzData(QString type, int packet_nu
     libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
 
     xyzCircuitData data;
-    data.group = type;
+    data.group = type.toStdString()[0];
     data.id = packet_number;
     data.x = (int)(xyz->x);
     data.y = (int)(xyz->y);

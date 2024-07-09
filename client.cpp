@@ -28,9 +28,13 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::slotConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::slotReadyRead);
 
-    udpSocket = new QUdpSocket(this);
-    udpSocket->bind(udpPort);
-    connect(udpSocket, &QUdpSocket::readyRead, this, &Client::slotProcessDatagrams);
+    udpDataSocket = new QUdpSocket(this);
+    udpDataSocket->bind(udpPort);
+    connect(udpDataSocket, &QUdpSocket::readyRead, this, &Client::slotProcessData);
+
+    udpAnalysisSocket = new QUdpSocket(this);
+    udpAnalysisSocket->bind(udpPort + 10);
+    connect(udpAnalysisSocket, &QUdpSocket::readyRead, this, &Client::slotProcessAnalysis);
 
     serverResponseText = new QTextEdit();
 
@@ -96,13 +100,32 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     grid->addWidget(configs, 0, 11, 4, 10);
 }
 
-void Client::slotProcessDatagrams()
+void Client::slotProcessData()
 {
     QByteArray baDatagram;
     do {
-        baDatagram.resize(udpSocket->pendingDatagramSize());
-        udpSocket->readDatagram(baDatagram.data(), baDatagram.size());
-    } while (udpSocket->hasPendingDatagrams());
+        baDatagram.resize(udpAnalysisSocket->pendingDatagramSize());
+        udpAnalysisSocket->readDatagram(baDatagram.data(), baDatagram.size());
+    } while (udpAnalysisSocket->hasPendingDatagrams());
+
+    QDateTime dateTime;
+    QString stringData;
+    QDataStream in(&baDatagram, QIODevice::ReadOnly);
+    in.setVersion(QDataStream::Qt_5_12);
+    in >> dateTime >> stringData;
+    // xyzCircuitData parsedData = parseReceivedData(stringData);
+    parseStringData(stringData);
+    QString result = "Received: " + dateTime.toString() + " - " + stringData;
+    receivedCircuitData->append(result);
+}
+
+void Client::slotProcessAnalysis()
+{
+    QByteArray baDatagram;
+    do {
+        baDatagram.resize(udpDataSocket->pendingDatagramSize());
+        udpDataSocket->readDatagram(baDatagram.data(), baDatagram.size());
+    } while (udpDataSocket->hasPendingDatagrams());
 
     QDateTime dateTime;
     QString stringData;
@@ -122,7 +145,7 @@ void Client::parseStringData(QString stringData)
     if (tokens[0] == "data")
     {
         xyzCircuitData data;
-        data.group = tokens[1];
+        data.group = tokens[1].toStdString()[0];
         data.id = tokens[2].toInt();
         data.x = tokens[3].toInt();
         data.y = tokens[4].toInt();
@@ -130,6 +153,18 @@ void Client::parseStringData(QString stringData)
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         emit signalReceivedData(data);
+        if (data.group != 'A') return;
+        if (lastReceivedTime == 0)
+        {
+            lastReceivedTime = receiveTime.elapsed();
+        }
+        else
+        {
+            qint64 currentTime = receiveTime.elapsed();
+            qint64 difference = currentTime - lastReceivedTime;
+            p7Trace->P7_DEBUG(moduleName, TM("delta t: %d"), difference);
+            lastReceivedTime = currentTime;
+        }
     }
     else if (tokens[0] == "analysis")
     {
