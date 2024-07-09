@@ -13,14 +13,7 @@ CDRWorker::~CDRWorker()
 
 void CDRWorker::process()
 {
-    int r = cdr->setCircuitParams();
+    int r = cdr->setConfigParams();
     emit finished(r);
-    return;
-}
-
-void CDRWorker::stop()
-{
-    if(cdr != NULL)
-        cdr->stopConfigExec();
     return;
 }

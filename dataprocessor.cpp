@@ -3,7 +3,9 @@
 #include <QApplication>
 #include <QDir>
 
-QQueue<QString> DataProcessor::dataQueue;
+//QQueue<QString> DataProcessor::dataQueue;
+QQueue<xyzCircuitData> DataProcessor::dataQueue;
+xyzCircuitData DataProcessor::currentData;
 
 DataProcessor::DataProcessor()
 {
@@ -23,13 +25,6 @@ DataProcessor::DataProcessor()
     dataMap["p1"] = 4;
 
     CircuitDataReceiver::connectCircuit();
-    // QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
-    // if (ans != "")
-    //     qDebug().noquote() << ans;
-    // this->setConfig();
-    //emit signalStopConfigExec();
-    //CircuitDataReceiver::disconnectCircuit();
-
 
     readTimer = new QTimer(this);
     readTimer->setSingleShot(false);
@@ -130,10 +125,35 @@ void DataProcessor::processLine(QString line)
     catch (...) {
         p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
     }
-
-
 }
 
+void DataProcessor::processReceivedData(xyzCircuitData data)
+{
+    try
+    {
+        switch (dataMap[data.group]) {
+        case 1:
+            emit signalLineProcessed(multiplyXyz(data, aConstant));
+            break;
+        case 2:
+            emit signalLineProcessed(multiplyXyz(data, gConstant));
+            break;
+        case 3:
+            emit signalLineProcessed(multiplyXyz(data, mConstant));
+            break;
+        case 4:
+            break;
+        default:
+            break;
+        }
+    }
+    catch (const std::exception& ex) {
+        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+    }
+    catch (...) {
+        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    }
+}
 
 xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
 {
@@ -165,10 +185,37 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     return data;
 }
 
-
-void DataProcessor::slotDataFromDataReceiver(QString data)
+xyzCircuitData DataProcessor::multiplyXyz(xyzCircuitData data, float transitionConst)
 {
-    processLine(data);
+    data.x *= transitionConst;
+    data.y *= transitionConst;
+    data.z *= transitionConst;
+    data.timestamp /= timeConstant;
+
+    QString message;
+    if (lastReceivedId + 1 == data.id)
+    {
+        message =  QString("no packages lost");
+        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
+    }
+    else
+    {
+        message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
+        counterLost += data.id - lastReceivedId;
+        qDebug() << "COUNTERLOST =" << counterLost;
+        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
+    }
+
+    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
+    lastReceivedId = data.id;
+
+    return data;
+}
+
+void DataProcessor::slotDataFromDataReceiver(xyzCircuitData data)
+{
+
+    //processLine(data);
 }
 
 void DataProcessor::slotConfigCompleted(int r)
@@ -190,15 +237,31 @@ void DataProcessor::slotConfigReceived(cConfig config)
     //qDebug() << "received config: " << config.toString();
 }
 
-void DataProcessor::receiveDataFromDataReceiver(QString data)
+// void DataProcessor::receiveDataFromDataReceiver(QString data)
+// {
+//     dataQueue.enqueue(data);
+// }
+
+void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
-    dataQueue.enqueue(data);
+    currentData = data;
+    //dataQueue.enqueue(data);
 }
 
 void DataProcessor::readData()
 {
     // fix queue
-    if(DataProcessor::dataQueue.isEmpty())
+    // if(DataProcessor::dataQueue.isEmpty())
+    //     return;
+    // processReceivedData(DataProcessor::dataQueue.dequeue());
+
+    if (currentData.group == "N")
+    {
         return;
-    processLine(DataProcessor::dataQueue.dequeue());
+    }
+    else
+    {
+        processReceivedData(currentData);
+        currentData.group = "N";
+    }
 }
