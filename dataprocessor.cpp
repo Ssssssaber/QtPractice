@@ -106,7 +106,8 @@ void DataProcessor::processLine(QString line)
         switch (dataMap[dataSource]) {
         case 1:
             emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
-            break;
+
+
         case 2:
             emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
             break;
@@ -134,6 +135,17 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
         switch (dataMap[data.group]) {
         case 1:
             emit signalLineProcessed(multiplyXyz(data, aConstant));
+            if (lastReceivedTime == 0)
+            {
+                lastReceivedTime = receiveTime.elapsed();
+            }
+            else
+            {
+                qint64 currentTime = receiveTime.elapsed();
+                qint64 difference = currentTime - lastReceivedTime;
+                p7Trace->P7_DEBUG(moduleName, TM("delta t: %d"), difference);
+                lastReceivedTime = currentTime;
+            }
             break;
         case 2:
             emit signalLineProcessed(multiplyXyz(data, gConstant));

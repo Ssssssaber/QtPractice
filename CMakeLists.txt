@@ -44,6 +44,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         perfomancechecker.h perfomancechecker.cpp
         circuitconfiguratorwidget.h circuitconfiguratorwidget.cpp
         CircuitConfiguration.h
+        udpsocketmanager.h udpsocketmanager.cpp
 
 
     )

@@ -30,6 +30,10 @@ private:
     const float timeConstant = 1000000000;
     QTimer *readTimer;
 
+    QElapsedTimer receiveTime;
+    qint64 lastReceivedTime;
+
+
     QFile *file;
     QTimer* fileTimer;
 
