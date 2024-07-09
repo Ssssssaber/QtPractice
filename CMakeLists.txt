@@ -33,12 +33,12 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         xyzworker.h xyzworker.cpp
 
         xyzworkercontroller.h xyzworkercontroller.cpp
-        nii_test.cpp
-        nii_test.h
+
+
         cmake/FindLibUdev.cmake cmake/FindUSB1.cmake
         circuitdatareceiver.cpp
         circuitdatareceiver.h
-        test.h test.cpp
+
         cdrworker.h cdrworker.cpp
         linux-system-usage.hpp
         perfomancechecker.h perfomancechecker.cpp

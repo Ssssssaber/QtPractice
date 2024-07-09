@@ -127,7 +127,7 @@ int CircuitDataReceiver::setCircuitParams()
     int r = -1;
 
     while ( ! libnii_is_connected(handle) && m_terminator) {
-        QThread::sleep(10);
+        QThread::sleep(1);
     }
 
     r = libnii_set_params(handle, &params);
