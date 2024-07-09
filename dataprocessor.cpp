@@ -19,10 +19,9 @@ DataProcessor::DataProcessor()
     {
         p7Trace->Register_Module(TM("DProc"), &moduleName);
     }
-    dataMap["A"] = 1;
-    dataMap["G"] = 2;
-    dataMap["M"] = 3;
-    dataMap["p1"] = 4;
+    dataMap['A'] = 1;
+    dataMap['G'] = 2;
+    dataMap['M'] = 3;
 
     CircuitDataReceiver::connectCircuit();
 
@@ -96,35 +95,36 @@ void DataProcessor::setConfig()
 
 void DataProcessor::processLine(QString line)
 {
-    try
-    {
-        QString processedLine = line.simplified();
-        emit signalLineReceived(processedLine);
-        QList<QString> tokens = line.simplified().split(' ');
+    // try
+    // {
+    //     QString processedLine = line.simplified();
+    //     emit signalLineReceived(processedLine);
+    //     QList<QString> tokens = line.simplified().split(' ');
 
-        QString dataSource = tokens.data()[0];
-        switch (dataMap[dataSource]) {
-        case 1:
-            emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
-            break;
-        case 2:
-            emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
-            break;
-        case 3:
-            emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
-            break;
-        case 4:
-            break;
-        default:
-            break;
-        }
-    }
-    catch (const std::exception& ex) {
-        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
-    }
-    catch (...) {
-        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
-    }
+    //     QString dataSource = tokens.data()[0];
+    //     switch (dataMap[dataSource]) {
+    //     case 1:
+    //         emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
+
+
+    //     case 2:
+    //         emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
+    //         break;
+    //     case 3:
+    //         emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
+    //         break;
+    //     case 4:
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    // }
+    // catch (const std::exception& ex) {
+    //     p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+    // }
+    // catch (...) {
+    //     p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    // }
 }
 
 void DataProcessor::processReceivedData(xyzCircuitData data)
@@ -134,6 +134,17 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
         switch (dataMap[data.group]) {
         case 1:
             emit signalLineProcessed(multiplyXyz(data, aConstant));
+            if (lastReceivedTime == 0)
+            {
+                lastReceivedTime = receiveTime.elapsed();
+            }
+            else
+            {
+                qint64 currentTime = receiveTime.elapsed();
+                qint64 difference = currentTime - lastReceivedTime;
+                p7Trace->P7_DEBUG(moduleName, TM("delta t: %d"), difference);
+                lastReceivedTime = currentTime;
+            }
             break;
         case 2:
             emit signalLineProcessed(multiplyXyz(data, gConstant));
@@ -159,7 +170,7 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
 {
 
     xyzCircuitData data;
-    data.group = tokens[0];
+    data.group = tokens[0].toStdString()[0];
     data.id = tokens[1].toInt();
     data.x = tokens[2].toInt() * transitionConst;
     data.y = tokens[3].toInt() * transitionConst;
@@ -255,13 +266,13 @@ void DataProcessor::readData()
     //     return;
     // processReceivedData(DataProcessor::dataQueue.dequeue());
 
-    if (currentData.group == "N")
+    if (currentData.group == 'N')
     {
         return;
     }
     else
     {
         processReceivedData(currentData);
-        currentData.group = "N";
+        currentData.group = 'N';
     }
 }

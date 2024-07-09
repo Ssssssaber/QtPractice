@@ -11,7 +11,7 @@ void WindowWorker::slotDoWork(QList<xyzCircuitData> dataList)
     {
         p7Trace->P7_ERROR(moduleName, TM("empty list on window analysis"));
     }
-    xyzAnalysisResult result = {.method="window", .group = dataList[0].group,.x = 0, .y = 0, .z = 0};
+    xyzAnalysisResult result = {.method="window", .group = QString(dataList[0].group),.x = 0, .y = 0, .z = 0};
     int length = dataList.length();
 
     foreach (xyzCircuitData data, dataList.toList())

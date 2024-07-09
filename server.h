@@ -20,11 +20,14 @@ private:
     DataAnalyzer *dataAnalyzer;
     // DataReceiver *dataReceiver;
     int udpPort;
-    QUdpSocket* udpSocket;
+    QUdpSocket* udpDataSocket;
+    QUdpSocket* udpAnalysisSocket;
+
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
     QQueue<xyzCircuitData> dataToSendQueue;
-    QQueue<QString> stringsToSendQueue;
+    QQueue<xyzAnalysisResult> analysisToSendQueue;
+    // QQueue<QString> stringsToSendQueue;
 
     int tcpPort;
     bool clientConnected = false;
@@ -42,7 +45,8 @@ public slots:
     void slotReadClient();
     void slotDataToSendAdded(xyzCircuitData data);
     void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
-    void slotSendDatagram();
+    void slotSendData();
+    void slotSendAnalysis();
 signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);

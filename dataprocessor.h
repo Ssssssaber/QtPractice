@@ -30,6 +30,10 @@ private:
     const float timeConstant = 1000000000;
     QTimer *readTimer;
 
+    QElapsedTimer receiveTime;
+    qint64 lastReceivedTime;
+
+
     QFile *file;
     QTimer* fileTimer;
 
@@ -37,7 +41,7 @@ private:
     QThread *thread;
 
     int lastReceivedId = 0;
-    QMap<QString, int> dataMap;
+    QMap<char, int> dataMap;
 
     void processLine(QString line);
     xyzCircuitData multiplyXyz(xyzCircuitData data, float transitionConst);
