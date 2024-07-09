@@ -5,11 +5,6 @@ uint64_t CircuitDataReceiver::accel_duration = 0,
     CircuitDataReceiver::gyro_duration = 0,
     CircuitDataReceiver::accel_ts = 0,
     CircuitDataReceiver::gyro_ts = 0;
-bool CircuitDataReceiver::configExec = 0;
-std::atomic_bool CircuitDataReceiver::m_terminator = true;
-
-CircuitDataReceiver::CircuitDataReceiver()
-{  }
 
 struct libnii_params CircuitDataReceiver::params = {
     .accel_freq = 0,
@@ -25,6 +20,10 @@ struct libnii_params CircuitDataReceiver::params = {
     .nv08c_freq = 0,
     .display_refresh = 2
 };
+
+CircuitDataReceiver::CircuitDataReceiver()
+{
+}
 
 void CircuitDataReceiver::connectCircuit()
 
@@ -122,23 +121,16 @@ QString CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, in
     return err;
 }
 
-int CircuitDataReceiver::setCircuitParams()
+int CircuitDataReceiver::setConfigParams()
 {
-    int r = -1;
+    int r = -1, attempts = 10;
 
-    while ( ! libnii_is_connected(handle) && m_terminator) {
+    while ( ! libnii_is_connected(handle) && (attempts-- > 0)) {
         QThread::sleep(1);
     }
 
     r = libnii_set_params(handle, &params);
-    if ( LIBNII_SUCCESS != r )
-        printError("failed to set parameters: %s\n", libnii_strerror(r));
     return r;
-}
-
-void CircuitDataReceiver::stopConfigExec()
-{
-    m_terminator = false;
 }
 
 int CircuitDataReceiver::calcDuration(int freq, int avr, int d)
@@ -180,22 +172,23 @@ void CircuitDataReceiver::printError(QString format, int error_code, const char 
     qDebug().noquote() << QString(format).arg(QString::number(error_code), str_error);
 }
 
-void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *data)
+void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *rawData)
 {
     (void) user_ptr;
-
-    //if ( __atomic_load_n(&silent, __ATOMIC_SEQ_CST)) return;
 
     switch ( type ) {
     case LIBNII_ACCEL_DATA:
     {
-        libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) data;
+        xyzCircuitData data = convertToXyzData("A", packet_number, rawData);
         //uint64_t diff, ts = xyz->ts;
-        QString data = QString("%1 %2 %3 %4 %5 %6").arg("A", QString::number(packet_number),
-                                                        QString::number((int)(xyz->x)), QString::number((int)(xyz->y)), QString::number((int)(xyz->z)),
-                                                        QString::number((unsigned long)(xyz->ts)));
-        qDebug() << data;
-        //print_xyz('A', xyz, packet_number);
+        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("A", QString::number(packet_number),
+        //                                                 QString::number((int)(xyz->x)),
+        //                                                 QString::number((int)(xyz->y)),
+        //                                                 QString::number((int)(xyz->z)),
+        //                                                 QString::number((unsigned long)(xyz->ts)));
+
+
+
         /*
         if ( accel_ts && accel_duration ) {
             if ( ts > accel_ts ) diff = ts - accel_ts;
@@ -210,13 +203,13 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     break;
     case LIBNII_GYRO_DATA:
     {
-        libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) data;
+        xyzCircuitData data = convertToXyzData("G", packet_number, rawData);
         //uint64_t diff, ts = xyz->ts;
-        //print_xyz('G', xyz, packet_number);
-        QString data = QString("%1 %2 %3 %4 %5 %6").arg("G", QString::number(packet_number),
-                QString::number((int)(xyz->x)), QString::number((int)(xyz->y)), QString::number((int)(xyz->z)),
-                QString::number((unsigned long)(xyz->ts)));
-        qDebug() << data;
+        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("G", QString::number(packet_number),
+        //                                                 QString::number((int)(xyz->x)),
+        //                                                 QString::number((int)(xyz->y)),
+        //                                                 QString::number((int)(xyz->z)),
+        //                                                 QString::number((unsigned long)(xyz->ts)));
 
         /*
         if ( gyro_ts && gyro_duration ) {
@@ -232,19 +225,35 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     break;
     case LIBNII_MAGNET_DATA:
     {
-        libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) data;
-        //print_xyz('M', (libnii_xyz_data_t *) data, packet_number);
-        QString data = QString("%1 %2 %3 %4 %5 %6").arg("M", QString::number(packet_number),
-                                                        QString::number((int)(xyz->x)), QString::number((int)(xyz->y)), QString::number((int)(xyz->z)),
-                                                        QString::number((unsigned long)(xyz->ts)));
-        qDebug() << data;
+        xyzCircuitData data = convertToXyzData("M", packet_number, rawData);
+        // libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
+        // QString data = QString("%1 %2 %3 %4 %5 %6").arg("M", QString::number(packet_number),
+        //                                                 QString::number((int)(xyz->x)),
+        //                                                 QString::number((int)(xyz->y)),
+        //                                                 QString::number((int)(xyz->z)),
+        //                                                 QString::number((unsigned long)(xyz->ts)));
         DataProcessor::receiveDataFromDataReceiver(data);
     }
     break;
     default:
-        qDebug() << "Other type data were received.";
+        // Other type data were received
         break;
     }
+}
+
+xyzCircuitData CircuitDataReceiver::convertToXyzData(QString type, int packet_number, void *rawData)
+{
+    libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
+
+    xyzCircuitData data;
+    data.group = type;
+    data.id = packet_number;
+    data.x = (int)(xyz->x);
+    data.y = (int)(xyz->y);
+    data.z = (int)(xyz->z);
+    data.timestamp = (unsigned long)(xyz->ts);
+
+    return data;
 }
 
 void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
@@ -253,8 +262,8 @@ void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
     (void) user_ptr;
 
     if ( LIBNII_SUCCESS != error_code && error_code != prev )
-        //nii_print_error("code %d: %s\n", error_code, libnii_strerror(error_code));
-        qDebug() << "Error: code" << error_code << libnii_strerror(error_code);
+        printError("Error: code %1 %2", error_code, libnii_strerror(error_code));
+        //qDebug() << "Error: code" << error_code << libnii_strerror(error_code);
 
     prev = error_code;
 }
