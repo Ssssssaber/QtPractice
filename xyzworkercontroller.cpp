@@ -90,7 +90,6 @@ void XyzWorkerController::startOperating(QList<xyzCircuitData> dataList)
 
 void XyzWorkerController::slotHandleResults(xyzAnalysisResult result)
 {
-    qDebug() << result.toString();
     p7Trace->P7_TRACE(moduleName, TM("Result ready: %s"), result.toString().toStdString().data());
     emit signalResultReady(result);
 }

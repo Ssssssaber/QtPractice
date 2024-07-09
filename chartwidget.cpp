@@ -51,6 +51,10 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     cViewY->chart()->createDefaultAxes();
     cViewZ->chart()->createDefaultAxes();
 
+    cViewX->chart()->legend()->hide();
+    cViewY->chart()->legend()->hide();
+    cViewZ->chart()->legend()->hide();
+
     vboxX->addWidget(cViewX); // adding widgets to VBox pair
     vboxX->addWidget(resX);
 
@@ -81,11 +85,15 @@ void ChartWidget::setWindowResult(xyzAnalysisResult data)
 
 void ChartWidget::setChartData(xyzCircuitData data)
 {
-    qDebug() << data.timestamp << data.x;
-
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
     cViewZ->chart()->removeSeries(serZ);
+
+    // if (!serX->points().isEmpty())
+    // {
+    //     double time = serX->points().last().rx();
+    //     qDebug() << data.timestamp << time << data.timestamp - time;
+    // }
 
     serX->append(data.timestamp, data.x); //adding new point to axis-line
     axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
@@ -101,15 +109,21 @@ void ChartWidget::setChartData(xyzCircuitData data)
 
     cViewX->chart()->axes(Qt::Vertical).back()->setRange(axisrn.xmin,axisrn.xmax); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp); // setting chart axies range
+    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
     cViewX->chart()->addSeries(serX); // restoring series
 
+
     cViewY->chart()->axes(Qt::Vertical).back()->setRange(axisrn.ymin,axisrn.ymax);
-    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    // cViewY->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
     cViewY->chart()->addSeries(serY);
 
     cViewZ->chart()->axes(Qt::Vertical).back()->setRange(axisrn.zmin,axisrn.zmax);
-    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(0,data.timestamp);
+    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
     cViewZ->chart()->addSeries(serZ);
+
+
 }
 
 void ChartWidget::cleanAllSeries(int timeInSeconds)
@@ -131,6 +145,7 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
 {
     QList<QPointF> data = datasource->points();
     int initial = data.length();
+    // float timeDelta = 0;
     foreach(QPointF point, data.toList()){
         if (data.last().x() - point.x() <= timeInSeconds)
             break;
@@ -138,6 +153,10 @@ void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
     }
     p7Trace->P7_TRACE(moduleName, TM("Cleared chart arrays: from %d to %d"), initial, data.length());
 
+    // qDebug() << data.length();
+
     datasource->clear();
     datasource->append(data);
 }
+
+

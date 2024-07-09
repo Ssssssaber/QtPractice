@@ -1,9 +1,9 @@
 #include "server.h"
+#include "CircuitConfiguration.h"
 #include "GTypes.h"
 #include "P7_Client.h"
+#include "perfomancechecker.h"
 #include <QTcpSocket>
-
-
 
 Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
@@ -66,6 +66,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     dataProcessor = new DataProcessor();
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
+    connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
@@ -74,7 +75,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
 
     // DISABLE WHEN NOT DEBUGGING
-    dataProcessor->readDataFromTestFile();
+    // dataProcessor->readDataFromTestFile();
 
     udpSocket = new QUdpSocket(this);
     QTimer* ptimer = new QTimer(this);
@@ -84,7 +85,12 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
 
 
     p7Trace->P7_TRACE(moduleName, TM("Server started"));
+
+    PerfomanceChecker *pc = new PerfomanceChecker();
+    pc->Start();
 }
+
+
 
 void Server::slotSendDatagram()
 {
@@ -221,6 +227,15 @@ bool Server::processClientResponse(QString messageType, QString message)
         if (result)
         {
             emit signalAnalysisToggle(message);
+        }
+    }
+    else if (messageType == "config")
+    {
+        cConfig config = parseStructFromString(message);
+        result = true;
+        if (result)
+        {
+            emit signalConfigReceived(config);
         }
     }
     return result;

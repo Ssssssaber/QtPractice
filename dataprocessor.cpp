@@ -1,4 +1,5 @@
 #include "dataprocessor.h"
+#include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
 
@@ -21,9 +22,13 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-    // CircuitDataReceiver *cdr = new CircuitDataReceiver();
-
-    connect(this, &DataProcessor::signalLossDetected, &DataProcessor::slotOnPackageLoss);
+    CircuitDataReceiver::connectCircuit();
+    // QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
+    // if (ans != "")
+    //     qDebug().noquote() << ans;
+    // this->setConfig();
+    //emit signalStopConfigExec();
+    //CircuitDataReceiver::disconnectCircuit();
 
 
     readTimer = new QTimer(this);
@@ -78,29 +83,55 @@ void DataProcessor::readLine()
     }
 }
 
+void DataProcessor::setConfig()
+{
+    cdrworker = new CDRWorker();
+    thread = new QThread();
+    cdrworker->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), cdrworker, SLOT(process()));
+    connect(cdrworker, SIGNAL(finished(int)), thread, SLOT(quit()));
+    connect(cdrworker, SIGNAL(finished(int)), this, SLOT(slotConfigCompleted(int)));
+    connect(this, SIGNAL(signalStopConfigExec()), cdrworker, SLOT(stop()));
+    connect(cdrworker, SIGNAL(finished(int)), cdrworker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+    thread->start();
+}
+
 void DataProcessor::processLine(QString line)
 {
+    try
+    {
+        QString processedLine = line.simplified();
+        emit signalLineReceived(processedLine);
+        QList<QString> tokens = line.simplified().split(' ');
 
-    QString processedLine = line.simplified();
-    emit signalLineReceived(processedLine);
-    QList<QString> tokens = line.simplified().split(' ');
-
-    QString dataSource = tokens.data()[0];
-    switch (dataMap[dataSource]) {
-    case 1:
-        emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
-        break;
-    case 2:
-        emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
-        break;
-    case 3:
-        emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
-        break;
-    case 4:
-        break;
-    default:
-        break;
+        QString dataSource = tokens.data()[0];
+        switch (dataMap[dataSource]) {
+        case 1:
+            emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
+            break;
+        case 2:
+            emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
+            break;
+        case 3:
+            emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
+            break;
+        case 4:
+            break;
+        default:
+            break;
+        }
     }
+    catch (const std::exception& ex) {
+        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+    }
+    catch (...) {
+        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    }
+
+
 }
 
 
@@ -119,29 +150,44 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     if (lastReceivedId + 1 == data.id)
     {
         message =  QString("no packages lost");
-        emit signalLossDetected(message);
+        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
     }
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
-        emit signalLossDetected(message);
+        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
 
-    p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
+
     p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
     lastReceivedId = data.id;
 
     return data;
 }
 
-void DataProcessor::slotOnPackageLoss(QString message)
-{
-    qDebug() << message;
-}
 
 void DataProcessor::slotDataFromDataReceiver(QString data)
 {
     processLine(data);
+}
+
+void DataProcessor::slotConfigCompleted(int r)
+{
+    if ( LIBNII_SUCCESS != r )
+    {
+        QString err = QString("failed to set parameters: %1").arg(libnii_strerror(r));
+        emit signalConfigError(err);
+        qDebug().noquote() << err;
+    }
+}
+
+void DataProcessor::slotConfigReceived(cConfig config)
+{
+    QString ans = CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range);
+    if (ans != "")
+        qDebug().noquote() << ans;
+    setConfig();
+    //qDebug() << "received config: " << config.toString();
 }
 
 void DataProcessor::receiveDataFromDataReceiver(QString data)
@@ -151,6 +197,7 @@ void DataProcessor::receiveDataFromDataReceiver(QString data)
 
 void DataProcessor::readData()
 {
+    // fix queue
     if(DataProcessor::dataQueue.isEmpty())
         return;
     processLine(DataProcessor::dataQueue.dequeue());

@@ -1,13 +1,18 @@
-// #ifndef DATAPROCESSOR_H
-// #define DATAPROCESSOR_H
+#ifndef DATAPROCESSOR_H
+#define DATAPROCESSOR_H
 
 #pragma once
 
 #include <QFile>
 #include <QDebug>
+#include "CircuitConfiguration.h"
 #include "xyzcircuitdata.h"
+
+#include "circuitdatareceiver.h"
+#include "cdrworker.h"
 #include "P7_Trace.h"
 
+class CDRWorker;
 class DataProcessor : public QObject
 {
     Q_OBJECT
@@ -25,6 +30,9 @@ private:
     QFile *file;
     QTimer* fileTimer;
 
+    CDRWorker *cdrworker;
+    QThread *thread;
+
     int lastReceivedId = 0;
     QMap<QString, int> dataMap;
 
@@ -37,15 +45,18 @@ public:
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(QString);
     void readLine();
-private slots:
-    void slotOnPackageLoss(QString message);
+    void setConfig();
 
 public slots:
     void slotDataFromDataReceiver(QString data);
+    void slotConfigCompleted(int);
+    void slotConfigReceived(cConfig data);
 
 signals:
-    void signalLossDetected(QString data);
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
+    void signalStopConfigExec();
+    void signalConfigError(QString);
 };
 
+#endif // DATAPROCESSOR_H

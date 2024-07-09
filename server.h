@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include <QUdpSocket>
 #include <QTcpServer>
+#include "CircuitConfiguration.h"
 #include "P7_Trace.h"
 #include "dataanalyzer.h"
 #include "dataprocessor.h"
@@ -13,6 +14,8 @@ class Server : public QWidget
 private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
+
+
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
     // DataReceiver *dataReceiver;
@@ -44,6 +47,7 @@ signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);
     void signalAnalysisToggle(QString analysisType);
+    void signalConfigReceived(cConfig config);
 };
 
 // #endif // UDPSERVER_H

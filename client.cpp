@@ -5,8 +5,10 @@
 Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
+
     if (p7Client)
     {
+
         p7Trace = P7_Create_Trace(p7Client, TM("ClientChannel"));
         p7Trace->Share("ClientChannel");
         p7Trace->Register_Module(TM("Client"), &moduleName);
@@ -39,10 +41,10 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
 
-    QGridLayout* boxLayout = new QGridLayout;
-    boxLayout->addWidget(receivedCircuitData, 9, 0, 2, 5);
-    boxLayout->addWidget(chartManager, 0, 0, 8, 10);
-    boxLayout->addWidget(serverResponseText, 9, 5, 2, 1);
+    QGridLayout* grid = new QGridLayout;
+    grid->addWidget(receivedCircuitData, 9, 0, 2, 5);
+    grid->addWidget(chartManager, 0, 0, 8, 10);
+    grid->addWidget(serverResponseText, 9, 5, 2, 1);
 
     // window part
     windowInput = new QLineEdit();
@@ -53,10 +55,10 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     QPushButton *windowToggleButton = new QPushButton("&Toggle windowing");
     connect(windowToggleButton, &QPushButton::clicked, this, &Client::slotServerToggleWindow);
 
-    boxLayout->addWidget(new QLabel("ChangeWindow"), 8, 7, 1, 2);
-    boxLayout->addWidget(windowInput, 9, 7, 1, 2);
-    boxLayout->addWidget(windowChangeButton, 9, 10, 1, 2);
-    boxLayout->addWidget(windowToggleButton, 10, 10, 1, 2);
+    grid->addWidget(new QLabel("ChangeWindow"), 8, 7, 1, 2);
+    grid->addWidget(windowInput, 9, 7, 1, 2);
+    grid->addWidget(windowChangeButton, 9, 10, 1, 2);
+    grid->addWidget(windowToggleButton, 10, 10, 1, 2);
 
     // time part
     timeToClearInput = new QLineEdit();
@@ -64,13 +66,34 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     QPushButton *timeToClearChangeButton = new QPushButton("&Set new time");
     connect(timeToClearChangeButton, &QPushButton::clicked, this, &Client::slotServerChangeTimeToCleanup);
 
-    boxLayout->addWidget(new QLabel("Change time to cleanup"), 11, 7, 1, 2);
-    boxLayout->addWidget(timeToClearInput, 12, 7, 1, 2);
-    boxLayout->addWidget(timeToClearChangeButton, 12, 10, 1, 2);
+    grid->addWidget(new QLabel("Change time to cleanup"), 11, 7, 1, 2);
+    grid->addWidget(timeToClearInput, 12, 7, 1, 2);
+    grid->addWidget(timeToClearChangeButton, 12, 10, 1, 2);
 
-    setLayout(boxLayout);
+    setLayout(grid);
 
     p7Trace->P7_TRACE(moduleName, TM("Client started"));
+
+    // config part
+    QWidget *configs = new QWidget(this);
+    // QGridLayout* configGrid = new QGridLayout;
+    QVBoxLayout *vbox = new QVBoxLayout;
+    aConfig = new CircuitConfiguratorWidget('A');
+
+    connect(aConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    vbox->addWidget(aConfig);
+
+    gConfig = new CircuitConfiguratorWidget('G');
+    connect(gConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    vbox->addWidget(gConfig);
+
+    mConfig = new CircuitConfiguratorWidget('M');
+    connect(mConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    vbox->addWidget(mConfig);
+
+    configs->setLayout(vbox);
+
+    grid->addWidget(configs, 0, 11, 4, 10);
 }
 
 void Client::slotProcessDatagrams()
@@ -205,6 +228,11 @@ void Client::slotServerChangeTimeToCleanup()
 void Client::slotConnected()
 {
     serverResponseText->append("Received the connect() signal");
+}
+
+void Client::slotConfigChanged(cConfig config)
+{
+    sendToTcpServer("config", config.toString());
 }
 
 
