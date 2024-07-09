@@ -142,7 +142,7 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
     {
         switch (dataMap[data.group]) {
         case 1:
-            emit signalLineProcessed(multiplyXyz(data, aConstant));
+            emit signalLineProcessed(transformXyzData(data, aConstant));
             if (lastReceivedTime == 0)
             {
                 lastReceivedTime = receiveTime.elapsed();
@@ -293,5 +293,5 @@ void DataProcessor::readError()
     if(errorQueue.isEmpty())
         return;
 
-    emit sendReceivedError(errorQueue.dequeue());
+    emit signalSendCircuitMessage(errorQueue.dequeue());
 }

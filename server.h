@@ -32,6 +32,7 @@ private:
     int tcpPort;
     bool clientConnected = false;
     QTcpServer* tcpServer;
+    QTcpSocket* clientSocket;
     QTextEdit *clientResponseText;
     quint16 nextBlockSize;
     void sendToClient(QTcpSocket* socket, const QString &str);
@@ -47,6 +48,7 @@ public slots:
     void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
     void slotSendData();
     void slotSendAnalysis();
+    void slotSendMessageToClient(QString string);
 signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);

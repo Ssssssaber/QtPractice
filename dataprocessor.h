@@ -70,7 +70,7 @@ signals:
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
     void signalConfigError(QString);
-    void sendReceivedError(QString);
+    void signalSendCircuitMessage(QString);
 };
 
 #endif // DATAPROCESSOR_H
