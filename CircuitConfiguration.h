@@ -22,8 +22,8 @@ static cConfig parseStructFromString(QString line)
     cConfig config;
     config.type = tokens[0];
     config.freq = tokens[1].toInt();
-    config.range = tokens[2].toInt();
-    config.avg = tokens[3].toInt();
+    config.avg = tokens[2].toInt();
+    config.range = tokens[3].toInt();
 
     return config;
 }

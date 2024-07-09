@@ -22,7 +22,13 @@ DataProcessor::DataProcessor()
     dataMap["M"] = 3;
     dataMap["p1"] = 4;
 
-    CircuitDataReceiver *cdr = new CircuitDataReceiver();
+    CircuitDataReceiver::connectCircuit();
+    // QString ans = CircuitDataReceiver::handleConfigParams('A', 1, 1, 1);
+    // if (ans != "")
+    //     qDebug().noquote() << ans;
+    // this->setConfig();
+    //emit signalStopConfigExec();
+    //CircuitDataReceiver::disconnectCircuit();
 
 
     readTimer = new QTimer(this);
@@ -75,6 +81,22 @@ void DataProcessor::readLine()
             processLine(line);
         }
     }
+}
+
+void DataProcessor::setConfig()
+{
+    cdrworker = new CDRWorker();
+    thread = new QThread();
+    cdrworker->moveToThread(thread);
+
+    connect(thread, SIGNAL(started()), cdrworker, SLOT(process()));
+    connect(cdrworker, SIGNAL(finished(int)), thread, SLOT(quit()));
+    connect(cdrworker, SIGNAL(finished(int)), this, SLOT(slotConfigCompleted(int)));
+    connect(this, SIGNAL(signalStopConfigExec()), cdrworker, SLOT(stop()));
+    connect(cdrworker, SIGNAL(finished(int)), cdrworker, SLOT(deleteLater()));
+    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+    thread->start();
 }
 
 void DataProcessor::processLine(QString line)
@@ -149,9 +171,23 @@ void DataProcessor::slotDataFromDataReceiver(QString data)
     processLine(data);
 }
 
+void DataProcessor::slotConfigCompleted(int r)
+{
+    if ( LIBNII_SUCCESS != r )
+    {
+        QString err = QString("failed to set parameters: %1").arg(libnii_strerror(r));
+        emit signalConfigError(err);
+        qDebug().noquote() << err;
+    }
+}
+
 void DataProcessor::slotConfigReceived(cConfig config)
 {
-    qDebug() << "received config: " << config.toString();
+    QString ans = CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range);
+    if (ans != "")
+        qDebug().noquote() << ans;
+    setConfig();
+    //qDebug() << "received config: " << config.toString();
 }
 
 void DataProcessor::receiveDataFromDataReceiver(QString data)

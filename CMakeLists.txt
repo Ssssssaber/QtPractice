@@ -39,6 +39,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         circuitdatareceiver.cpp
         circuitdatareceiver.h
         test.h test.cpp
+        cdrworker.h cdrworker.cpp
         linux-system-usage.hpp
         perfomancechecker.h perfomancechecker.cpp
         circuitconfiguratorwidget.h circuitconfiguratorwidget.cpp
