@@ -35,18 +35,18 @@ private:
     static void printError(QString format, uint64_t diff);
     static void printError(QString format, const char* str_error);
     static void printError(QString format, int error_code, const char* str_error);
+    static void sendError(QString error);
     static xyzCircuitData convertToXyzData(QString type, int packet_number, void *rawData);
 
 public:
     CircuitDataReceiver();
     static void connectCircuit();
     static void disconnectCircuit();
-    static QString handleConfigParams(char type, int freq, int avr, int range);
+    static int handleConfigParams(char type, int freq, int avr, int range);
     int setConfigParams();
     static int calcDuration(int freq, int avr, int d);
 
 signals:
-    void signalSentData(QString data);
 };
 
 #endif // CIRCUITDATARECEIVER_H

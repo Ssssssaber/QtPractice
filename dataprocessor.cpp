@@ -5,6 +5,7 @@
 
 //QQueue<QString> DataProcessor::dataQueue;
 QQueue<xyzCircuitData> DataProcessor::dataQueue;
+QQueue<QString> DataProcessor::errorQueue;
 xyzCircuitData DataProcessor::currentData;
 
 DataProcessor::DataProcessor()
@@ -25,18 +26,27 @@ DataProcessor::DataProcessor()
 
     CircuitDataReceiver::connectCircuit();
 
-    readTimer = new QTimer(this);
-    readTimer->setSingleShot(false);
-    readTimer->setInterval(0);
-    connect(readTimer, &QTimer::timeout, this, &DataProcessor::readData);
+    dataTimer = new QTimer(this);
+    dataTimer->setSingleShot(false);
+    dataTimer->setInterval(0);
+    connect(dataTimer, &QTimer::timeout, this, &DataProcessor::readData);
+    dataTimer->start();
 
-    readTimer->start();
+    errorTimer = new QTimer();
+    errorTimer->setSingleShot(false);
+    errorTimer->setInterval(0);
+    connect(errorTimer, &QTimer::timeout, this, &DataProcessor::readError);
+    errorTimer->start();
 
     fileTimer = new QTimer(this);
     fileTimer->setSingleShot(false);
     fileTimer->setInterval(0);
     connect(fileTimer, &QTimer::timeout, this, &DataProcessor::readLine);
+}
 
+DataProcessor::~DataProcessor()
+{
+    CircuitDataReceiver::disconnectCircuit();
 }
 
 void DataProcessor::readDataFromTestFile()
@@ -86,7 +96,6 @@ void DataProcessor::setConfig()
     connect(thread, SIGNAL(started()), cdrworker, SLOT(process()));
     connect(cdrworker, SIGNAL(finished(int)), thread, SLOT(quit()));
     connect(cdrworker, SIGNAL(finished(int)), this, SLOT(slotConfigCompleted(int)));
-    connect(this, SIGNAL(signalStopConfigExec()), cdrworker, SLOT(stop()));
     connect(cdrworker, SIGNAL(finished(int)), cdrworker, SLOT(deleteLater()));
     connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 
@@ -147,10 +156,10 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
             }
             break;
         case 2:
-            emit signalLineProcessed(multiplyXyz(data, gConstant));
+            emit signalLineProcessed(transformXyzData(data, gConstant));
             break;
         case 3:
-            emit signalLineProcessed(multiplyXyz(data, mConstant));
+            emit signalLineProcessed(transformXyzData(data, mConstant));
             break;
         case 4:
             break;
@@ -196,7 +205,7 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     return data;
 }
 
-xyzCircuitData DataProcessor::multiplyXyz(xyzCircuitData data, float transitionConst)
+xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transitionConst)
 {
     data.x *= transitionConst;
     data.y *= transitionConst;
@@ -212,8 +221,6 @@ xyzCircuitData DataProcessor::multiplyXyz(xyzCircuitData data, float transitionC
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
-        counterLost += data.id - lastReceivedId;
-        qDebug() << "COUNTERLOST =" << counterLost;
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
 
@@ -241,11 +248,11 @@ void DataProcessor::slotConfigCompleted(int r)
 
 void DataProcessor::slotConfigReceived(cConfig config)
 {
-    QString ans = CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range);
-    if (ans != "")
-        qDebug().noquote() << ans;
-    setConfig();
-    //qDebug() << "received config: " << config.toString();
+    if(!CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range))
+    {
+        setConfig();
+    }
+
 }
 
 // void DataProcessor::receiveDataFromDataReceiver(QString data)
@@ -256,7 +263,11 @@ void DataProcessor::slotConfigReceived(cConfig config)
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
     currentData = data;
-    //dataQueue.enqueue(data);
+}
+
+void DataProcessor::receiveErrorFromDataReceiver(QString error)
+{
+    errorQueue.enqueue(error);
 }
 
 void DataProcessor::readData()
@@ -275,4 +286,12 @@ void DataProcessor::readData()
         processReceivedData(currentData);
         currentData.group = 'N';
     }
+}
+
+void DataProcessor::readError()
+{
+    if(errorQueue.isEmpty())
+        return;
+
+    emit sendReceivedError(errorQueue.dequeue());
 }
