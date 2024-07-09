@@ -12,6 +12,7 @@
 #include "cdrworker.h"
 #include "P7_Trace.h"
 
+class CDRWorker;
 class DataProcessor : public QObject
 {
     Q_OBJECT
@@ -45,9 +46,6 @@ public:
     static void receiveDataFromDataReceiver(QString);
     void readLine();
     void setConfig();
-
-private slots:
-    void slotOnPackageLoss(QString message);
 
 public slots:
     void slotDataFromDataReceiver(QString data);

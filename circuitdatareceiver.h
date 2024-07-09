@@ -33,6 +33,9 @@ private:
 
     static void receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *data);
     static void handleError(void *user_ptr, int error_code);
+    static void printError(QString format, uint64_t diff);
+    static void printError(QString format, const char* str_error);
+    static void printError(QString format, int error_code, const char* str_error);
 
 public:
     CircuitDataReceiver();
