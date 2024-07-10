@@ -25,7 +25,7 @@ private:
     int mReceived;
 
     int dataLifespanInSeconds = 10;
-    int analysisFrequency = 5;
+    int analysisFrequency = 1;
     int inCount = 0;
 
     int timeToTimeout = 5000; // miliseconds

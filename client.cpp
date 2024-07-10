@@ -136,9 +136,9 @@ void Client::parseStringData(QString stringData)
         xyzCircuitData data;
         data.group = tokens[1].toStdString()[0];
         data.id = tokens[2].toInt();
-        data.x = tokens[3].toInt();
-        data.y = tokens[4].toInt();
-        data.z = tokens[5].toInt();
+        data.x = tokens[3].toFloat();
+        data.y = tokens[4].toFloat();
+        data.z = tokens[5].toFloat();
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         currentThread += 1;

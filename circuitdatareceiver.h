@@ -14,6 +14,7 @@
 #include "libnii.h"
 #include "dataprocessor.h"
 #include "xyzcircuitdata.h"
+#include "CircuitConfiguration.h"
 
 #define NII_MAX_PACKET_SIZE 64
 
@@ -44,7 +45,6 @@ public:
     static void disconnectCircuit();
     static int handleConfigParams(char type, int freq, int avr, int range);
     int setConfigParams();
-    static int calcDuration(int freq, int avr, int d);
 
 signals:
 };
