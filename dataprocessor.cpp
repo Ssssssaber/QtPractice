@@ -268,11 +268,6 @@ void DataProcessor::slotConfigReceived(cConfig config)
 
 }
 
-// void DataProcessor::receiveDataFromDataReceiver(QString data)
-// {
-//     dataQueue.enqueue(data);
-// }
-
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
     currentData = data;
@@ -285,16 +280,13 @@ void DataProcessor::receiveErrorFromDataReceiver(QString error)
 
 void DataProcessor::readData()
 {
-    // fix queue
-    // if(DataProcessor::dataQueue.isEmpty())
-    //     return;
-    // processReceivedData(DataProcessor::dataQueue.dequeue());
-
     if (currentData.group == 'N')
     {
         return;
     }
-    else
+    else if (currentData.group == 'A' ||
+             currentData.group == 'G' ||
+             currentData.group == 'M')
     {
         processReceivedData(currentData);
         currentData.group = 'N';

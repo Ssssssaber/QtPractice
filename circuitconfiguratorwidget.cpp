@@ -30,11 +30,12 @@ void CircuitConfiguratorWidget::setAvgLabelValue(int value)
     avgLabel->setText("Current avr: " + QString::number(value));
 }
 
-void CircuitConfiguratorWidget::prepeareConfig()
+void CircuitConfiguratorWidget::slotPrepeareConfig()
 {
     cConfig config;
     config.type = type;
     if (type != 'M') config.range = rangeSlider->value();
+    else config.range = -1;
     config.freq = freqSlider->value();
     config.avg = avgSlider->value();
 
@@ -68,8 +69,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
         avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
     }
 
-    QPushButton *setButton = new QPushButton("Change config");
-    connect(setButton, &QPushButton::clicked, this, &CircuitConfiguratorWidget::prepeareConfig);
+
 
     QGridLayout *layout = new QGridLayout;
     layout->addWidget(headLabel, 0, 0, 1, 2);
@@ -86,6 +86,5 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
         layout->addWidget(rangeSlider, 3, 2, 1, 3);
     }
 
-    layout->addWidget(setButton, 4, 4, 1, 1);
     setLayout(layout);
 }

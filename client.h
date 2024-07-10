@@ -39,6 +39,12 @@ private:
     CircuitConfiguratorWidget *gConfig;
     CircuitConfiguratorWidget *mConfig;
 
+    QList<xyzCircuitData> statData;
+    QLabel *threadLabel;
+    QLabel *deltaLabel;
+    int currentThread = 0;
+
+
 public:
     Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt = 0);
 
@@ -51,6 +57,7 @@ private slots:
     void slotServerChangeTimeToCleanup();
     void slotConnected();
     void slotConfigChanged(cConfig config);
+    void slotUpdateThreadInfo();
 
 signals:
     void signalReceivedData(xyzCircuitData data);

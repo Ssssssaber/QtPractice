@@ -56,8 +56,6 @@ private:
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
     static QQueue<QString> errorQueue;
-    // const float aConstant = 9.81f;
-    // const float gConstant = 1.0f;
     const float mConstant = .25f * .0001f;
     const float timeConstant = 1000000000;
     QTimer *dataTimer;
