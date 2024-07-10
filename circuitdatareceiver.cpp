@@ -55,30 +55,6 @@ int CircuitDataReceiver::setConfigParams()
     return r;
 }
 
-int CircuitDataReceiver::calcDuration(int freq, int avr, int d)
-{
-    uint64_t duration = 0;
-
-    switch ( freq ) {
-    case 0: duration = 1000000 * d; break;
-    case 1: duration = 500000 * d; break;
-    case 2: duration = 250000 * d; break;
-    }
-
-    switch ( avr ) {
-    case 8: duration <<= 8; break;
-    case 7: duration <<= 7; break;
-    case 6: duration <<= 6; break;
-    case 5: duration <<= 5; break;
-    case 4: duration <<= 4; break;
-    case 3: duration <<= 3; break;
-    case 2: duration <<= 2; break;
-    case 1: duration <<= 1; break;
-    }
-
-    return duration;
-}
-
 void CircuitDataReceiver::printError(QString format, uint64_t diff)
 {
     QString err = QString(format).arg(diff);
@@ -113,34 +89,12 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     case LIBNII_ACCEL_DATA:
     {
         xyzCircuitData data = convertToXyzData("A", packet_number, rawData);
-        //uint64_t diff, ts = xyz->ts;
-
-        /*
-        if ( accel_ts && accel_duration ) {
-            if ( ts > accel_ts ) diff = ts - accel_ts;
-            else                 diff = accel_ts - ts;
-            if ( diff > accel_duration )
-                nii_print_error("accel timeout: %lu\n", diff);
-        }
-        accel_ts = ts;
-        */
         DataProcessor::receiveDataFromDataReceiver(data);
     }
     break;
     case LIBNII_GYRO_DATA:
     {
         xyzCircuitData data = convertToXyzData("G", packet_number, rawData);
-        //uint64_t diff, ts = xyz->ts;
-
-        /*
-        if ( gyro_ts && gyro_duration ) {
-            if ( ts > gyro_ts ) diff = ts - gyro_ts;
-            else                diff = gyro_ts - ts;
-            if ( diff > gyro_duration )
-                nii_print_error("gyro timeout:  %lu\n", diff);
-        }
-        gyro_ts = ts;
-        */
         DataProcessor::receiveDataFromDataReceiver(data);
     }
     break;
@@ -163,9 +117,9 @@ xyzCircuitData CircuitDataReceiver::convertToXyzData(QString type, int packet_nu
     xyzCircuitData data;
     data.group = type.toStdString()[0];
     data.id = packet_number;
-    data.x = (int)(xyz->x);
-    data.y = (int)(xyz->y);
-    data.z = (int)(xyz->z);
+    data.x = (float)(xyz->x);
+    data.y = (float)(xyz->y);
+    data.z = (float)(xyz->z);
     data.timestamp = (unsigned long)(xyz->ts);
 
     return data;

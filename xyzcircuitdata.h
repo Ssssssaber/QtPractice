@@ -6,9 +6,9 @@
 struct xyzCircuitData {
     char group;
     int id;
-    int x;
-    int y;
-    int z;
+    float x;
+    float y;
+    float z;
     float timestamp;
 
 public:

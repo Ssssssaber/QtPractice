@@ -24,7 +24,17 @@ DataProcessor::DataProcessor()
     dataMap['G'] = 2;
     dataMap['M'] = 3;
 
+    aMap[0] = 3.90625f * 1e-3 / 9.81f;
+    aMap[1] = 7.8125f * 1e-3 / 9.81f;
+    aMap[2] = 15.625f * 1e-3 / 9.81f;
+
+    gMap[0] = 1.f / 96.f;
+    gMap[1] = 1.f / 48.f;
+    gMap[2] = 1.f / 24.f;
+    gMap[3] = 1.f / 8.f;
+
     CircuitDataReceiver::connectCircuit();
+    setConfig();
 
     dataTimer = new QTimer(this);
     dataTimer->setSingleShot(false);
@@ -142,23 +152,13 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
     {
         switch (dataMap[data.group]) {
         case 1:
-            emit signalLineProcessed(transformXyzData(data, aConstant));
-            if (lastReceivedTime == 0)
-            {
-                lastReceivedTime = receiveTime.elapsed();
-            }
-            else
-            {
-                qint64 currentTime = receiveTime.elapsed();
-                qint64 difference = currentTime - lastReceivedTime;
-                p7Trace->P7_DEBUG(moduleName, TM("delta t: %d"), difference);
-                lastReceivedTime = currentTime;
-            }
+            emit signalLineProcessed(transformXyzData(data, aMap[currentAConfig.range]));
             break;
         case 2:
-            emit signalLineProcessed(transformXyzData(data, gConstant));
+            emit signalLineProcessed(transformXyzData(data, gMap[currentGConfig.range]));
             break;
         case 3:
+
             emit signalLineProcessed(transformXyzData(data, mConstant));
             break;
         case 4:
@@ -206,11 +206,12 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
 }
 
 xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transitionConst)
-{
+{    
     data.x *= transitionConst;
     data.y *= transitionConst;
     data.z *= transitionConst;
     data.timestamp /= timeConstant;
+    qDebug() << data.group << data.x << data.y << data.z;
 
     QString message;
     if (lastReceivedId + 1 == data.id)
@@ -250,6 +251,18 @@ void DataProcessor::slotConfigReceived(cConfig config)
 {
     if(!CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range))
     {
+        if (config.type == "A")
+        {
+            currentAConfig = config;
+        }
+        else if (config.type == "G")
+        {
+            currentGConfig = config;
+        }
+        else if (config.type == "M")
+        {
+            currentMConfig = config;
+        }
         setConfig();
     }
 
