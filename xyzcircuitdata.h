@@ -32,7 +32,6 @@ struct xyzAnalysisResult
     }
 };
 
-
 enum class WorkerTypes {WindowWorker, FilterWorker};
 
 #endif // XYZCIRCUITDATA_H

@@ -81,15 +81,8 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     udpDataSocket = new QUdpSocket(this);
     QTimer* pTimer = new QTimer(this);
     pTimer->setInterval(0);
-    connect(pTimer, SIGNAL(timeout()), SLOT(slotSendData()));
+    connect(pTimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
     pTimer->start();
-
-    udpAnalysisSocket = new QUdpSocket(this);
-    QTimer* aTimer = new QTimer(this);
-    aTimer->setInterval(0);
-    connect(aTimer, SIGNAL(timeout()), SLOT(slotSendAnalysis()));
-    aTimer->start();
-
 
     p7Trace->P7_TRACE(moduleName, TM("Server started"));
 
@@ -97,17 +90,30 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     pc->Start();
 }
 
+void Server::slotSendDatagram()
+{
+    if (!clientConnected) return;
+
+    if (!cDataToSendQueue.isEmpty())
+    {
+        sendData();
+    }
+    if (!cAnalysisToSendQueue.isEmpty())
+    {
+        sendAnalysis();
+    }
+}
 
 
-void Server::slotSendData()
+
+void Server::sendData()
 {
     QByteArray baDatagram;
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
 
-    if (dataToSendQueue.isEmpty() | !clientConnected) return;
-    xyzCircuitData data = dataToSendQueue.dequeue();
+    xyzCircuitData data = cDataToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
     out << dt << data.toString();
     udpDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
@@ -115,18 +121,17 @@ void Server::slotSendData()
     p7Trace->P7_TRACE(moduleName, TM("Data sent: %s"), data.toString().toStdString().data());
 }
 
-void Server::slotSendAnalysis()
+void Server::sendAnalysis()
 {
     QByteArray baDatagram;
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
 
-    if (analysisToSendQueue.isEmpty() | !clientConnected) return;
-    xyzAnalysisResult analysis = analysisToSendQueue.dequeue();
+    xyzAnalysisResult analysis = cAnalysisToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + analysis.toString());
     out << dt << analysis.toString();
-    udpAnalysisSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort + 10);
+    udpDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
 
     p7Trace->P7_TRACE(moduleName, TM("Analysis sent: %s"), analysis.toString().toStdString().data());
 }
@@ -205,14 +210,13 @@ void Server::slotReadClient()
 
 void Server::slotDataToSendAdded(xyzCircuitData data)
 {
-    // stringsToSendQueue.enqueue(data.toString());
-    dataToSendQueue.enqueue(data);
+    cDataToSendQueue.enqueue(data);
 }
 
 void Server::slotAnalysisToSendAdded(xyzAnalysisResult analysis)
 {
-    // stringsToSendQueue.enqueue(analysis.toString());
-    analysisToSendQueue.enqueue(analysis);
+    cAnalysisToSendQueue.enqueue(analysis);
+
 }
 
 void Server::sendToClient(QTcpSocket *socket, const QString& str)

@@ -43,8 +43,7 @@ public:
     Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt = 0);
 
 private slots:
-    void slotProcessData();
-    void slotProcessAnalysis();
+    void slotProcessDatagram();
     void slotReadyRead();
     void slotError(QAbstractSocket::SocketError error);
     void slotServerChangeWindowSize();
