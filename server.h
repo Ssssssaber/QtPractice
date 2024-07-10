@@ -25,17 +25,19 @@ private:
 
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
-    QQueue<xyzCircuitData> dataToSendQueue;
-    QQueue<xyzAnalysisResult> analysisToSendQueue;
-    // QQueue<QString> stringsToSendQueue;
+    QQueue<xyzCircuitData> cDataToSendQueue;
+    QQueue<xyzAnalysisResult> cAnalysisToSendQueue;
 
     int tcpPort;
     bool clientConnected = false;
     QTcpServer* tcpServer;
+    QTcpSocket* clientSocket;
     QTextEdit *clientResponseText;
     quint16 nextBlockSize;
     void sendToClient(QTcpSocket* socket, const QString &str);
     bool processClientResponse(QString messageType, QString message);
+    void sendData();
+    void sendAnalysis();
 public:
     Server(int tcpPort, int udpPort, QWidget* pwgt = 0);
 
@@ -45,8 +47,8 @@ public slots:
     void slotReadClient();
     void slotDataToSendAdded(xyzCircuitData data);
     void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
-    void slotSendData();
-    void slotSendAnalysis();
+    void slotSendDatagram();
+    void slotSendMessageToClient(QString string);
 signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);

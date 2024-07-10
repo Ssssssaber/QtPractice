@@ -105,10 +105,18 @@ void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int t
 void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData)
 {
     dataList->append(newData);
-    if (windowWorkerController->isEnabled)
-        windowWorkerController->startOperating(createListSlice(dataList->toList(), windowSize));
-    // }
-
+    inCount += 1;
+    if (inCount == analysisFrequency)
+    {
+        if (windowWorkerController->isEnabled)
+            windowWorkerController->startOperating(createListSlice(dataList->toList(), windowSize));
+        inCount = 0;
+    }
+    else if (inCount > analysisFrequency)
+    {
+        p7Trace->P7_CRITICAL(moduleName, TM("ANALYSIS FREQUENCY ERROR"));
+        inCount = 0;
+    }
 }
 
 QList<xyzCircuitData> DataAnalyzer::createListSlice(QList<xyzCircuitData> dataList, int size)

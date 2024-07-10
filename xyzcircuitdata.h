@@ -6,9 +6,9 @@
 struct xyzCircuitData {
     char group;
     int id;
-    int x;
-    int y;
-    int z;
+    float x;
+    float y;
+    float z;
     float timestamp;
 
 public:
@@ -31,7 +31,6 @@ struct xyzAnalysisResult
         return QString("analysis " + method + " " + group + " %1 %2 %3").arg(x).arg(y).arg(z);
     }
 };
-
 
 enum class WorkerTypes {WindowWorker, FilterWorker};
 
