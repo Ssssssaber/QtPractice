@@ -18,17 +18,19 @@ class DataProcessor : public QObject
     Q_OBJECT
 
 private:
-    int counterLost;
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
     //static QQueue<QString> dataQueue;
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
+    static QQueue<QString> errorQueue;
     const float aConstant = 9.81f;
     const float gConstant = 1.0f;
     const float mConstant = 1.0f;
     const float timeConstant = 1000000000;
-    QTimer *readTimer;
+    QTimer *dataTimer;
+    QTimer *errorTimer;
+
 
     QElapsedTimer receiveTime;
     qint64 lastReceivedTime;
@@ -44,15 +46,18 @@ private:
     QMap<char, int> dataMap;
 
     void processLine(QString line);
-    xyzCircuitData multiplyXyz(xyzCircuitData data, float transitionConst);
+    xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
     void processReceivedData(xyzCircuitData data);
     xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
     void readData();
+    void readError();
 
 public:
     DataProcessor();
+    ~DataProcessor();
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(xyzCircuitData);
+    static void receiveErrorFromDataReceiver(QString error);
     void readLine();
     void setConfig();
 
@@ -65,6 +70,7 @@ signals:
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
     void signalConfigError(QString);
+    void signalSendCircuitMessage(QString);
 };
 
 #endif // DATAPROCESSOR_H

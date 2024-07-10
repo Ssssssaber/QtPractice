@@ -67,6 +67,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
     connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
+    connect(dataProcessor, &DataProcessor::signalSendCircuitMessage, this, &Server::slotSendMessageToClient);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
@@ -125,12 +126,15 @@ void Server::slotSendAnalysis()
     xyzAnalysisResult analysis = analysisToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + analysis.toString());
     out << dt << analysis.toString();
-    udpDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort + 10);
+    udpAnalysisSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort + 10);
 
     p7Trace->P7_TRACE(moduleName, TM("Analysis sent: %s"), analysis.toString().toStdString().data());
 }
 
-
+void Server::slotSendMessageToClient(QString string)
+{
+    sendToClient(clientSocket, string);
+}
 
 void Server::slotStringReceived(QString stringData)
 {
@@ -141,6 +145,7 @@ void Server::slotStringReceived(QString stringData)
 void Server::slotNewConnection()
 {
     QTcpSocket* clientSocket = tcpServer->nextPendingConnection();
+    this->clientSocket = clientSocket;
     connect(clientSocket, &QTcpSocket::disconnected, this, &QTcpSocket::deleteLater);
     connect(clientSocket, &QTcpSocket::readyRead, this, &Server::slotReadClient);
     clientConnected = true;
@@ -215,7 +220,8 @@ void Server::sendToClient(QTcpSocket *socket, const QString& str)
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
-    out << quint16() << QTime::currentTime() << str;
+    qDebug() << str;
+    out << quint16(0) << QTime::currentTime() << str;
 
     out.device() -> seek(0);
     out << quint16(arrBlock.size() - sizeof(quint16));
