@@ -49,6 +49,7 @@ public slots:
     void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
     void slotSendDatagram();
     void slotSendMessageToClient(QString string);
+    void slotSendDeltaTime(xyzAnalysisResult analysis);
 signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);

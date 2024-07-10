@@ -24,23 +24,32 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
     cleanupTimer = new QTimer(this);
     cleanupTimer->setSingleShot(false);
     cleanupTimer->setInterval(timeToTimeout);
-    connect(cleanupTimer, &QTimer::timeout, this, &DataAnalyzer::cleanup);
+    connect(cleanupTimer, &QTimer::timeout, this, &DataAnalyzer::slotCleanup);
 
     cleanupTimer->start();
+
+    QTimer *deltaTimer = new QTimer(this);
+    deltaTimer->setSingleShot(false);
+    deltaTimer->setInterval(3000);
+    connect(deltaTimer, &QTimer::timeout, this, &DataAnalyzer::slotUpdateDeltaTime);
+    deltaTimer->start();
 }
 
 void DataAnalyzer::slotInfoReceived(xyzCircuitData data)
 {
     if (data.group == 'A')
     {
+        aReceived += 1;
         addDataWithAnalysisCheck(&aData, data);
     }
     else if (data.group == 'G')
     {
+        gReceived += 1;
         addDataWithAnalysisCheck(&gData, data);
     }
     else if (data.group == 'M')
     {
+        mReceived += 1;
         addDataWithAnalysisCheck(&mData, data);
     }
     else
@@ -77,7 +86,22 @@ void DataAnalyzer::slotResultReceived(xyzAnalysisResult analysis)
     p7Trace->P7_TRACE(moduleName, TM("Analysis ready: %s"), analysis.toString().toStdString().data());
 }
 
-void DataAnalyzer::cleanup()
+void DataAnalyzer::slotUpdateDeltaTime()
+{
+    xyzAnalysisResult deltaTimes = {
+        .x = getAverageDeltaTime(aData, aReceived)/*aData.first().timestamp - aData[aData.length() - 2].timestamp*/,
+        .y = getAverageDeltaTime(gData, gReceived)/*gData.first().timestamp - gData[aData.length() - 2].timestamp*/,
+        .z = getAverageDeltaTime(mData, mReceived)/*mData.first().timestamp - mData[aData.length() - 2].timestamp*/,
+    };
+
+    aReceived = 0;
+    gReceived = 0;
+    mReceived = 0;
+
+    emit signalUpdatedDeltaTime(deltaTimes);
+}
+
+void DataAnalyzer::slotCleanup()
 {
     cleanDataListToTime(&aData, dataLifespanInSeconds);
     cleanDataListToTime(&gData, dataLifespanInSeconds);
@@ -100,6 +124,22 @@ void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int t
     p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
                       dataToClean->back().group,
                       initial, dataToClean->length());
+}
+
+float DataAnalyzer::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
+{
+    int size = data.length();
+    if (amount <= 0 || amount > data.length()) return 0;
+
+    float average = 0;
+
+    for(int i = size - amount; i < size - 1; i++)
+    {
+        average += data[i + 1].timestamp - data[i].timestamp;
+    }
+    average /= (float) amount;
+    p7Trace->P7_DEBUG(moduleName, TM("Frequency %f for %c with %d amount"), average, data.first().group, amount);
+    return average;
 }
 
 void DataAnalyzer::addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData)
