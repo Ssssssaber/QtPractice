@@ -20,11 +20,19 @@ private:
     QList<xyzCircuitData> gData;
     QList<xyzCircuitData> mData;
 
+    int aReceived;
+    int gReceived;
+    int mReceived;
+
     int dataLifespanInSeconds = 10;
+    int analysisFrequency = 1;
+    int inCount = 0;
+
     int timeToTimeout = 5000; // miliseconds
     QTimer *cleanupTimer;
-    void cleanup();
+
     void cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds);
+    float getAverageDeltaTime(QList<xyzCircuitData> data, int amount = -1);
 
     void addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
     QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
@@ -37,8 +45,11 @@ public slots:
     void slotAnalysisToggled(QString analysisType);
 private slots:
     void slotResultReceived(xyzAnalysisResult analysis);
+    void slotUpdateDeltaTime();
+    void slotCleanup();
 signals:
     void signalAnalysisReady(xyzAnalysisResult analysis);
+    void signalUpdatedDeltaTime(xyzAnalysisResult deltaTimes);
 };
 
 #endif // DATAANALYZER_H

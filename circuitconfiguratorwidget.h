@@ -23,10 +23,13 @@ private:
     void setRangeLabelValue(int value);
     void setFreqLabelValue(int value);
     void setAvgLabelValue(int value);
-    void prepeareConfig();
+
 
 public:
     explicit CircuitConfiguratorWidget(const char type, QWidget *parent = nullptr);
+
+public slots:
+     void slotPrepeareConfig();
 
 signals:
     void configChanged(cConfig config);

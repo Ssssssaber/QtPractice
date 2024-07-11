@@ -20,7 +20,8 @@ private:
     QTextEdit* receivedCircuitData;
 
     int udpPort;
-    QUdpSocket* udpSocket;
+    QUdpSocket* udpDataSocket;
+    QUdpSocket* udpAnalysisSocket;
 
     int tcpPort;
     QTcpSocket* tcpSocket;
@@ -31,16 +32,24 @@ private:
     void parseStringData(QString stringData);
     void sendToTcpServer(QString messageType, QString message);
 
+    QElapsedTimer receiveTime;
+    qint64 lastReceivedTime;
 
     CircuitConfiguratorWidget *aConfig;
     CircuitConfiguratorWidget *gConfig;
     CircuitConfiguratorWidget *mConfig;
 
+    QList<xyzCircuitData> statData;
+    QLabel *threadLabel;
+    QLabel *deltaLabel;
+    int currentThread = 0;
+
+
 public:
     Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt = 0);
 
 private slots:
-    void slotProcessDatagrams();
+    void slotProcessDatagram();
     void slotReadyRead();
     void slotError(QAbstractSocket::SocketError error);
     void slotServerChangeWindowSize();
@@ -48,6 +57,7 @@ private slots:
     void slotServerChangeTimeToCleanup();
     void slotConnected();
     void slotConfigChanged(cConfig config);
+    void slotUpdateThreadInfo();
 
 signals:
     void signalReceivedData(xyzCircuitData data);

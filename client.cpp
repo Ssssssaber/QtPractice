@@ -28,15 +28,16 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::slotConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::slotReadyRead);
 
-    udpSocket = new QUdpSocket(this);
-    udpSocket->bind(udpPort);
-    connect(udpSocket, &QUdpSocket::readyRead, this, &Client::slotProcessDatagrams);
+    udpDataSocket = new QUdpSocket(this);
+    udpDataSocket->bind(udpPort);
+    connect(udpDataSocket, &QUdpSocket::readyRead, this, &Client::slotProcessDatagram);
 
     serverResponseText = new QTextEdit();
 
 
     receivedCircuitData = new QTextEdit();
     receivedCircuitData->setReadOnly(true);
+
     chartManager = new ChartManager();
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
@@ -77,44 +78,55 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     // config part
     QWidget *configs = new QWidget(this);
     // QGridLayout* configGrid = new QGridLayout;
-    QVBoxLayout *vbox = new QVBoxLayout;
+    QVBoxLayout *configVBox = new QVBoxLayout;
     aConfig = new CircuitConfiguratorWidget('A');
 
     connect(aConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    vbox->addWidget(aConfig);
+    configVBox->addWidget(aConfig);
 
     gConfig = new CircuitConfiguratorWidget('G');
     connect(gConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    vbox->addWidget(gConfig);
+    configVBox->addWidget(gConfig);
 
     mConfig = new CircuitConfiguratorWidget('M');
     connect(mConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
-    vbox->addWidget(mConfig);
+    configVBox->addWidget(mConfig);
 
-    configs->setLayout(vbox);
+    QPushButton *setButton = new QPushButton("Change config");
+    connect(setButton, &QPushButton::clicked, aConfig, &CircuitConfiguratorWidget::slotPrepeareConfig);
+    connect(setButton, &QPushButton::clicked, gConfig, &CircuitConfiguratorWidget::slotPrepeareConfig);
+    connect(setButton, &QPushButton::clicked, mConfig, &CircuitConfiguratorWidget::slotPrepeareConfig);
+    configVBox->addWidget(setButton);
 
-    grid->addWidget(configs, 0, 11, 4, 10);
+    configs->setLayout(configVBox);
+
+    grid->addWidget(configs, 0, 10, 4, 10);
+
+    QTimer *statTimer = new QTimer();
+    statTimer->setInterval(3000);
+    statTimer->setSingleShot(false);
+
+    connect(statTimer, &QTimer::timeout, this, &Client::slotUpdateThreadInfo);
+    statTimer->start();
 }
 
-void Client::slotProcessDatagrams()
+void Client::slotProcessDatagram()
 {
     QByteArray baDatagram;
     do {
-        baDatagram.resize(udpSocket->pendingDatagramSize());
-        udpSocket->readDatagram(baDatagram.data(), baDatagram.size());
-    } while (udpSocket->hasPendingDatagrams());
-
-    QDateTime dateTime;
-    QString stringData;
-    QDataStream in(&baDatagram, QIODevice::ReadOnly);
-    in.setVersion(QDataStream::Qt_5_12);
-    in >> dateTime >> stringData;
-    // xyzCircuitData parsedData = parseReceivedData(stringData);
-    parseStringData(stringData);
-    QString result = "Received: " + dateTime.toString() + " - " + stringData;
-    receivedCircuitData->append(result);
+        baDatagram.resize(udpDataSocket->pendingDatagramSize());
+        udpDataSocket->readDatagram(baDatagram.data(), baDatagram.size());
+        QDateTime dateTime;
+        QString stringData;
+        QDataStream in(&baDatagram, QIODevice::ReadOnly);
+        in.setVersion(QDataStream::Qt_5_12);
+        in >> dateTime >> stringData;
+        // xyzCircuitData parsedData = parseReceivedData(stringData);
+        parseStringData(stringData);
+        QString result = "Received: " + dateTime.toString() + " - " + stringData;
+        receivedCircuitData->append(result);
+    } while (udpDataSocket->hasPendingDatagrams());
 }
-
 
 void Client::parseStringData(QString stringData)
 {
@@ -122,13 +134,14 @@ void Client::parseStringData(QString stringData)
     if (tokens[0] == "data")
     {
         xyzCircuitData data;
-        data.group = tokens[1];
+        data.group = tokens[1].toStdString()[0];
         data.id = tokens[2].toInt();
-        data.x = tokens[3].toInt();
-        data.y = tokens[4].toInt();
-        data.z = tokens[5].toInt();
+        data.x = tokens[3].toFloat();
+        data.y = tokens[4].toFloat();
+        data.z = tokens[5].toFloat();
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
+        currentThread += 1;
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
@@ -160,6 +173,12 @@ void Client::sendToTcpServer(QString messageType, QString message)
     p7Trace->P7_INFO(moduleName, TM("Client sent: \" %s: %s \""), messageType.toStdString().data(), message.toStdString().data());
 }
 
+void Client::slotUpdateThreadInfo()
+{
+    serverResponseText->append(QDateTime::currentDateTime().toString() +
+                               QString("Client: Current thread - %1 ").arg(currentThread));
+    currentThread = 0;
+}
 
 void Client::slotReadyRead()
 {
@@ -227,12 +246,15 @@ void Client::slotServerChangeTimeToCleanup()
 
 void Client::slotConnected()
 {
-    serverResponseText->append("Received the connect() signal");
+    serverResponseText->append(QDateTime::currentDateTime().toString() +
+                               "Client: Received the connect() signal");
 }
 
 void Client::slotConfigChanged(cConfig config)
 {
     sendToTcpServer("config", config.toString());
 }
+
+
 
 
