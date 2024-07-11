@@ -19,22 +19,10 @@ class DataProcessor : public QObject
     Q_OBJECT
 
 private:
-    // struct libnii_params CircuitDataReceiver::params = {
-    //     .accel_freq = 0,
-    //     .accel_range = 2,
-    //     .accel_avr = 8,
-    //     .gyro_freq = 0,
-    //     .gyro_range = 3,
-    //     .gyro_avr = 8,
-    //     .magnet_duty = 0,
-    //     .magnet_avr = 8,
-    //     .press_freq = 0,
-    //     .press_filter = 0,
-    //     .nv08c_freq = 0,
-    //     .display_refresh = 2
-    // };
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
+
+
     cConfig currentAConfig = {
         .type = "A",
         .freq = 0,
@@ -52,15 +40,22 @@ private:
         .freq = 0,
         .avg = 8
     };
-    //static QQueue<QString> dataQueue;
+
+    cConfig newAConfig = currentAConfig;
+    cConfig newGConfig = currentGConfig;
+    cConfig newMConfig = currentMConfig;
+
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
     static QQueue<QString> errorQueue;
-    const float mConstant = .25f * .0001f;
+
+    const float mConstant = .25f * .0001f; // mT
+    QMap<int, float> aMap;
+    QMap<int, float> gMap;
+
     const float timeConstant = 1000000000;
     QTimer *dataTimer;
     QTimer *errorTimer;
-
 
     QElapsedTimer receiveTime;
     qint64 lastReceivedTime;
@@ -74,9 +69,6 @@ private:
 
     int lastReceivedId = 0;
     QMap<char, int> dataMap;
-    QMap<int, float> aMap;
-    QMap<int, float> gMap;
-    // QMap<int, float> mMap;
 
     void processLine(QString line);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
@@ -86,7 +78,7 @@ private:
     void readError();
 
 public:
-    DataProcessor();
+    explicit DataProcessor(QObject *parent = nullptr);
     ~DataProcessor();
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(xyzCircuitData);
@@ -95,7 +87,6 @@ public:
     void setConfig();
 
 public slots:
-    void slotDataFromDataReceiver(xyzCircuitData data);
     void slotConfigCompleted(int);
     void slotConfigReceived(cConfig data);
 

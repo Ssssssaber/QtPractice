@@ -43,7 +43,7 @@ void CircuitDataReceiver::disconnectCircuit()
 
 int CircuitDataReceiver::setConfigParams()
 {
-    int r = -1, attempts = 10;
+    int r = -1, attempts = 100;
 
     while ( ! libnii_is_connected(handle) && (attempts-- > 0)) {
         QThread::sleep(1);
@@ -88,34 +88,34 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     switch ( type ) {
     case LIBNII_ACCEL_DATA:
     {
-        xyzCircuitData data = convertToXyzData("A", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('A', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     case LIBNII_GYRO_DATA:
     {
-        xyzCircuitData data = convertToXyzData("G", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('G', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     case LIBNII_MAGNET_DATA:
     {
-        xyzCircuitData data = convertToXyzData("M", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('M', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     default:
         // Other type data were received
-        break;
+    return;
     }
 }
 
-xyzCircuitData CircuitDataReceiver::convertToXyzData(QString type, int packet_number, void *rawData)
+xyzCircuitData CircuitDataReceiver::convertToXyzData(char type, int packet_number, void *rawData)
 {
     libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
 
     xyzCircuitData data;
-    data.group = type.toStdString()[0];
+    data.group = type;
     data.id = packet_number;
     data.x = (float)(xyz->x);
     data.y = (float)(xyz->y);
@@ -136,88 +136,67 @@ void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
     prev = error_code;
 }
 
-int CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, int range)
+int CircuitDataReceiver::checkForValidConfigParams(fullConfig config)
 {
     QString err = "";
     int r = -1;
-    switch (type) {
-    case 'A':
+
+    // accelerometer configuration
+    if ((config.aFreq < 0) || (config.aFreq > 2))
     {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Accelerator frequency option must be in 0-2 range\n";
-        }
-        else params.accel_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Accelerator average option must be in 0-8 range\n";
-        }
-        else params.accel_avr = avr;
-
-        if ((range < 0) || (range > 2))
-        {
-            err += "Accelerator range option must be in 0-2 range\n";
-        }
-        else params.accel_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator frequency option must be in 0-2 range\n";
     }
-    break;
-    case 'G':
+    else params.accel_freq = config.aFreq;
+
+    if ((config.aAvg < 0) || (config.aAvg > 8))
     {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Gyroscope frequency option must be in 0-2 range\n";
-        }
-        else params.gyro_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Gyroscope average option must be in 0-8 range\n";
-        }
-        else params.gyro_avr = avr;
-
-        if ((range < 0) || (range > 3))
-        {
-            err += "Gyroscope range option must be in 0-3 range\n";
-        }
-        else params.gyro_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator average option must be in 0-8 range\n";
     }
-    break;
-    case 'M':
+    else params.accel_avr = config.aAvg;
+
+    if ((config.aRange < 0) || (config.aRange > 2))
     {
-        if ((freq < 0) || (freq > 3))
-        {
-            err += "Magnet frequency option must be in 0-3 range\n";
-        }
-        else params.magnet_duty = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Magnet average option must be in 0-8 range\n";
-        }
-        else params.magnet_avr = avr;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator range option must be in 0-2 range\n";
     }
-    break;
-    default:
-        err += "Unknown sensor type";
+    else params.accel_range = config.aRange;
+
+    // gyroscope configuration
+    if ((config.gFreq < 0) || (config.gFreq > 2))
+    {
+        err += "Gyroscope frequency option must be in 0-2 range\n";
+    }
+    else params.gyro_freq = config.gFreq;
+
+    if ((config.gAvg < 0) || (config.gAvg > 8))
+    {
+        err += "Gyroscope average option must be in 0-8 range\n";
+    }
+    else params.gyro_avr = config.gAvg;
+
+    if ((config.gRange < 0) || (config.gRange > 3))
+    {
+        err += "Gyroscope range option must be in 0-3 range\n";
+    }
+    else params.gyro_range = config.gRange;
+
+    // magnetometer configuration
+    if ((config.mFreq < 0) || (config.mFreq > 3))
+    {
+        err += "Magnet frequency option must be in 0-3 range\n";
+    }
+    else params.magnet_duty = config.mFreq;
+
+    if ((config.mAvg < 0) || (config.mAvg > 8))
+    {
+        err += "Magnet average option must be in 0-8 range\n";
+    }
+    else params.magnet_avr = config.mAvg;
+
+    if(err != "")
+    {
         qDebug().noquote() << err;
     }
-    if(err == "")
+    else
     {
         err = "Received configuration is valid";
         r = 0;
