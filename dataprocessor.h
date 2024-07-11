@@ -34,9 +34,10 @@ class DataProcessor : public QObject
     Q_OBJECT
 
 private:
-
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
+
+
     cConfig currentAConfig = {
         .type = "A",
         .freq = 0,
@@ -54,15 +55,22 @@ private:
         .freq = 0,
         .avg = 8
     };
-    //static QQueue<QString> dataQueue;
+
+    cConfig newAConfig = currentAConfig;
+    cConfig newGConfig = currentGConfig;
+    cConfig newMConfig = currentMConfig;
+
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
     static QQueue<QString> errorQueue;
-    const float mConstant = .25f * .0001f;
+
+    const float mConstant = .25f * .0001f; // mT
+    QMap<int, float> aMap;
+    QMap<int, float> gMap;
+
     const float timeConstant = 1000000000;
     QTimer *dataTimer;
     QTimer *errorTimer;
-
 
     QElapsedTimer receiveTime;
     qint64 lastReceivedTime;
@@ -76,9 +84,6 @@ private:
 
     int lastReceivedId = 0;
     QMap<char, int> dataMap;
-    QMap<int, float> aMap;
-    QMap<int, float> gMap;
-    // QMap<int, float> mMap;
 
     void processLine(QString line);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
@@ -89,7 +94,7 @@ private:
     fullConfig setConfigParamsFromList(QList<cConfig> configs);
 
 public:
-    DataProcessor();
+    explicit DataProcessor(QObject *parent = nullptr);
     ~DataProcessor();
     void readDataFromTestFile();
     static void receiveDataFromDataReceiver(xyzCircuitData);
@@ -98,7 +103,6 @@ public:
     void setConfig();
 
 public slots:
-    void slotDataFromDataReceiver(xyzCircuitData data);
     void slotConfigCompleted(int);
     void slotConfigReceived(QList<cConfig> configsReceived);
 

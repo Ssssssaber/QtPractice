@@ -3,12 +3,12 @@
 #include <QApplication>
 #include <QDir>
 
-//QQueue<QString> DataProcessor::dataQueue;
 QQueue<xyzCircuitData> DataProcessor::dataQueue;
 QQueue<QString> DataProcessor::errorQueue;
 xyzCircuitData DataProcessor::currentData;
 
-DataProcessor::DataProcessor()
+DataProcessor::DataProcessor(QObject *parent)
+    : QObject{parent}
 {
     p7Trace = P7_Get_Shared_Trace("ServerChannel");
 
@@ -24,13 +24,9 @@ DataProcessor::DataProcessor()
     dataMap['G'] = 2;
     dataMap['M'] = 3;
 
-    // aMap[0] = 3.90625f * 1e-3 / 9.81f;
-    // aMap[1] = 7.8125f * 1e-3 / 9.81f;
-    // aMap[2] = 15.625f * 1e-3 / 9.81f;
-
-    aMap[0] = 3.90625f * 1e-6 * 2;
-    aMap[1] = 7.8125f * 1e-6 * 2;
-    aMap[2] = 15.625f * 1e-6 * 2;
+    aMap[0] = 3.90625f * 1e-6 * 2.;
+    aMap[1] = 7.8125f * 1e-6 * 2.;
+    aMap[2] = 15.625f * 1e-6 * 2.;
 
     gMap[0] = 1.f / 96.f;
     gMap[1] = 1.f / 48.f;
@@ -65,7 +61,6 @@ DataProcessor::~DataProcessor()
 
 void DataProcessor::readDataFromTestFile()
 {
-
     QString appPath = QDir().absolutePath();
     qInfo() << appPath;
 
@@ -118,36 +113,33 @@ void DataProcessor::setConfig()
 
 void DataProcessor::processLine(QString line)
 {
-    // try
-    // {
-    //     QString processedLine = line.simplified();
-    //     emit signalLineReceived(processedLine);
-    //     QList<QString> tokens = line.simplified().split(' ');
+    try
+    {
+        QString processedLine = line.simplified();
+        emit signalLineReceived(processedLine);
+        QList<QString> tokens = line.simplified().split(' ');
 
-    //     QString dataSource = tokens.data()[0];
-    //     switch (dataMap[dataSource]) {
-    //     case 1:
-    //         emit signalLineProcessed(stringDataToStruct(tokens, aConstant));
-
-
-    //     case 2:
-    //         emit signalLineProcessed(stringDataToStruct(tokens, gConstant));
-    //         break;
-    //     case 3:
-    //         emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
-    //         break;
-    //     case 4:
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    // }
-    // catch (const std::exception& ex) {
-    //     p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
-    // }
-    // catch (...) {
-    //     p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
-    // }
+        char dataSource = tokens.data()[0].toStdString().c_str()[0];
+        switch (dataMap[dataSource]) {
+        case 1:
+            emit signalLineProcessed(stringDataToStruct(tokens, aMap[currentAConfig.range]));
+            break;
+        case 2:
+            emit signalLineProcessed(stringDataToStruct(tokens, gMap[currentGConfig.range]));
+            break;
+        case 3:
+            emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
+            break;
+        default:
+            break;
+        }
+    }
+    catch (const std::exception& ex) {
+        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+    }
+    catch (...) {
+        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    }
 }
 
 void DataProcessor::processReceivedData(xyzCircuitData data)
@@ -162,7 +154,6 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
             emit signalLineProcessed(transformXyzData(data, gMap[currentGConfig.range]));
             break;
         case 3:
-
             emit signalLineProcessed(transformXyzData(data, mConstant));
             break;
         case 4:
@@ -181,7 +172,6 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
 
 xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
 {
-
     xyzCircuitData data;
     data.group = tokens[0].toStdString()[0];
     data.id = tokens[1].toInt();
@@ -201,7 +191,6 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
-
 
     p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
     lastReceivedId = data.id;
@@ -244,57 +233,28 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
     return data;
 }
 
-void DataProcessor::slotDataFromDataReceiver(xyzCircuitData data)
-{
-
-    //processLine(data);
-}
-
 void DataProcessor::slotConfigCompleted(int r)
 {
-    if ( LIBNII_SUCCESS != r )
+    if (r == LIBNII_SUCCESS)
     {
-        QString err = QString("failed to set parameters: %1").arg(libnii_strerror(r));
-        emit signalConfigError(err);
-        qDebug().noquote() << err;
+        currentAConfig = newAConfig;
+        currentGConfig = newGConfig;
+        currentMConfig = newMConfig;
     }
 }
 
 void DataProcessor::slotConfigReceived(QList<cConfig> configsReceived)
 {
     fullConfig conf = setConfigParamsFromList(configsReceived);
-    // qDebug() << conf.aAvg;
     if (!CircuitDataReceiver::checkForValidConfigParams(conf))
     {
         setConfig();
     }
-    // if(!CircuitDataReceiver::handleConfigParams(config.type.toStdString().c_str()[0], config.freq, config.avg, config.range))
-    // {
-    //     if (config.type == "A")
-    //     {
-    //         currentAConfig = config;
-    //     }
-    //     else if (config.type == "G")
-    //     {
-    //         currentGConfig = config;
-    //     }
-    //     else if (config.type == "M")
-    //     {
-    //         currentMConfig = config;
-    //     }
-    //     setConfig();
-    // }
-
 }
 
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
     currentData = data;
-}
-
-void DataProcessor::receiveErrorFromDataReceiver(QString error)
-{
-    errorQueue.enqueue(error);
 }
 
 void DataProcessor::readData()
@@ -310,6 +270,11 @@ void DataProcessor::readData()
         processReceivedData(currentData);
         currentData.group = 'N';
     }
+}
+
+void DataProcessor::receiveErrorFromDataReceiver(QString error)
+{
+    errorQueue.enqueue(error);
 }
 
 void DataProcessor::readError()

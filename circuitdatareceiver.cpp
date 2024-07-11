@@ -43,7 +43,7 @@ void CircuitDataReceiver::disconnectCircuit()
 
 int CircuitDataReceiver::setConfigParams()
 {
-    int r = -1, attempts = 10;
+    int r = -1, attempts = 100;
 
     while ( ! libnii_is_connected(handle) && (attempts-- > 0)) {
         QThread::sleep(1);
@@ -88,34 +88,34 @@ void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type
     switch ( type ) {
     case LIBNII_ACCEL_DATA:
     {
-        xyzCircuitData data = convertToXyzData("A", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('A', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     case LIBNII_GYRO_DATA:
     {
-        xyzCircuitData data = convertToXyzData("G", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('G', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     case LIBNII_MAGNET_DATA:
     {
-        xyzCircuitData data = convertToXyzData("M", packet_number, rawData);
+        xyzCircuitData data = convertToXyzData('M', packet_number, rawData);
         DataProcessor::receiveDataFromDataReceiver(data);
     }
-    break;
+    return;
     default:
         // Other type data were received
-        break;
+    return;
     }
 }
 
-xyzCircuitData CircuitDataReceiver::convertToXyzData(QString type, int packet_number, void *rawData)
+xyzCircuitData CircuitDataReceiver::convertToXyzData(char type, int packet_number, void *rawData)
 {
     libnii_xyz_data_t *xyz = (libnii_xyz_data_t *) rawData;
 
     xyzCircuitData data;
-    data.group = type.toStdString()[0];
+    data.group = type;
     data.id = packet_number;
     data.x = (float)(xyz->x);
     data.y = (float)(xyz->y);

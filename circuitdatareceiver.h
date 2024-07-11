@@ -37,7 +37,7 @@ private:
     static void printError(QString format, const char* str_error);
     static void printError(QString format, int error_code, const char* str_error);
     static void sendError(QString error);
-    static xyzCircuitData convertToXyzData(QString type, int packet_number, void *rawData);
+    static xyzCircuitData convertToXyzData(char type, int packet_number, void *rawData);
 
 public:
     CircuitDataReceiver();

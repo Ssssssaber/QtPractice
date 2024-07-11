@@ -63,7 +63,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     boxLayout->addWidget(clientResponseText, 1, 7, 2, 3);
     setLayout(boxLayout);
 
-    dataProcessor = new DataProcessor();
+    dataProcessor = new DataProcessor(this);
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
     connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
@@ -237,7 +237,6 @@ void Server::sendToClient(QTcpSocket *socket, const QString& str)
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
-    qDebug() << str;
     out << quint16(0) << QTime::currentTime() << str;
 
     out.device() -> seek(0);
