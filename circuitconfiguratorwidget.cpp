@@ -106,7 +106,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
 
         currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = 3};
 
-        rangeSlider = createSlider(0, 100, &CircuitConfiguratorWidget::setRangeValue);
+        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeValue);
         setRangeValue(currentConfig.range);
         freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqValue);
         setFreqValue(currentConfig.freq);
