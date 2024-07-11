@@ -28,7 +28,7 @@ void CircuitConfiguratorWidget::setFreqValue(int value)
 
 void CircuitConfiguratorWidget::setAvgValue(int value)
 {
-    avgLabel->setText("Current avr: " + QString::number(value) );
+    avgLabel->setText("Current avr: " +  QString::number(avgMap[value]) );
     avgSlider->setValue(value);
 }
 
@@ -54,7 +54,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
     freqLabel = new QLabel("Current freq: 0");
     avgLabel = new QLabel("Current avr: 0");
 
-    avgMap[0] = 0; avgMap[1] = 2; avgMap[2] = 4;
+    avgMap[0] = 1; avgMap[1] = 2; avgMap[2] = 4;
     avgMap[3] = 8; avgMap[4] = 16; avgMap[5] = 32;
     avgMap[6] = 64; avgMap[7] = 128; avgMap[8] = 256;
 
@@ -106,7 +106,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
 
         currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = 3};
 
-        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeValue);
+        rangeSlider = createSlider(0, 100000, &CircuitConfiguratorWidget::setRangeValue);
         setRangeValue(currentConfig.range);
         freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqValue);
         setFreqValue(currentConfig.freq);

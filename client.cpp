@@ -164,6 +164,8 @@ void Client::slotProcessDatagram()
         QDataStream in(&baDatagram, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_12);
         in >> dateTime >> stringData;
+        currentThread += sizeof(dateTime) + sizeof(stringData);
+        // currentThread += sizeof(QString) * 2;
         // xyzCircuitData parsedData = parseReceivedData(stringData);
         parseStringData(stringData);
         QString result = "Received: " + dateTime.toString() + " - " + stringData;
@@ -185,7 +187,7 @@ void Client::parseStringData(QString stringData)
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         // currentThread += 1;
-        currentThread += sizeof(data);
+        // currentThread += sizeof(data);
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
@@ -197,10 +199,9 @@ void Client::parseStringData(QString stringData)
         analysis.y = tokens[4].toFloat();
         analysis.z = tokens[5].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), analysis.toString().toStdString().data());
-        currentThread += sizeof(analysis);
+        // currentThread += sizeof(analysis);
         emit signalReceivedAnalysis(analysis);
     }
-
 }
 
 void Client::sendToTcpServer(QString messageType, QString message)

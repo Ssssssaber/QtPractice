@@ -26,7 +26,6 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     serX = new QLineSeries(); // creating lines
     serY = new QLineSeries();
     serZ = new QLineSeries();
-
     // serX->setName("X-axis"); // setting the names
     // serY->setName("Y-axis");
     // serZ->setName("Z-axis");
