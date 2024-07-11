@@ -43,7 +43,7 @@ public:
     CircuitDataReceiver();
     static void connectCircuit();
     static void disconnectCircuit();
-    static int handleConfigParams(char type, int freq, int avr, int range);
+    static int checkForValidConfigParams(fullConfig config);
     int setConfigParams();
 
 signals:

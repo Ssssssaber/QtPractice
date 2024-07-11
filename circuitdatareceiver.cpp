@@ -136,88 +136,67 @@ void CircuitDataReceiver::handleError (void *user_ptr, int error_code)
     prev = error_code;
 }
 
-int CircuitDataReceiver::handleConfigParams(char type, int freq, int avr, int range)
+int CircuitDataReceiver::checkForValidConfigParams(fullConfig config)
 {
     QString err = "";
     int r = -1;
-    switch (type) {
-    case 'A':
+
+    // accelerometer configuration
+    if ((config.aFreq < 0) || (config.aFreq > 2))
     {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Accelerator frequency option must be in 0-2 range\n";
-        }
-        else params.accel_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Accelerator average option must be in 0-8 range\n";
-        }
-        else params.accel_avr = avr;
-
-        if ((range < 0) || (range > 2))
-        {
-            err += "Accelerator range option must be in 0-2 range\n";
-        }
-        else params.accel_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator frequency option must be in 0-2 range\n";
     }
-    break;
-    case 'G':
+    else params.accel_freq = config.aFreq;
+
+    if ((config.aAvg < 0) || (config.aAvg > 8))
     {
-        if ((freq < 0) || (freq > 2))
-        {
-            err += "Gyroscope frequency option must be in 0-2 range\n";
-        }
-        else params.gyro_freq = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Gyroscope average option must be in 0-8 range\n";
-        }
-        else params.gyro_avr = avr;
-
-        if ((range < 0) || (range > 3))
-        {
-            err += "Gyroscope range option must be in 0-3 range\n";
-        }
-        else params.gyro_range = range;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator average option must be in 0-8 range\n";
     }
-    break;
-    case 'M':
+    else params.accel_avr = config.aAvg;
+
+    if ((config.aRange < 0) || (config.aRange > 2))
     {
-        if ((freq < 0) || (freq > 3))
-        {
-            err += "Magnet frequency option must be in 0-3 range\n";
-        }
-        else params.magnet_duty = freq;
-
-        if ((avr < 0) || (avr > 8))
-        {
-            err += "Magnet average option must be in 0-8 range\n";
-        }
-        else params.magnet_avr = avr;
-
-        if(err != "")
-        {
-            qDebug().noquote() << err;
-        }
+        err += "Accelerator range option must be in 0-2 range\n";
     }
-    break;
-    default:
-        err += "Unknown sensor type";
+    else params.accel_range = config.aRange;
+
+    // gyroscope configuration
+    if ((config.gFreq < 0) || (config.gFreq > 2))
+    {
+        err += "Gyroscope frequency option must be in 0-2 range\n";
+    }
+    else params.gyro_freq = config.gFreq;
+
+    if ((config.gAvg < 0) || (config.gAvg > 8))
+    {
+        err += "Gyroscope average option must be in 0-8 range\n";
+    }
+    else params.gyro_avr = config.gAvg;
+
+    if ((config.gRange < 0) || (config.gRange > 3))
+    {
+        err += "Gyroscope range option must be in 0-3 range\n";
+    }
+    else params.gyro_range = config.gRange;
+
+    // magnetometer configuration
+    if ((config.mFreq < 0) || (config.mFreq > 3))
+    {
+        err += "Magnet frequency option must be in 0-3 range\n";
+    }
+    else params.magnet_duty = config.mFreq;
+
+    if ((config.mAvg < 0) || (config.mAvg > 8))
+    {
+        err += "Magnet average option must be in 0-8 range\n";
+    }
+    else params.magnet_avr = config.mAvg;
+
+    if(err != "")
+    {
         qDebug().noquote() << err;
     }
-    if(err == "")
+    else
     {
         err = "Received configuration is valid";
         r = 0;

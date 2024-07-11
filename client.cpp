@@ -173,6 +173,58 @@ void Client::sendToTcpServer(QString messageType, QString message)
     p7Trace->P7_INFO(moduleName, TM("Client sent: \" %s: %s \""), messageType.toStdString().data(), message.toStdString().data());
 }
 
+void Client::processServerResponse(QString message)
+{
+    QList<QString> mTokens = message.simplified().split(' ');
+    if (mTokens[2] == "failed")
+    {
+        serverResponseText->append("Client: resetting old config");
+        aConfig->resetConfig();
+        gConfig->resetConfig();
+        mConfig->resetConfig();
+    }
+    else if (mTokens[2] == "success")
+    {
+        aConfig->keepConfig();
+        gConfig->keepConfig();
+        mConfig->keepConfig();
+    }
+    // if (mTokens[1] == "config")
+    // {
+    //     configStrings.append(message);
+    //     if (configStrings.length() == 3)
+    //     {
+    //         bool error = false;
+    //         foreach (QString str, configStrings)
+    //         {
+    //             QList<QString> tokens= str.simplified().split(' ');
+    //             if (tokens[2] == "failed")
+    //             {
+    //                 error = true;
+    //                 break;
+    //             }
+    //         }
+
+    //         if (error)
+    //         {
+    //             serverResponseText->append("Client: resetting old config");
+    //             aConfig->resetConfig();
+    //             gConfig->resetConfig();
+    //             mConfig->resetConfig();
+    //         }
+    //         else
+    //         {
+    //             aConfig->keepConfig();
+    //             gConfig->keepConfig();
+    //             mConfig->keepConfig();
+    //         }
+
+    //         configStrings.clear();
+    //     }
+    // }
+
+}
+
 void Client::slotUpdateThreadInfo()
 {
     serverResponseText->append(QDateTime::currentDateTime().toString() +
@@ -205,6 +257,8 @@ void Client::slotReadyRead()
         in >> time >> str;
 
         QString response = time.toString() + " " + str;
+
+        processServerResponse(response);
 
         serverResponseText->append(response);
         p7Trace->P7_INFO(moduleName, TM("%s"), response.toStdString().data());
