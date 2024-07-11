@@ -32,6 +32,15 @@ struct xyzAnalysisResult
     }
 };
 
+// struct chartBoundries{
+//     float xmax;
+//     float xmin;
+//     float ymax;
+//     float ymin;
+//     float zmax;
+//     float zmin;
+// };
+
 enum class WorkerTypes {WindowWorker, FilterWorker};
 
 #endif // XYZCIRCUITDATA_H
