@@ -16,6 +16,17 @@ public:
     }
 };
 
+struct fullConfig {
+    int aFreq;
+    int aAvg;
+    int aRange;
+    int gFreq;
+    int gAvg;
+    int gRange;
+    int mFreq;
+    int mAvg;
+};
+
 static cConfig parseStructFromString(QString line)
 {
     QList<QString> tokens = line.simplified().split(' ');
