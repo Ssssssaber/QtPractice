@@ -28,6 +28,8 @@ private:
     QQueue<xyzCircuitData> cDataToSendQueue;
     QQueue<xyzAnalysisResult> cAnalysisToSendQueue;
 
+    QList<cConfig> configsReceived;
+
     int tcpPort;
     bool clientConnected = false;
     QTcpServer* tcpServer;
@@ -48,13 +50,13 @@ public slots:
     void slotDataToSendAdded(xyzCircuitData data);
     void slotAnalysisToSendAdded(xyzAnalysisResult analysis);
     void slotSendDatagram();
-    void slotSendMessageToClient(QString string);
+    void slotSendCircuitMessageToClient(QString string);
     void slotSendDeltaTime(xyzAnalysisResult analysis);
 signals:
     void signalWindowSizeChanged(int newSize);
     void signalTimeToClearChanged(int newTime);
     void signalAnalysisToggle(QString analysisType);
-    void signalConfigReceived(cConfig config);
+    void signalConfigReceived(QList<cConfig> configsReceived);
 };
 
 // #endif // UDPSERVER_H

@@ -63,11 +63,11 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     boxLayout->addWidget(clientResponseText, 1, 7, 2, 3);
     setLayout(boxLayout);
 
-    dataProcessor = new DataProcessor();
+    dataProcessor = new DataProcessor(this);
     connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
     connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
-    connect(dataProcessor, &DataProcessor::signalSendCircuitMessage, this, &Server::slotSendMessageToClient);
+    connect(dataProcessor, &DataProcessor::signalSendCircuitMessage, this, &Server::slotSendCircuitMessageToClient);
 
     dataAnalyzer = new DataAnalyzer(dataProcessor);
     connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
@@ -137,15 +137,17 @@ void Server::sendAnalysis()
     p7Trace->P7_TRACE(moduleName, TM("Analysis sent: %s"), analysis.toString().toStdString().data());
 }
 
-void Server::slotSendMessageToClient(QString string)
+void Server::slotSendCircuitMessageToClient(QString string)
 {
+    if (string != "Received configuration is valid") string = "config failed : " + string;
+    else string = "config success : " + string;
     sendToClient(clientSocket, string);
 }
 
 void Server::slotSendDeltaTime(xyzAnalysisResult analysis)
 {
 
-    slotSendMessageToClient(QString("A, G, M delta times: %1 ms, %2 ms, %3 ms").
+    sendToClient(clientSocket, QString("A, G, M delta times: %1 ms, %2 ms, %3 ms").
                             arg(analysis.x).arg(analysis.y).arg(analysis.z));
     // slotSendMessageToClient(QString("A delta time: %1").arg(analysis.x));
     // slotSendMessageToClient(QString("G delta time: %1").arg(analysis.y));
@@ -235,7 +237,6 @@ void Server::sendToClient(QTcpSocket *socket, const QString& str)
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
-    qDebug() << str;
     out << quint16(0) << QTime::currentTime() << str;
 
     out.device() -> seek(0);
@@ -279,10 +280,12 @@ bool Server::processClientResponse(QString messageType, QString message)
     else if (messageType == "config")
     {
         cConfig config = parseStructFromString(message);
+        configsReceived.append(config);
         result = true;
-        if (result)
+        if (result && configsReceived.length() == 3)
         {
-            emit signalConfigReceived(config);
+            emit signalConfigReceived(configsReceived);
+            configsReceived.clear();
         }
     }
     return result;
