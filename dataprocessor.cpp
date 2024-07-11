@@ -266,7 +266,9 @@ void DataProcessor::readData()
     {
         return;
     }
-    else
+    else if (currentData.group == 'A' ||
+             currentData.group == 'G' ||
+             currentData.group == 'M')
     {
         processReceivedData(currentData);
         currentData.group = 'N';

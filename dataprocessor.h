@@ -48,9 +48,11 @@ private:
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
     static QQueue<QString> errorQueue;
+
     const float mConstant = .25f * .0001f; // mT
     QMap<int, float> aMap;
     QMap<int, float> gMap;
+
     const float timeConstant = 1000000000;
     QTimer *dataTimer;
     QTimer *errorTimer;

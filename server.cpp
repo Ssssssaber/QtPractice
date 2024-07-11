@@ -74,6 +74,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
     connect(this, &Server::signalTimeToClearChanged, dataAnalyzer, &DataAnalyzer::slotTimeToCleanChanged);
     connect(this, &Server::signalAnalysisToggle, dataAnalyzer, &DataAnalyzer::slotAnalysisToggled);
     connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
+    connect(dataAnalyzer, &DataAnalyzer::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
 
     // DISABLE WHEN NOT DEBUGGING
     // dataProcessor->readDataFromTestFile();
@@ -141,6 +142,16 @@ void Server::slotSendMessageToClient(QString string)
     sendToClient(clientSocket, string);
 }
 
+void Server::slotSendDeltaTime(xyzAnalysisResult analysis)
+{
+
+    slotSendMessageToClient(QString("A, G, M delta times: %1 ms, %2 ms, %3 ms").
+                            arg(analysis.x).arg(analysis.y).arg(analysis.z));
+    // slotSendMessageToClient(QString("A delta time: %1").arg(analysis.x));
+    // slotSendMessageToClient(QString("G delta time: %1").arg(analysis.y));
+    // slotSendMessageToClient(QString("M delta time: %1").arg(analysis.z));
+}
+
 void Server::slotStringReceived(QString stringData)
 {
     receivedDataText->append(stringData);
@@ -192,12 +203,12 @@ void Server::slotReadClient()
         QString serverResponse;
         if (processClientResponse(messageType, message))
         {
-            serverResponse = "Server Response: Received \"" + messageType + ": " + message + "\"";
+            serverResponse = "received \"" + messageType + ": " + message + "\"";
             sendToClient(clientSocket, serverResponse);
         }
         else
         {
-            serverResponse = "Server cannot process that message - \"" + messageType + ": " + message + "\"";
+            serverResponse = "cannot process that message - \"" + messageType + ": " + message + "\"";
             sendToClient(clientSocket, serverResponse);
         }
         // p7Trace->P7_INFO(0, TM("%s"), serverResponse.toStdString().data());
@@ -231,7 +242,7 @@ void Server::sendToClient(QTcpSocket *socket, const QString& str)
 
     socket->write(arrBlock);
 
-    p7Trace->P7_INFO(moduleName, TM("Server sent: %s"), str.toStdString().data());
+    p7Trace->P7_INFO(moduleName, TM("Server: %s"), str.toStdString().data());
 }
 
 bool Server::processClientResponse(QString messageType, QString message)
