@@ -32,12 +32,12 @@ private:
     QLabel* ltitle; //title
 
     struct{
-        int xmax;
-        int xmin;
-        int ymax;
-        int ymin;
-        int zmax;
-        int zmin;
+        float xmax = 8.192f;
+        float xmin = 8.192f;
+        float ymax = 8.192f;
+        float ymin = 8.192f;
+        float zmax = 8.192f;
+        float zmin = 8.192f;
     } axisrn;
 
     void cleanSeries(QLineSeries* data, int timeInSeconds);
