@@ -10,6 +10,11 @@ class CircuitConfiguratorWidget : public QWidget
 {
     Q_OBJECT
 private:
+    QString rangeMeasure;
+    QMap<int, float> rangeMap;
+    QMap<int, float> freqMap;
+    QMap<int, int> avgMap;
+
     const char type;
     QLabel *rangeLabel;
     QLabel *freqLabel;
@@ -19,17 +24,22 @@ private:
     QSlider *freqSlider;
     QSlider *avgSlider;
 
+    cConfig lastConfig;
+    cConfig currentConfig;
+
     QSlider *createSlider(int min, int max, void (CircuitConfiguratorWidget::*)(int));
-    void setRangeLabelValue(int value);
-    void setFreqLabelValue(int value);
-    void setAvgLabelValue(int value);
+    void setRangeValue(int value);
+    void setFreqValue(int value);
+    void setAvgValue(int value);
 
 
 public:
     explicit CircuitConfiguratorWidget(const char type, QWidget *parent = nullptr);
-
+    void resetConfig();
+    void keepConfig();
 public slots:
      void slotPrepeareConfig();
+
 
 signals:
     void configChanged(cConfig config);

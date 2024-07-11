@@ -12,6 +12,21 @@
 #include "circuitdatareceiver.h"
 #include "cdrworker.h"
 #include "P7_Trace.h"
+// struct libnii_params CircuitDataReceiver::params = {
+//     .accel_freq = 0,
+//     .accel_range = 2,
+//     .accel_avr = 8,
+//     .gyro_freq = 0,
+//     .gyro_range = 3,
+//     .gyro_avr = 8,
+//     .magnet_duty = 0,
+//     .magnet_avr = 8,
+//     .press_freq = 0,
+//     .press_filter = 0,
+//     .nv08c_freq = 0,
+//     .display_refresh = 2
+// };
+
 
 class CDRWorker;
 class DataProcessor : public QObject
@@ -76,6 +91,7 @@ private:
     xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
     void readData();
     void readError();
+    fullConfig setConfigParamsFromList(QList<cConfig> configs);
 
 public:
     explicit DataProcessor(QObject *parent = nullptr);
@@ -88,7 +104,7 @@ public:
 
 public slots:
     void slotConfigCompleted(int);
-    void slotConfigReceived(cConfig data);
+    void slotConfigReceived(QList<cConfig> configsReceived);
 
 signals:
     void signalLineReceived(QString data);

@@ -199,12 +199,21 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
 }
 
 xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transitionConst)
-{    
+{
+    if (data.group == 'A')
+    {
+         qDebug() << "before: " << data.toString();
+    }
+
     data.x *= transitionConst;
     data.y *= transitionConst;
     data.z *= transitionConst;
     data.timestamp /= timeConstant;
-    qDebug() << data.group << data.x << data.y << data.z;
+    if (data.group == 'A')
+    {
+        qDebug() << "after: " << data.toString();
+    }
+
 
     QString message;
     if (lastReceivedId + 1 == data.id)
@@ -234,25 +243,13 @@ void DataProcessor::slotConfigCompleted(int r)
     }
 }
 
-void DataProcessor::slotConfigReceived(cConfig config)
+void DataProcessor::slotConfigReceived(QList<cConfig> configsReceived)
 {
-    //if(!CircuitDataReceiver::handleConfigParams(???)
-    // {
-    //     if (config.type == "A")
-    //     {
-    //         newAConfig = config;
-    //     }
-    //     else if (config.type == "G")
-    //     {
-    //         newGConfig = config;
-    //     }
-    //     else if (config.type == "M")
-    //     {
-    //         newMConfig = config;
-    //     }
-    //     setConfig();
-    // }
-
+    fullConfig conf = setConfigParamsFromList(configsReceived);
+    if (!CircuitDataReceiver::checkForValidConfigParams(conf))
+    {
+        setConfig();
+    }
 }
 
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
@@ -286,4 +283,32 @@ void DataProcessor::readError()
         return;
 
     emit signalSendCircuitMessage(errorQueue.dequeue());
+}
+
+fullConfig DataProcessor::setConfigParamsFromList(QList<cConfig> configs)
+{
+    fullConfig full;
+
+    foreach (cConfig config, configs)
+    {
+        if (config.type == "A")
+        {
+            full.aAvg = config.avg;
+            full.aFreq = config.freq;
+            full.aRange = config.range;
+        }
+        else if (config.type == "G")
+        {
+            full.gAvg = config.avg;
+            full.gFreq = config.freq;
+            full.gRange = config.range;
+        }
+        else if (config.type == "M")
+        {
+            full.mAvg = config.avg;
+            full.mFreq = config.freq;
+        }
+    }
+
+    return full;
 }

@@ -6,28 +6,30 @@ QSlider *CircuitConfiguratorWidget::createSlider(int min, int max, void (Circuit
 {
     QSlider *slider = new QSlider(Qt::Horizontal, this);
     slider->setRange(min, max);
-    slider->setValue(0);
     slider->setTickPosition(QSlider::TicksBelow);
     slider->setSingleStep(1);
-
     connect(slider, &QSlider::valueChanged, this, fptr);
 
     return slider;
 }
 
-void CircuitConfiguratorWidget::setRangeLabelValue(int value)
+void CircuitConfiguratorWidget::setRangeValue(int value)
 {
-    rangeLabel->setText("Current range: " + QString::number(value));
+    rangeLabel->setText("Current range: " + QString::number(rangeMap[value]) + rangeMeasure);
+    rangeSlider->setValue(value);
 }
 
-void CircuitConfiguratorWidget::setFreqLabelValue(int value)
+void CircuitConfiguratorWidget::setFreqValue(int value)
 {
-    freqLabel->setText("Current freq: " + QString::number(value));
+    if (type != 'M') freqLabel->setText("Current freq: " + QString::number(freqMap[value]) + " oper/s");
+    else freqLabel->setText("Current duty: " + QString::number(freqMap[value]) + "ms");
+    freqSlider->setValue(value);
 }
 
-void CircuitConfiguratorWidget::setAvgLabelValue(int value)
+void CircuitConfiguratorWidget::setAvgValue(int value)
 {
-    avgLabel->setText("Current avr: " + QString::number(value));
+    avgLabel->setText("Current avr: " + QString::number(value) );
+    avgSlider->setValue(value);
 }
 
 void CircuitConfiguratorWidget::slotPrepeareConfig()
@@ -38,6 +40,8 @@ void CircuitConfiguratorWidget::slotPrepeareConfig()
     else config.range = -1;
     config.freq = freqSlider->value();
     config.avg = avgSlider->value();
+
+    currentConfig = config;
 
     emit configChanged(config);
 }
@@ -50,24 +54,81 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
     freqLabel = new QLabel("Current freq: 0");
     avgLabel = new QLabel("Current avr: 0");
 
+    avgMap[0] = 0; avgMap[1] = 2; avgMap[2] = 4;
+    avgMap[3] = 8; avgMap[4] = 16; avgMap[5] = 32;
+    avgMap[6] = 64; avgMap[7] = 128; avgMap[8] = 256;
+
     if (type == 'A')
     {
-        rangeSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setRangeLabelValue);
-        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
-        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+        freqMap[0] = 1000;
+        freqMap[1] = 2000;
+        freqMap[2] = 4000;
+
+        rangeMeasure = " g";
+        rangeMap[0] = 2.048;
+        rangeMap[1] = 4.096;
+        rangeMap[2] = 8.192;
+
+        // struct libnii_params CircuitDataReceiver::params = {
+        //     .accel_freq = 0,
+        //     .accel_range = 2,
+        //     .accel_avr = 8,
+        //     .gyro_freq = 0,
+        //     .gyro_range = 3,
+        //     .gyro_avr = 8,
+        //     .magnet_duty = 0,
+        //     .magnet_avr = 8,
+        //     .press_freq = 0,
+        //     .press_filter = 0,
+        //     .nv08c_freq = 0,
+        //     .display_refresh = 2
+        // };
+        currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = 2};
+
+        rangeSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setRangeValue);
+        setRangeValue(currentConfig.range);
+        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqValue);
+        setFreqValue(currentConfig.freq);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgValue);
+        setAvgValue(currentConfig.avg);
     }
     else if (type == 'G')
     {
-        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
-        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
-        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+        freqMap[0] = 1000;
+        freqMap[1] = 2000;
+        freqMap[2] = 4000;
+
+        rangeMeasure = " °/s";
+        rangeMap[0] = 75;
+        rangeMap[1] = 150;
+        rangeMap[2] = 300;
+        rangeMap[3] = 900;
+
+        currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = 3};
+
+        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeValue);
+        setRangeValue(currentConfig.range);
+        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqValue);
+        setFreqValue(currentConfig.freq);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgValue);
+        setAvgValue(currentConfig.avg);
     }
     else if (type == 'M')
     {
+        freqMap[0] = 10;
+        freqMap[1] = 5;
+        freqMap[2] = 2.5;
+        freqMap[3] = 1.6;
+
+        currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = -1};
         // rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeLabelValue);
-        freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqLabelValue);
-        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgLabelValue);
+        freqSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setFreqValue);
+        setFreqValue(currentConfig.freq);
+        avgSlider = createSlider(0, 8, &CircuitConfiguratorWidget::setAvgValue);
+        setAvgValue(currentConfig.avg);
     }
+
+    keepConfig();
 
 
 
@@ -87,4 +148,16 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
     }
 
     setLayout(layout);
+}
+
+void CircuitConfiguratorWidget::resetConfig()
+{
+    setAvgValue(lastConfig.avg);
+    setFreqValue(lastConfig.freq);
+    if (type != 'M') setRangeValue(lastConfig.range);
+}
+
+void CircuitConfiguratorWidget::keepConfig()
+{
+    lastConfig = currentConfig;
 }
