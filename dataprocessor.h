@@ -12,6 +12,21 @@
 #include "circuitdatareceiver.h"
 #include "cdrworker.h"
 #include "P7_Trace.h"
+// struct libnii_params CircuitDataReceiver::params = {
+//     .accel_freq = 0,
+//     .accel_range = 2,
+//     .accel_avr = 8,
+//     .gyro_freq = 0,
+//     .gyro_range = 3,
+//     .gyro_avr = 8,
+//     .magnet_duty = 0,
+//     .magnet_avr = 8,
+//     .press_freq = 0,
+//     .press_filter = 0,
+//     .nv08c_freq = 0,
+//     .display_refresh = 2
+// };
+
 
 class CDRWorker;
 class DataProcessor : public QObject
@@ -22,28 +37,41 @@ private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
 
-
-    cConfig currentAConfig = {
-        .type = "A",
-        .freq = 0,
-        .avg = 8,
-        .range = 2
+    // struct libnii_params CircuitDataReceiver::params = {
+    //     .accel_freq = 0,
+    //     .accel_range = 2,
+    //     .accel_avr = 8,
+    //     .gyro_freq = 0,
+    //     .gyro_range = 3,
+    //     .gyro_avr = 8,
+    //     .magnet_duty = 0,
+    //     .magnet_avr = 8,
+    //     .press_freq = 0,
+    //     .press_filter = 0,
+    //     .nv08c_freq = 0,
+    //     .display_refresh = 2
+    // };
+    fullConfig defaultConfig = {
+        .aFreq = 0,
+        .aAvg = 8,
+        .aRange = 2,
+        .gFreq = 0,
+        .gAvg = 8,
+        .gRange = 3,
+        .mFreq = 0,
+        .mAvg = 8
     };
-    cConfig currentGConfig = {
-        .type = "G",
-        .freq = 0,
-        .avg = 8,
-        .range = 3
+    fullConfig currentConfig = {
+        .aFreq = 0,
+        .aAvg = 8,
+        .aRange = 2,
+        .gFreq = 0,
+        .gAvg = 8,
+        .gRange = 3,
+        .mFreq = 0,
+        .mAvg = 8
     };
-    cConfig currentMConfig = {
-        .type = "M",
-        .freq = 0,
-        .avg = 8
-    };
-
-    cConfig newAConfig = currentAConfig;
-    cConfig newGConfig = currentGConfig;
-    cConfig newMConfig = currentMConfig;
+    fullConfig newConfig;
 
     static QQueue<xyzCircuitData> dataQueue;
     static xyzCircuitData currentData;
@@ -56,6 +84,10 @@ private:
     const float timeConstant = 1000000000;
     QTimer *dataTimer;
     QTimer *errorTimer;
+
+    long aLost = 0;
+    long gLost = 0;
+    long mLost = 0;
 
     QElapsedTimer receiveTime;
     qint64 lastReceivedTime;
@@ -76,6 +108,7 @@ private:
     xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
     void readData();
     void readError();
+    fullConfig setConfigParamsFromList(QList<cConfig> configs);
 
 public:
     explicit DataProcessor(QObject *parent = nullptr);
@@ -88,7 +121,7 @@ public:
 
 public slots:
     void slotConfigCompleted(int);
-    void slotConfigReceived(cConfig data);
+    void slotConfigReceived(QList<cConfig> configsReceived);
 
 signals:
     void signalLineReceived(QString data);

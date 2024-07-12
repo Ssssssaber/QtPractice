@@ -89,10 +89,11 @@ void DataAnalyzer::slotResultReceived(xyzAnalysisResult analysis)
 
 void DataAnalyzer::slotUpdateDeltaTime()
 {
+
     xyzAnalysisResult deltaTimes = {
-        .x = getAverageDeltaTime(aData, aReceived)/*aData.first().timestamp - aData[aData.length() - 2].timestamp*/,
-        .y = getAverageDeltaTime(gData, gReceived)/*gData.first().timestamp - gData[aData.length() - 2].timestamp*/,
-        .z = getAverageDeltaTime(mData, mReceived)/*mData.first().timestamp - mData[aData.length() - 2].timestamp*/,
+        .x = getAverageDeltaTime(aData, aReceived) * 1000,
+        .y = getAverageDeltaTime(gData, gReceived) * 1000,
+        .z = getAverageDeltaTime(mData, mReceived) * 1000,
     };
 
     aReceived = 0;
@@ -118,7 +119,7 @@ void DataAnalyzer::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int t
     {
         if (dataToClean->last().timestamp - data.timestamp <= timeInSeconds)
             break;
-        dataToClean->pop_back();
+        dataToClean->pop_front();
     }
 
     // qDebug() << " before and after " << initial << dataToClean->length();
@@ -131,6 +132,12 @@ float DataAnalyzer::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
 {
     int size = data.length();
     if (amount <= 0 || amount > data.length()) return 0;
+
+    // if (amount == 1) return 0;
+    // float first = data.last().timestamp;
+    // float second = data[data.length() - 2].timestamp;
+
+    // float average = first - second;
 
     float average = 0;
 

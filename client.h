@@ -31,6 +31,7 @@ private:
     QTextEdit *serverResponseText;
     void parseStringData(QString stringData);
     void sendToTcpServer(QString messageType, QString message);
+    void processServerResponse(QString message);
 
     QElapsedTimer receiveTime;
     qint64 lastReceivedTime;
@@ -43,6 +44,8 @@ private:
     QLabel *threadLabel;
     QLabel *deltaLabel;
     int currentThread = 0;
+
+    QList<QString> configStrings;
 
 
 public:
