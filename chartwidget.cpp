@@ -223,15 +223,15 @@ void ChartWidget::setChartData(xyzCircuitData data)
     //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
 
 
-    cViewX->chart()->axes(Qt::Vertical).back()->setRange(axisrn.xmin,axisrn.xmax); // setting chart axies range
+    cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.xmin,chartBoundries.xmax); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
     cViewX->chart()->addSeries(serX); // restoring series
 
-    cViewY->chart()->axes(Qt::Vertical).back()->setRange(axisrn.ymin,axisrn.ymax);
+    cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.ymin,chartBoundries.ymax);
     cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
     cViewY->chart()->addSeries(serY);
 
-    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(axisrn.zmin,axisrn.zmax);
+    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.zmin,chartBoundries.zmax);
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
     cViewZ->chart()->addSeries(serZ);
 }
@@ -250,6 +250,11 @@ void ChartWidget::cleanAllSeries(int timeInSeconds)
     cViewY->chart()->addSeries(serY);
     cViewZ->chart()->addSeries(serZ);
 }
+
+// void ChartWidget::slotBoundriesChanged(chartBoundries boundries)
+// {
+
+// }
 
 void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
 {

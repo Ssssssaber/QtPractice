@@ -90,9 +90,9 @@ void DataAnalyzer::slotUpdateDeltaTime()
 {
 
     xyzAnalysisResult deltaTimes = {
-        .x = getAverageDeltaTime(aData, aReceived),
-        .y = getAverageDeltaTime(gData, gReceived),
-        .z = getAverageDeltaTime(mData, mReceived),
+        .x = getAverageDeltaTime(aData, aReceived) * 1000,
+        .y = getAverageDeltaTime(gData, gReceived) * 1000,
+        .z = getAverageDeltaTime(mData, mReceived) * 1000,
     };
 
     aReceived = 0;
@@ -132,8 +132,9 @@ float DataAnalyzer::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
     int size = data.length();
     if (amount <= 0 || amount > data.length()) return 0;
 
-    // float first = aData.last().timestamp;
-    // float second = aData[aData.length() - 2].timestamp;
+    // if (amount == 1) return 0;
+    // float first = data.last().timestamp;
+    // float second = data[data.length() - 2].timestamp;
 
     // float average = first - second;
 
