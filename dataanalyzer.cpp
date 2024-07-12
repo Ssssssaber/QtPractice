@@ -17,7 +17,8 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
 
     // qRegisterMetaType<uint16_t>("QList<xyzCircuitData>");
     this->dataProcessor = dataProcessor;
-    windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
+    // windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
+    windowWorkerController = new XyzWorkerController(WorkerTypes::FilterWorker);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &DataAnalyzer::slotInfoReceived);
     connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataAnalyzer::slotResultReceived);
 

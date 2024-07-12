@@ -2,6 +2,8 @@
 #define XYZWORKERCONTROLLER_H
 
 #include "xyzworker.h"
+#include "windowworker.h"
+#include "filterworker.h"
 
 class XyzWorkerController : public QObject
 {
