@@ -15,6 +15,22 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
         p7Trace->Register_Module(TM("CWgt"), &moduleName);
     }
 
+    if (title == "A")
+    {
+        chartBoundries.min = -8.192f;
+        chartBoundries.max = 8.192f;
+    }
+    if (title == "G")
+    {
+        chartBoundries.min = -900;
+        chartBoundries.max = 900;
+    }
+    if (title == "M")
+    {
+        chartBoundries.min = -8;
+        chartBoundries.max = 8;
+    }
+
     QGridLayout* lyChartPairs = new QGridLayout(); // main layout of chartwidget
 
     QScrollArea* sraX = new QScrollArea(); // carrier of sublayouts
@@ -196,6 +212,14 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 
 }
 
+
+void ChartWidget::setNewYBoundries(float min, float max)
+{
+    chartBoundries.min = min;
+    chartBoundries.max = max;
+}
+
+
 void ChartWidget::setWindowResult(xyzAnalysisResult data)
 {
     resX->setText(QString::fromStdString("Windowing result: " + std::to_string(data.x)));
@@ -205,6 +229,10 @@ void ChartWidget::setWindowResult(xyzAnalysisResult data)
 
 void ChartWidget::setChartData(xyzCircuitData data)
 {
+    if (data.group == 'A')
+    {
+        qDebug() << "CHART DATA" <<data.toString();
+    }
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
     cViewZ->chart()->removeSeries(serZ);
@@ -222,17 +250,17 @@ void ChartWidget::setChartData(xyzCircuitData data)
     //axisrn.zmax = data.x > axisrn.zmax ? data.x : axisrn.zmax;
     //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
 
-
-    cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.xmin,chartBoundries.xmax); // setting chart axies range
+    cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
+    // serX->detachAxis(serXaxisX);
     cViewX->chart()->addSeries(serX); // restoring series
 
-    cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.ymin,chartBoundries.ymax);
     cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
+    cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
     cViewY->chart()->addSeries(serY);
 
-    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.zmin,chartBoundries.zmax);
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
+    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
     cViewZ->chart()->addSeries(serZ);
 }
 

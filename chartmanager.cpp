@@ -97,6 +97,22 @@ void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
     }
 }
 
+void ChartManager::slotRangeChanged(char type, float newRange)
+{
+    if (type == 'A')
+    {
+        chartA->setNewYBoundries(-newRange, newRange);
+    }
+    else if (type == 'G')
+    {
+        chartG->setNewYBoundries(-newRange, newRange);
+    }
+    else
+    {
+        p7Trace->P7_ERROR(moduleName, TM("Wrong chart selection"));
+    }
+}
+
 void ChartManager::cleanup()
 {
     chartA->cleanAllSeries(dataLifespanInSeconds);

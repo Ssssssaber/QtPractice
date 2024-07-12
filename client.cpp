@@ -119,15 +119,17 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     QVBoxLayout *configVBox = new QVBoxLayout;
 
     aConfig = new CircuitConfiguratorWidget('A');
-    connect(aConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(aConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
+    connect(aConfig, &CircuitConfiguratorWidget::signalRangeChanged, chartManager, &ChartManager::slotRangeChanged);
 
 
     gConfig = new CircuitConfiguratorWidget('G');
-    connect(gConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(gConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
+    connect(gConfig, &CircuitConfiguratorWidget::signalRangeChanged, chartManager, &ChartManager::slotRangeChanged);
 
 
     mConfig = new CircuitConfiguratorWidget('M');
-    connect(mConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(mConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
 
 
     QPushButton *setButton = new QPushButton("Change config");

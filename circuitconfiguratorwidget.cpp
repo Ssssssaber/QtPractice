@@ -43,7 +43,7 @@ void CircuitConfiguratorWidget::slotPrepeareConfig()
 
     currentConfig = config;
 
-    emit configChanged(config);
+    emit signalConfigChanged(config);
 }
 
 CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *parent)
@@ -106,7 +106,7 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
 
         currentConfig = {.type = QString(type), .freq = 0, .avg = 8, .range = 3};
 
-        rangeSlider = createSlider(0, 100000, &CircuitConfiguratorWidget::setRangeValue);
+        rangeSlider = createSlider(0, 3, &CircuitConfiguratorWidget::setRangeValue);
         setRangeValue(currentConfig.range);
         freqSlider = createSlider(0, 2, &CircuitConfiguratorWidget::setFreqValue);
         setFreqValue(currentConfig.freq);
@@ -160,4 +160,5 @@ void CircuitConfiguratorWidget::resetConfig()
 void CircuitConfiguratorWidget::keepConfig()
 {
     lastConfig = currentConfig;
+    if (type != 'M') emit signalRangeChanged(type, rangeMap[lastConfig.range]);
 }
