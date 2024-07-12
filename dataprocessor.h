@@ -128,7 +128,7 @@ signals:
     void signalLineProcessed(xyzCircuitData data);
     void signalConfigError(QString);
     void signalSendCircuitMessage(QString);
-    void signalSendDt(char device, float dt);
+    void signalSendDtOption(char device, int dt);
 };
 
 #endif // DATAPROCESSOR_H

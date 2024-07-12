@@ -281,14 +281,11 @@ void DataProcessor::slotConfigCompleted(int r)
         float dt;
         currentConfig = newConfig;
 
-        dt = 1. / currentConfig.aFreq;
-        emit signalSendDt('A', dt);
+        emit signalSendDtOption('A', currentConfig.aFreq);
 
-        dt = 1. / currentConfig.gFreq;
-        emit signalSendDt('G', dt);
+        emit signalSendDtOption('G', currentConfig.gFreq);
 
-        dt = 1. / currentConfig.mFreq;
-        emit signalSendDt('M', dt);
+        emit signalSendDtOption('M', currentConfig.mFreq);
     }
 }
 

@@ -95,18 +95,18 @@ void XyzWorkerController::slotHandleResults(xyzAnalysisResult result)
     emit signalResultReady(result);
 }
 
-void XyzWorkerController::slotHandleDt(char device, float dt)
+void XyzWorkerController::slotHandleDtOption(char device, int dtOption)
 {
     switch(device)
     {
     case 'A':
-        dynamic_cast<FilterWorker*>(aWorker)->dt = dt;
+        dynamic_cast<FilterWorker*>(aWorker)->dt = 1. / freqAG[dtOption];
         break;
     case 'G':
-        dynamic_cast<FilterWorker*>(gWorker)->dt = dt;
+        dynamic_cast<FilterWorker*>(gWorker)->dt = 1. / freqAG[dtOption];
         break;
     case 'M':
-        dynamic_cast<FilterWorker*>(mWorker)->dt = dt;
+        dynamic_cast<FilterWorker*>(mWorker)->dt = dutyTimeM[dtOption];
         break;
     }
 }
