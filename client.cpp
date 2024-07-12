@@ -2,7 +2,7 @@
 #include "P7_Client.h"
 
 
-Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
+Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
 
@@ -24,7 +24,7 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     this->tcpPort = tcpPort;
 
     tcpSocket = new QTcpSocket(this);
-    tcpSocket->connectToHost(strHost, tcpPort);
+    tcpSocket->connectToHost(serverAddress, tcpPort);
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::slotConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::slotReadyRead);
 

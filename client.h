@@ -16,6 +16,8 @@ private:
     IP7_Telemetry *p7Telemetry;
     IP7_Trace::hModule moduleName;
 
+    QHostAddress serverAddress;
+
     ChartManager* chartManager;
     QTextEdit* receivedCircuitData;
 
@@ -49,7 +51,7 @@ private:
 
 
 public:
-    Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt = 0);
+    Client(int tcpPort = 2323, int udpPort = 2424, QHostAddress serverAddress = QHostAddress::LocalHost, QWidget* pwgt = 0);
 
 private slots:
     void slotProcessDatagram();
