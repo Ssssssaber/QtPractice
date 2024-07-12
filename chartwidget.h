@@ -32,18 +32,15 @@ private:
     QLabel* ltitle; //title
 
     struct{
-        int xmax;
-        int xmin;
-        int ymax;
-        int ymin;
-        int zmax;
-        int zmin;
-    } axisrn;
+        float min = -8.192f;
+        float max = 8.192f;
+    } chartBoundries;
 
     void cleanSeries(QLineSeries* data, int timeInSeconds);
 
 public:
     ChartWidget(const QString title = "", QWidget* pwgt = 0);
+    void setNewYBoundries(float min, float max);
     void setWindowResult(xyzAnalysisResult);
     void setChartData(xyzCircuitData);
     void cleanAllSeries(int timeInSeconds);

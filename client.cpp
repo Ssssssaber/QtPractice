@@ -2,7 +2,7 @@
 #include "P7_Client.h"
 
 
-Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
+Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
 
@@ -24,7 +24,7 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     this->tcpPort = tcpPort;
 
     tcpSocket = new QTcpSocket(this);
-    tcpSocket->connectToHost(strHost, tcpPort);
+    tcpSocket->connectToHost(serverAddress, tcpPort);
     connect(tcpSocket, &QTcpSocket::connected, this, &Client::slotConnected);
     connect(tcpSocket, &QTcpSocket::readyRead, this, &Client::slotReadyRead);
 
@@ -41,19 +41,23 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     // grid->addWidget(serverResponseText, 9, 5, 4, 5);
 
     // main layout
+    QSplitter *mainSplitter = new QSplitter(Qt::Horizontal);
+
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     setLayout(mainLayout);
 
     // data part
-    QWidget *dataWidget = new QWidget(this);
-    QVBoxLayout *dataVBox = new QVBoxLayout;
-    dataWidget->setLayout(dataVBox);
+    // QWidget *dataWidget = new QWidget(this);
+    QSplitter *dataSplitter = new QSplitter(Qt::Vertical);
+    // QVBoxLayout *dataVBox = new QVBoxLayout;
+    // dataWidget->setLayout(dataVBox);
 
     // chart part
     chartManager = new ChartManager(this);
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
-    dataVBox->addWidget(chartManager);
+    // dataVBox->addWidget(chartManager);
+    dataSplitter->addWidget(chartManager);
 
     // logs part
     QWidget *logsWidget = new QWidget(this);
@@ -70,7 +74,8 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     logsWidget->setLayout(logsHBox);
 
     logsWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    dataVBox->addWidget(logsWidget);
+    // dataVBox->addWidget(logsWidget);
+    dataSplitter->addWidget(logsWidget);
 
 
     // window part
@@ -114,15 +119,17 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     QVBoxLayout *configVBox = new QVBoxLayout;
 
     aConfig = new CircuitConfiguratorWidget('A');
-    connect(aConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(aConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
+    connect(aConfig, &CircuitConfiguratorWidget::signalRangeChanged, chartManager, &ChartManager::slotRangeChanged);
 
 
     gConfig = new CircuitConfiguratorWidget('G');
-    connect(gConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(gConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
+    connect(gConfig, &CircuitConfiguratorWidget::signalRangeChanged, chartManager, &ChartManager::slotRangeChanged);
 
 
     mConfig = new CircuitConfiguratorWidget('M');
-    connect(mConfig, &CircuitConfiguratorWidget::configChanged, this, &Client::slotConfigChanged);
+    connect(mConfig, &CircuitConfiguratorWidget::signalConfigChanged, this, &Client::slotConfigChanged);
 
 
     QPushButton *setButton = new QPushButton("Change config");
@@ -130,20 +137,26 @@ Client::Client(const QString& strHost, int tcpPort, int udpPort, QWidget* pwgt) 
     connect(setButton, &QPushButton::clicked, gConfig, &CircuitConfiguratorWidget::slotPrepeareConfig);
     connect(setButton, &QPushButton::clicked, mConfig, &CircuitConfiguratorWidget::slotPrepeareConfig);
 
-    QSpacerItem *configSpacer = new QSpacerItem(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    // QSpacerItem *configSpacer = new QSpacerItem(QSizePolicy::MinimumExpanding, QSizePolicy::Expanding);
+    configVBox->addStretch();
     configVBox->addWidget(aConfig);
     configVBox->addWidget(gConfig);
     configVBox->addWidget(mConfig);
     configVBox->addWidget(setButton);
     configVBox->addWidget(windowWidget);
     configVBox->addWidget(timeWidget);
-    configVBox->addItem(configSpacer);
+    // configVBox->addItem(configSpacer);
+    configVBox->addStretch();
 
     configs->setLayout(configVBox);
-    configs->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+    configs->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-    mainLayout->addWidget(dataWidget);
-    mainLayout->addWidget(configs);
+    // mainLayout->addWidget(dataWidget);
+    // mainLayout->addWidget(dataSplitter);
+    // mainLayout->addWidget(configs);
+    mainSplitter->addWidget(dataSplitter);
+    mainSplitter->addWidget(configs);
+    mainLayout->addWidget(mainSplitter);
 
     QTimer *statTimer = new QTimer();
     statTimer->setInterval(3000);
@@ -164,6 +177,8 @@ void Client::slotProcessDatagram()
         QDataStream in(&baDatagram, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_12);
         in >> dateTime >> stringData;
+        currentThread += sizeof(dateTime) + sizeof(stringData);
+        // currentThread += sizeof(QString) * 2;
         // xyzCircuitData parsedData = parseReceivedData(stringData);
         parseStringData(stringData);
         QString result = "Received: " + dateTime.toString() + " - " + stringData;
@@ -185,7 +200,7 @@ void Client::parseStringData(QString stringData)
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         // currentThread += 1;
-        currentThread += sizeof(data);
+        // currentThread += sizeof(data);
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
@@ -197,10 +212,9 @@ void Client::parseStringData(QString stringData)
         analysis.y = tokens[4].toFloat();
         analysis.z = tokens[5].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), analysis.toString().toStdString().data());
-        currentThread += sizeof(analysis);
+        // currentThread += sizeof(analysis);
         emit signalReceivedAnalysis(analysis);
     }
-
 }
 
 void Client::sendToTcpServer(QString messageType, QString message)

@@ -5,7 +5,7 @@
 #include "perfomancechecker.h"
 #include <QTcpSocket>
 
-Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
+Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
     if (p7Client)
@@ -24,6 +24,7 @@ Server::Server(int tcpPort, int udpPort, QWidget* pwgt) : QWidget(pwgt), nextBlo
 
     this->tcpPort = tcpPort;
     this->udpPort = udpPort;
+    this->clientAddress = clientAddress;
 
     tcpServer = new QTcpServer(this);
     if (!tcpServer->listen(QHostAddress::Any, tcpPort))
@@ -117,7 +118,7 @@ void Server::sendData()
     xyzCircuitData data = cDataToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
     out << dt << data.toString();
-    udpDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
+    udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
 
     p7Trace->P7_TRACE(moduleName, TM("Data sent: %s"), data.toString().toStdString().data());
 }
@@ -132,7 +133,7 @@ void Server::sendAnalysis()
     xyzAnalysisResult analysis = cAnalysisToSendQueue.dequeue();
     sentDataText->append("Sent: " + dt.toString() + "\n" + analysis.toString());
     out << dt << analysis.toString();
-    udpDataSocket->writeDatagram(baDatagram, QHostAddress::LocalHost, udpPort);
+    udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
 
     p7Trace->P7_TRACE(moduleName, TM("Analysis sent: %s"), analysis.toString().toStdString().data());
 }

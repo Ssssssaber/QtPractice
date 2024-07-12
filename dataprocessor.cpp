@@ -2,6 +2,7 @@
 #include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
+#include <QtMath>
 
 QQueue<xyzCircuitData> DataProcessor::dataQueue;
 QQueue<QString> DataProcessor::errorQueue;
@@ -24,9 +25,9 @@ DataProcessor::DataProcessor(QObject *parent)
     dataMap['G'] = 2;
     dataMap['M'] = 3;
 
-    aMap[0] = 3.90625f * 1e-6 * 2.;
-    aMap[1] = 7.8125f * 1e-6 * 2.;
-    aMap[2] = 15.625f * 1e-6 * 2.;
+    aMap[0] = 3.90625f * 1e-6;
+    aMap[1] = 7.8125f * 1e-6;
+    aMap[2] = 15.625f * 1e-6;
 
     gMap[0] = 1.f / 96.f;
     gMap[1] = 1.f / 48.f;
@@ -34,7 +35,7 @@ DataProcessor::DataProcessor(QObject *parent)
     gMap[3] = 1.f / 8.f;
 
     CircuitDataReceiver::connectCircuit();
-    setConfig();
+    // setConfig();
 
     dataTimer = new QTimer(this);
     dataTimer->setSingleShot(false);
@@ -56,7 +57,12 @@ DataProcessor::DataProcessor(QObject *parent)
 
 DataProcessor::~DataProcessor()
 {
+    if (!CircuitDataReceiver::checkForValidConfigParams(defaultConfig))
+    {
+        setConfig();
+    }
     CircuitDataReceiver::disconnectCircuit();
+
 }
 
 void DataProcessor::readDataFromTestFile()
@@ -122,10 +128,10 @@ void DataProcessor::processLine(QString line)
         char dataSource = tokens.data()[0].toStdString().c_str()[0];
         switch (dataMap[dataSource]) {
         case 1:
-            emit signalLineProcessed(stringDataToStruct(tokens, aMap[currentAConfig.range]));
+            emit signalLineProcessed(stringDataToStruct(tokens, aMap[currentConfig.aRange]));
             break;
         case 2:
-            emit signalLineProcessed(stringDataToStruct(tokens, gMap[currentGConfig.range]));
+            emit signalLineProcessed(stringDataToStruct(tokens, gMap[currentConfig.gRange]));
             break;
         case 3:
             emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
@@ -148,10 +154,10 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
     {
         switch (dataMap[data.group]) {
         case 1:
-            emit signalLineProcessed(transformXyzData(data, aMap[currentAConfig.range]));
+            emit signalLineProcessed(transformXyzData(data, aMap[currentConfig.aRange]));
             break;
         case 2:
-            emit signalLineProcessed(transformXyzData(data, gMap[currentGConfig.range]));
+            emit signalLineProcessed(transformXyzData(data, gMap[currentConfig.gRange]));
             break;
         case 3:
             emit signalLineProcessed(transformXyzData(data, mConstant));
@@ -189,6 +195,23 @@ xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float tr
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
+
+        switch(data.group)
+        {
+        case 'A':
+            aLost += data.id - lastReceivedId;
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, aLost);
+            break;
+        case 'G':
+            gLost += data.id - lastReceivedId;
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, gLost);
+            break;
+        case 'M':
+            mLost += data.id - lastReceivedId;
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, mLost);
+            break;
+        }
+
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
 
@@ -224,8 +247,26 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
     else
     {
         message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
+
+        switch(data.group)
+        {
+        case 'A':
+            aLost += qFabs(data.id - lastReceivedId);
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, aLost);
+            break;
+        case 'G':
+            gLost += qFabs(data.id - lastReceivedId);
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, gLost);
+            break;
+        case 'M':
+            mLost += qFabs(data.id - lastReceivedId);
+            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, mLost);
+            break;
+        }
+
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
+
 
     p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
     lastReceivedId = data.id;
@@ -237,18 +278,18 @@ void DataProcessor::slotConfigCompleted(int r)
 {
     if (r == LIBNII_SUCCESS)
     {
-        currentAConfig = newAConfig;
-        currentGConfig = newGConfig;
-        currentMConfig = newMConfig;
+        currentConfig = newConfig;
     }
 }
 
 void DataProcessor::slotConfigReceived(QList<cConfig> configsReceived)
 {
-    fullConfig conf = setConfigParamsFromList(configsReceived);
+    fullConfig conf = defaultConfig;
+    conf = setConfigParamsFromList(configsReceived);
     if (!CircuitDataReceiver::checkForValidConfigParams(conf))
     {
         setConfig();
+        newConfig = conf;
     }
 }
 

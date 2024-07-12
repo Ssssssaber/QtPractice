@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     Server server = Server(2323, 2424);
     server.show();
 
-    Client client = Client("localhost", 2323, 2424);
+    Client client = Client(2323, 2424);
     client.show();
 
     return a.exec();

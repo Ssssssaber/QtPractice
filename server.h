@@ -15,6 +15,7 @@ private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
 
+    QHostAddress clientAddress;
 
     DataProcessor *dataProcessor;
     DataAnalyzer *dataAnalyzer;
@@ -41,7 +42,7 @@ private:
     void sendData();
     void sendAnalysis();
 public:
-    Server(int tcpPort, int udpPort, QWidget* pwgt = 0);
+    Server(int tcpPort = 2323, int udpPort = 2424, QHostAddress hostAddress = QHostAddress::LocalHost, QWidget* pwgt = 0);
 
 public slots:
     void slotStringReceived(QString string);
