@@ -1,7 +1,4 @@
 #include "xyzworkercontroller.h"
-#include "windowworker.h"
-
-
 
 XyzWorkerController::XyzWorkerController(WorkerTypes workerType)
 {
@@ -27,7 +24,11 @@ XyzWorkerController::XyzWorkerController(WorkerTypes workerType)
         break;
 
     case WorkerTypes::FilterWorker:
-        p7Trace->P7_ERROR(moduleName, TM("invalid worker type"));
+        aWorker = new FilterWorker();
+        gWorker = new FilterWorker();
+        mWorker = new FilterWorker();
+
+        //p7Trace->P7_ERROR(moduleName, TM("invalid worker type"));
         break;
     }
 
