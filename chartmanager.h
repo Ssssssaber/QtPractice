@@ -29,6 +29,7 @@ public:
 public slots:
     void slotDataReceived(xyzCircuitData);
     void slotAnalysisRecived(xyzAnalysisResult);
+    void slotRangeChanged(char type, float newRange);
 
 signals:
 
