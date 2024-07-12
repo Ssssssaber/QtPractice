@@ -30,6 +30,8 @@ public:
 
 public slots:
     void slotHandleResults(xyzAnalysisResult result);
+    void slotHandleDt(char device, float dt);
+    void slotHandleFilterFreq(char device, float filterFreq);
 signals:
     void signalResultReady(xyzAnalysisResult analysis);
 };

@@ -94,3 +94,35 @@ void XyzWorkerController::slotHandleResults(xyzAnalysisResult result)
     p7Trace->P7_TRACE(moduleName, TM("Result ready: %s"), result.toString().toStdString().data());
     emit signalResultReady(result);
 }
+
+void XyzWorkerController::slotHandleDt(char device, float dt)
+{
+    switch(device)
+    {
+    case 'A':
+        dynamic_cast<FilterWorker*>(aWorker)->dt = dt;
+        break;
+    case 'G':
+        dynamic_cast<FilterWorker*>(gWorker)->dt = dt;
+        break;
+    case 'M':
+        dynamic_cast<FilterWorker*>(mWorker)->dt = dt;
+        break;
+    }
+}
+
+void XyzWorkerController::slotHandleFilterFreq(char device, float filterFreq)
+{
+    switch(device)
+    {
+    case 'A':
+        dynamic_cast<FilterWorker*>(aWorker)->setK(filterFreq);
+        break;
+    case 'G':
+        dynamic_cast<FilterWorker*>(gWorker)->setK(filterFreq);
+        break;
+    case 'M':
+        dynamic_cast<FilterWorker*>(mWorker)->setK(filterFreq);
+        break;
+    }
+}

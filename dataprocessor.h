@@ -7,7 +7,7 @@
 #include <QDebug>
 #include "CircuitConfiguration.h"
 #include "xyzcircuitdata.h"
-
+#include "xyzworkercontroller.h"
 #include "CircuitConfiguration.h"
 #include "circuitdatareceiver.h"
 #include "cdrworker.h"
@@ -128,6 +128,7 @@ signals:
     void signalLineProcessed(xyzCircuitData data);
     void signalConfigError(QString);
     void signalSendCircuitMessage(QString);
+    void signalSendDt(char device, float dt);
 };
 
 #endif // DATAPROCESSOR_H

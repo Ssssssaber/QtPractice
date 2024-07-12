@@ -278,7 +278,17 @@ void DataProcessor::slotConfigCompleted(int r)
 {
     if (r == LIBNII_SUCCESS)
     {
+        float dt;
         currentConfig = newConfig;
+
+        dt = 1. / currentConfig.aFreq;
+        emit signalSendDt('A', dt);
+
+        dt = 1. / currentConfig.gFreq;
+        emit signalSendDt('G', dt);
+
+        dt = 1. / currentConfig.mFreq;
+        emit signalSendDt('M', dt);
     }
 }
 

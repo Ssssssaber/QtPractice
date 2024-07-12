@@ -20,6 +20,7 @@ DataAnalyzer::DataAnalyzer(DataProcessor *dataProcessor)
     // windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
     windowWorkerController = new XyzWorkerController(WorkerTypes::FilterWorker);
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &DataAnalyzer::slotInfoReceived);
+    connect(dataProcessor, &DataProcessor::signalSendDt , windowWorkerController, &XyzWorkerController::slotHandleDt);
     connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataAnalyzer::slotResultReceived);
 
     cleanupTimer = new QTimer(this);

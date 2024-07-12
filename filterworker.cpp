@@ -25,3 +25,9 @@ void FilterWorker::slotDoWork(QList<xyzCircuitData> dataList)
         emit signalResultReady(result);
     }
 }
+
+void FilterWorker::setK(float filterFreq)
+{
+    k = dt / (dt + 1.f / filterFreq);
+}
+
