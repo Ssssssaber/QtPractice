@@ -17,6 +17,11 @@ private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
 
+    bool isVisible = false;
+
+    QList<xyzCircuitData> currentDataList;
+
+
     QChartView* cViewX; // creating chart with 1 axies
     QChartView* cViewY;
     QChartView* cViewZ;
@@ -31,21 +36,28 @@ private:
 
     QLabel* ltitle; //title
 
+    int dataLifespan = 10;
+
     struct{
-        float min = -8.192f;
-        float max = 8.192f;
+        float Xmin = -8.192f;
+        float Xmax = 8.192f;
+        float Ymin = -8.192f;
+        float Ymax = 8.192f;
+        float Zmin = -8.192f;
+        float Zmax = 8.192f;
     } chartBoundries;
 
     void cleanSeries(QLineSeries* data, int timeInSeconds);
 
 public:
     ChartWidget(const QString title = "", QWidget* pwgt = 0);
-    void setNewYBoundries(float min, float max);
     void setWindowResult(xyzAnalysisResult);
-    void setChartData(xyzCircuitData);
-    void cleanAllSeries(int timeInSeconds);
+    void addChartDot(xyzCircuitData);
+    void drawAllSeries(int timeInSeconds);
+private slots:
+    void slotCleanDataListToTime();
 public slots:
-
+    void slotToggleVisible();
 };
 
 #endif // CHARTWIDGET_H

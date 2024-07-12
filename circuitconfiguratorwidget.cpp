@@ -64,10 +64,10 @@ CircuitConfiguratorWidget::CircuitConfiguratorWidget(const char type, QWidget *p
         freqMap[1] = 2000;
         freqMap[2] = 4000;
 
-        rangeMeasure = " g";
-        rangeMap[0] = 2.048;
-        rangeMap[1] = 4.096;
-        rangeMap[2] = 8.192;
+        rangeMeasure = " m/s^2";
+        rangeMap[0] = 20.01;
+        rangeMap[1] = 40.18;
+        rangeMap[2] = 80.36;
 
         // struct libnii_params CircuitDataReceiver::params = {
         //     .accel_freq = 0,
@@ -160,5 +160,4 @@ void CircuitConfiguratorWidget::resetConfig()
 void CircuitConfiguratorWidget::keepConfig()
 {
     lastConfig = currentConfig;
-    if (type != 'M') emit signalRangeChanged(type, rangeMap[lastConfig.range]);
 }

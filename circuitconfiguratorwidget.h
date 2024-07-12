@@ -43,7 +43,6 @@ public slots:
 
 signals:
     void signalConfigChanged(cConfig config);
-    void signalRangeChanged(char type, float newRange);
 };
 
 #endif // CIRCUITCONFIGURATORWIDGET_H

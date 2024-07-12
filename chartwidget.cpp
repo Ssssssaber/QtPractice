@@ -15,21 +15,6 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
         p7Trace->Register_Module(TM("CWgt"), &moduleName);
     }
 
-    if (title == "A")
-    {
-        chartBoundries.min = -8.192f;
-        chartBoundries.max = 8.192f;
-    }
-    if (title == "G")
-    {
-        chartBoundries.min = -900;
-        chartBoundries.max = 900;
-    }
-    if (title == "M")
-    {
-        chartBoundries.min = -8;
-        chartBoundries.max = 8;
-    }
 
     QGridLayout* lyChartPairs = new QGridLayout(); // main layout of chartwidget
 
@@ -58,17 +43,17 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 
     serX = new QLineSeries(sraX); // creating lines with data
     serX->setName("X-axis"); // setting the names of this line
-    //serX->setUseOpenGL(true);
+    // serX->setUseOpenGL(true);
 
 
     serY = new QLineSeries(sraY);
     serY->setName("Y-axis");
-    //serY->setUseOpenGL(true);
+    // serY->setUseOpenGL(true);
 
 
     serZ = new QLineSeries(sraZ);
     serZ->setName("Z-axis");
-    //serZ->setUseOpenGL(true);
+    // serZ->setUseOpenGL(true);
 
 
 
@@ -88,12 +73,12 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     cViewX->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     QValueAxis* serXaxisX = new QValueAxis(sraX);
-    serXaxisX->setTitleText("x, м");
-    serXaxisX->setLabelFormat("%.1f");
+    // serXaxisX->setTitleText("x, м");
+    // serXaxisX->setLabelFormat("%.1f");
 
     QValueAxis* serXaxisY = new QValueAxis(sraX);
-    serXaxisY->setTitleText("x, м");
-    serXaxisY->setLabelFormat("%.1f");
+    // serXaxisY->setTitleText("x, м");
+    // serXaxisY->setLabelFormat("%.1f");
 
     cViewX->chart()->addAxis(serXaxisX, Qt::AlignLeft);
     cViewX->chart()->addAxis(serXaxisY, Qt::AlignBottom);
@@ -107,12 +92,12 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     cViewY->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     QValueAxis* serYaxisX = new QValueAxis(sraY);
-    serYaxisX->setTitleText("x, м");
-    serYaxisX->setLabelFormat("%.1f");
+    // serYaxisX->setTitleText("x, м");
+    // serYaxisX->setLabelFormat("%.1f");
 
     QValueAxis* serYaxisY = new QValueAxis(sraY);
-    serYaxisY->setTitleText("x, м");
-    serYaxisY->setLabelFormat("%.1f");
+    // serYaxisY->setTitleText("x, м");
+    // serYaxisY->setLabelFormat("%.1f");
 
     cViewY->chart()->addAxis(serYaxisX, Qt::AlignLeft);
     cViewY->chart()->addAxis(serYaxisY, Qt::AlignBottom);
@@ -126,12 +111,12 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     cViewZ->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
 
     QValueAxis* serZaxisX = new QValueAxis(sraZ);
-    serZaxisX->setTitleText("x, м");
-    serZaxisX->setLabelFormat("%.1f");
+    // serZaxisX->setTitleText("x, м");
+    // serZaxisX->setLabelFormat("%.1f");
 
     QValueAxis* serZaxisY = new QValueAxis(sraZ);
-    serZaxisY->setTitleText("x, м");
-    serZaxisY->setLabelFormat("%.1f");
+    // serZaxisY->setTitleText("x, м");
+    // serZaxisY->setLabelFormat("%.1f");
 
     cViewZ->chart()->addAxis(serZaxisX, Qt::AlignLeft);
     cViewZ->chart()->addAxis(serZaxisY, Qt::AlignBottom);
@@ -169,6 +154,34 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     scZ->setLayout(sclayZ);
     scZ->setMinimumSize(400,300);
 
+    QString miniTitle;
+
+    if (title == "A")
+    {
+        miniTitle = "m/s^2";
+    }
+    if (title == "G")
+    {
+        miniTitle = "°/s";
+    }
+    if (title == "M")
+    {
+        miniTitle = "mT";
+    }
+
+    serXaxisX->setTitleText(miniTitle);
+    serXaxisY->setTitleText("sec");
+    serYaxisX->setTitleText(miniTitle);
+    serYaxisY->setTitleText("sec");
+    serZaxisX->setTitleText(miniTitle);
+    serZaxisY->setTitleText("sec");
+
+    // serXaxisX->setLabelFormat("%.1f");
+    // serXaxisY->setLabelFormat("%.1f");
+    // serYaxisX->setLabelFormat("%.1f");
+    // serYaxisY->setLabelFormat("%.1f");
+    // serZaxisX->setLabelFormat("%.1f");
+    // serZaxisY->setLabelFormat("%.1f");
 
 
     lyChartPairs->addWidget(sraX,0,0); // adding pairs to main layout
@@ -210,13 +223,12 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
         }
     });
 
-}
+    QTimer *cleanupTimer = new QTimer(this);
+    cleanupTimer->setSingleShot(false);
+    cleanupTimer->setInterval(100);
 
-
-void ChartWidget::setNewYBoundries(float min, float max)
-{
-    chartBoundries.min = min;
-    chartBoundries.max = max;
+    connect(cleanupTimer, &QTimer::timeout, this, &ChartWidget::slotCleanDataListToTime);
+    cleanupTimer->start();
 }
 
 
@@ -227,62 +239,125 @@ void ChartWidget::setWindowResult(xyzAnalysisResult data)
     resZ->setText(QString::fromStdString("Windowing result: " + std::to_string(data.z)));
 }
 
-void ChartWidget::setChartData(xyzCircuitData data)
+void ChartWidget::addChartDot(xyzCircuitData data)
 {
-    if (data.group == 'A')
-    {
-        qDebug() << "CHART DATA" <<data.toString();
-    }
+    currentDataList.append(data);
+    // if (data.group != 'A') return;
+
+    // cViewX->chart()->removeSeries(serX); // removing series from view
+    // cViewY->chart()->removeSeries(serY);
+    // cViewZ->chart()->removeSeries(serZ);
+
+
+    // serX->append(data.timestamp, data.x); //adding new point to axis-line
+    // //axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
+    // //axisrn.xmin = data.x < axisrn.xmin ? data.x : axisrn.xmin;
+
+    // serY->append(data.timestamp, data.y);
+    // //axisrn.ymax = data.x > axisrn.ymax ? data.x : axisrn.ymax;
+    // //axisrn.ymin = data.x < axisrn.ymin ? data.x : axisrn.ymin;
+
+    // serZ->append(data.timestamp, data.z);
+    // //axisrn.zmax = data.x > axisrn.zmax ? data.x : axisrn.zmax;
+    // //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
+
+    // cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max); // setting chart axies range
+    // cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
+    // // serX->detachAxis(serXaxisX);
+    // cViewX->chart()->addSeries(serX); // restoring series
+
+    // cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
+    // cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
+    // cViewY->chart()->addSeries(serY);
+
+    // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
+    // cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
+    // cViewZ->chart()->addSeries(serZ);
+}
+
+void ChartWidget::drawAllSeries(int timeInSeconds)
+{
+    if (currentDataList.isEmpty()) return;
+
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
     cViewZ->chart()->removeSeries(serZ);
 
+    serX->clear();
+    serY->clear();
+    serZ->clear();
 
-    serX->append(data.timestamp, data.x); //adding new point to axis-line
-    //axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
-    //axisrn.xmin = data.x < axisrn.xmin ? data.x : axisrn.xmin;
+    chartBoundries.Xmin = 0;
+    chartBoundries.Ymin = 0;
+    chartBoundries.Zmin = 0;
+    chartBoundries.Xmax = 0;
+    chartBoundries.Ymax = 0;
+    chartBoundries.Zmax = 0;
 
-    serY->append(data.timestamp, data.y);
-    //axisrn.ymax = data.x > axisrn.ymax ? data.x : axisrn.ymax;
-    //axisrn.ymin = data.x < axisrn.ymin ? data.x : axisrn.ymin;
+    foreach(xyzCircuitData data, currentDataList)
+    {
+        serX->append(data.timestamp, data.x);
+        serY->append(data.timestamp, data.y);
+        serZ->append(data.timestamp, data.z);
+        chartBoundries.Xmin = chartBoundries.Xmin < data.x ? chartBoundries.Xmin : data.x;
+        chartBoundries.Ymin = chartBoundries.Ymin < data.y ? chartBoundries.Ymin : data.y;
+        chartBoundries.Zmin = chartBoundries.Zmin < data.z ? chartBoundries.Zmin : data.z;
+        chartBoundries.Xmax = chartBoundries.Xmax > data.x ? chartBoundries.Xmax : data.x;
+        chartBoundries.Ymax = chartBoundries.Ymax > data.y ? chartBoundries.Ymax : data.y;
+        chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
+    }
 
-    serZ->append(data.timestamp, data.z);
-    //axisrn.zmax = data.x > axisrn.zmax ? data.x : axisrn.zmax;
-    //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
+    float time = currentDataList.last().timestamp;
 
-    cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max); // setting chart axies range
-    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
+    cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Xmin,chartBoundries.Xmax); // setting chart axies range
+    cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(), time); // setting chart axies range
     // serX->detachAxis(serXaxisX);
     cViewX->chart()->addSeries(serX); // restoring series
 
-    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
-    cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
+    cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(), time); // setting chart axies range
+    cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Ymin,chartBoundries.Ymax);
     cViewY->chart()->addSeries(serY);
 
-    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
-    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
+    cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(), time); // setting chart axies range
+    cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Zmin,chartBoundries.Zmax);
     cViewZ->chart()->addSeries(serZ);
+    // cViewX->chart()->addSeries(serX);
+    // serX->append()
+    // cViewX->chart()->removeSeries(serX); // removing series from view
+    // cViewY->chart()->removeSeries(serY);
+    // cViewZ->chart()->removeSeries(serZ);
+
+    // cleanSeries(serX, timeInSeconds); // clean first points (no relatable)
+    // cleanSeries(serY, timeInSeconds);
+    // cleanSeries(serZ, timeInSeconds);
+
+    // cViewX->chart()->addSeries(serX); // restoring series
+    // cViewY->chart()->addSeries(serY);
+    // cViewZ->chart()->addSeries(serZ);
 }
 
-void ChartWidget::cleanAllSeries(int timeInSeconds)
+void ChartWidget::slotCleanDataListToTime()
 {
-    cViewX->chart()->removeSeries(serX); // removing series from view
-    cViewY->chart()->removeSeries(serY);
-    cViewZ->chart()->removeSeries(serZ);
+    if (currentDataList.isEmpty()) return;
 
-    cleanSeries(serX, timeInSeconds); // clean first points (no relatable)
-    cleanSeries(serY, timeInSeconds);
-    cleanSeries(serZ, timeInSeconds);
+    int initial = currentDataList.length();
+    foreach (xyzCircuitData data, currentDataList)
+    {
+        if (currentDataList.last().timestamp - data.timestamp <= dataLifespan)
+            break;
+        currentDataList.pop_front();
+    }
 
-    cViewX->chart()->addSeries(serX); // restoring series
-    cViewY->chart()->addSeries(serY);
-    cViewZ->chart()->addSeries(serZ);
+    qDebug() << " before and after " << initial << currentDataList.length();
+    // p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
+    //                   dataToClean->back().group,
+    //                   initial, dataToClean->length());
 }
 
-// void ChartWidget::slotBoundriesChanged(chartBoundries boundries)
-// {
-
-// }
+void ChartWidget::slotToggleVisible()
+{
+    isVisible = !isVisible;
+}
 
 void ChartWidget::cleanSeries(QLineSeries* datasource, int timeInSeconds)
 {

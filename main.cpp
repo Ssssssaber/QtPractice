@@ -17,7 +17,15 @@ int main(int argc, char *argv[])
     IP7_Client *p7Client = P7_Create_Client(TM("/P7.Sink=Baical /P7.Addr=127.0.0.1 “/P7.Name=MyChannel”"));
     p7Client->Share("MyChannel");
 
+    // SERVER MODE
+    // Server server = Server(2323, 2424,QHostAddress("10.0.0.109"));
+    // server.show();
 
+    //CLIENT MODE
+    // Client client = Client(2323, 2424, QHostAddress("10.0.0.1"));
+    // client.show();
+
+    //LOCAL MODE
     Server server = Server(2323, 2424);
     server.show();
 
