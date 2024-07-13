@@ -32,14 +32,6 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     udpDataSocket->bind(udpPort);
     connect(udpDataSocket, &QUdpSocket::readyRead, this, &Client::slotProcessDatagram);
 
-
-
-
-    // QGridLayout* grid = new QGridLayout;
-    // grid->addWidget(receivedCircuitData, 9, 0, 2, 5);
-    // grid->addWidget(chartManager, 0, 0, 8, 10);
-    // grid->addWidget(serverResponseText, 9, 5, 4, 5);
-
     // main layout
     QSplitter *mainSplitter = new QSplitter(Qt::Horizontal);
 
@@ -47,10 +39,9 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     setLayout(mainLayout);
 
     // data part
-    // QWidget *dataWidget = new QWidget(this);
     QSplitter *dataSplitter = new QSplitter(Qt::Vertical);
-    // QVBoxLayout *dataVBox = new QVBoxLayout;
-    // dataWidget->setLayout(dataVBox);
+    dataSplitter->setStretchFactor(0, 1);
+    dataSplitter->setStretchFactor(1, 0);
 
     // chart part
     chartManager = new ChartManager(this);
@@ -66,10 +57,7 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     serverResponseText = new QTextEdit();
     serverResponseText->setReadOnly(true);
 
-    receivedCircuitData = new QTextEdit();
-    receivedCircuitData->setReadOnly(true);
-
-    logsHBox->addWidget(receivedCircuitData);
+    // logsHBox->addWidget(receivedCircuitData);
     logsHBox->addWidget(serverResponseText);
     logsWidget->setLayout(logsHBox);
 
@@ -149,11 +137,10 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     configs->setLayout(configVBox);
     configs->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-    // mainLayout->addWidget(dataWidget);
-    // mainLayout->addWidget(dataSplitter);
-    // mainLayout->addWidget(configs);
     mainSplitter->addWidget(dataSplitter);
     mainSplitter->addWidget(configs);
+    mainSplitter->setStretchFactor(0, 1);
+    mainSplitter->setStretchFactor(1, 0);
     mainLayout->addWidget(mainSplitter);
 
     QTimer *statTimer = new QTimer();
@@ -162,6 +149,8 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
 
     connect(statTimer, &QTimer::timeout, this, &Client::slotUpdateThreadInfo);
     statTimer->start();
+
+    qDebug() << mainSplitter->sizes();
 }
 
 void Client::slotProcessDatagram()
@@ -176,11 +165,9 @@ void Client::slotProcessDatagram()
         in.setVersion(QDataStream::Qt_5_12);
         in >> dateTime >> stringData;
         currentThread += sizeof(dateTime) + sizeof(stringData);
-        // currentThread += sizeof(QString) * 2;
-        // xyzCircuitData parsedData = parseReceivedData(stringData);
         parseStringData(stringData);
         QString result = "Received: " + dateTime.toString() + " - " + stringData;
-        receivedCircuitData->append(result);
+        // receivedCircuitData->append(result);
     } while (udpDataSocket->hasPendingDatagrams());
 }
 
@@ -197,8 +184,6 @@ void Client::parseStringData(QString stringData)
         data.z = tokens[5].toFloat();
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
-        // currentThread += 1;
-        // currentThread += sizeof(data);
         emit signalReceivedData(data);
     }
     else if (tokens[0] == "analysis")
@@ -210,7 +195,6 @@ void Client::parseStringData(QString stringData)
         analysis.y = tokens[4].toFloat();
         analysis.z = tokens[5].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), analysis.toString().toStdString().data());
-        // currentThread += sizeof(analysis);
         emit signalReceivedAnalysis(analysis);
     }
 }
@@ -246,40 +230,6 @@ void Client::processServerResponse(QString message)
         gConfig->keepConfig();
         mConfig->keepConfig();
     }
-    // if (mTokens[1] == "config")
-    // {
-    //     configStrings.append(message);
-    //     if (configStrings.length() == 3)
-    //     {
-    //         bool error = false;
-    //         foreach (QString str, configStrings)
-    //         {
-    //             QList<QString> tokens= str.simplified().split(' ');
-    //             if (tokens[2] == "failed")
-    //             {
-    //                 error = true;
-    //                 break;
-    //             }
-    //         }
-
-    //         if (error)
-    //         {
-    //             serverResponseText->append("Client: resetting old config");
-    //             aConfig->resetConfig();
-    //             gConfig->resetConfig();
-    //             mConfig->resetConfig();
-    //         }
-    //         else
-    //         {
-    //             aConfig->keepConfig();
-    //             gConfig->keepConfig();
-    //             mConfig->keepConfig();
-    //         }
-
-    //         configStrings.clear();
-    //     }
-    // }
-
 }
 
 void Client::slotUpdateThreadInfo()

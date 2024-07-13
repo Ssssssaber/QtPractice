@@ -4,6 +4,7 @@
 #include "P7_Client.h"
 #include "perfomancechecker.h"
 #include <QTcpSocket>
+#include <QtCore>
 
 Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
@@ -44,9 +45,17 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
 
     receivedDataText = new QTextEdit("Received data");
     receivedDataText->setReadOnly(true);
+    QTimer *receivedTimerClear = new QTimer();
+    receivedTimerClear->setInterval(5000);
+    connect(receivedTimerClear, &QTimer::timeout, receivedDataText, &QTextEdit::clear);
+    receivedTimerClear->start();
 
     sentDataText = new QTextEdit("Sent Data");
     sentDataText->setReadOnly(true);
+    QTimer *sentTimerClear = new QTimer();
+    sentTimerClear->setInterval(5000);
+    connect(sentTimerClear, &QTimer::timeout, sentDataText, &QTextEdit::clear);
+    sentTimerClear->start();
 
     clientResponseText = new QTextEdit("Client response");
     clientResponseText->setReadOnly(true);
@@ -150,9 +159,13 @@ void Server::slotSendDeltaTime(xyzAnalysisResult analysis)
 
     sendToClient(clientSocket, QString("A, G, M delta times: %1 ms, %2 ms, %3 ms").
                             arg(analysis.x).arg(analysis.y).arg(analysis.z));
-    // slotSendMessageToClient(QString("A delta time: %1").arg(analysis.x));
-    // slotSendMessageToClient(QString("G delta time: %1").arg(analysis.y));
-    // slotSendMessageToClient(QString("M delta time: %1").arg(analysis.z));
+}
+
+void Server::slotClrearSentData(int toSize)
+{
+    sentDataText->clear();
+    // QString data = sentDataText->toPlainText();
+    // QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
 }
 
 void Server::slotStringReceived(QString stringData)
