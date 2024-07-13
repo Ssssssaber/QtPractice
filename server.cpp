@@ -235,6 +235,7 @@ void Server::slotAnalysisToSendAdded(xyzAnalysisResult analysis)
 
 void Server::sendToClient(QTcpSocket *socket, const QString& str)
 {
+    if (!clientConnected) return;
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);

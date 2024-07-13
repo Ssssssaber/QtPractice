@@ -53,21 +53,24 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 void ChartManager::changeDataLifeSpan(int newTime)
 {
     dataLifespanInSeconds = newTime;
+    chartA->changeDataLifespan(newTime);
+    chartG->changeDataLifespan(newTime);
+    chartM->changeDataLifespan(newTime);
 }
 
 void ChartManager::slotDataReceived(xyzCircuitData data)
 {
     if (data.group == 'A')
     {
-        chartA->setChartData(data);
+        chartA->addChartDot(data);
     }
     else if (data.group == 'G')
     {
-        chartG->setChartData(data);
+        chartG->addChartDot(data);
     }
     else if (data.group == 'M')
     {
-        chartM->setChartData(data);
+        chartM->addChartDot(data);
     }
     else
     {
@@ -97,25 +100,11 @@ void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
     }
 }
 
-void ChartManager::slotRangeChanged(char type, float newRange)
-{
-    if (type == 'A')
-    {
-        chartA->setNewYBoundries(-newRange, newRange);
-    }
-    else if (type == 'G')
-    {
-        chartG->setNewYBoundries(-newRange, newRange);
-    }
-    else
-    {
-        p7Trace->P7_ERROR(moduleName, TM("Wrong chart selection"));
-    }
-}
+
 
 void ChartManager::cleanup()
 {
-    chartA->cleanAllSeries(dataLifespanInSeconds);
-    chartG->cleanAllSeries(dataLifespanInSeconds);
-    chartM->cleanAllSeries(dataLifespanInSeconds);
+    chartA->drawAllSeries(dataLifespanInSeconds);
+    chartG->drawAllSeries(dataLifespanInSeconds);
+    chartM->drawAllSeries(dataLifespanInSeconds);
 }

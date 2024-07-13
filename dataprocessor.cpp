@@ -25,9 +25,9 @@ DataProcessor::DataProcessor(QObject *parent)
     dataMap['G'] = 2;
     dataMap['M'] = 3;
 
-    aMap[0] = 3.90625f * 1e-6;
-    aMap[1] = 7.8125f * 1e-6;
-    aMap[2] = 15.625f * 1e-6;
+    aMap[0] = 3.90625f * 1e-6 * 9.81f;
+    aMap[1] = 7.8125f * 1e-6 * 9.81f;
+    aMap[2] = 15.625f * 1e-6 * 9.81f;
 
     gMap[0] = 1.f / 96.f;
     gMap[1] = 1.f / 48.f;
