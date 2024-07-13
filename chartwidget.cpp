@@ -176,12 +176,12 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
     serZaxisX->setTitleText(miniTitle);
     serZaxisY->setTitleText("sec");
 
-    // serXaxisX->setLabelFormat("%.1f");
-    // serXaxisY->setLabelFormat("%.1f");
-    // serYaxisX->setLabelFormat("%.1f");
-    // serYaxisY->setLabelFormat("%.1f");
-    // serZaxisX->setLabelFormat("%.1f");
-    // serZaxisY->setLabelFormat("%.1f");
+    serXaxisX->setLabelFormat("%.2f");
+    serXaxisY->setLabelFormat("%.2f");
+    serYaxisX->setLabelFormat("%.2f");
+    serYaxisY->setLabelFormat("%.2f");
+    serZaxisX->setLabelFormat("%.2f");
+    serZaxisY->setLabelFormat("%.2f");
 
 
     lyChartPairs->addWidget(sraX,0,0); // adding pairs to main layout
@@ -287,9 +287,9 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     serY->clear();
     serZ->clear();
 
-    chartBoundries.Xmin = 0;
-    chartBoundries.Ymin = 0;
-    chartBoundries.Zmin = 0;
+    chartBoundries.Xmin = 1000;
+    chartBoundries.Ymin = 1000;
+    chartBoundries.Zmin = 1000;
     chartBoundries.Xmax = 0;
     chartBoundries.Ymax = 0;
     chartBoundries.Zmax = 0;
@@ -334,6 +334,11 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     // cViewX->chart()->addSeries(serX); // restoring series
     // cViewY->chart()->addSeries(serY);
     // cViewZ->chart()->addSeries(serZ);
+}
+
+void ChartWidget::changeDataLifespan(int newTime)
+{
+    dataLifespan = newTime;
 }
 
 void ChartWidget::slotCleanDataListToTime()

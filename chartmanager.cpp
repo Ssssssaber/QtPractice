@@ -53,6 +53,9 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 void ChartManager::changeDataLifeSpan(int newTime)
 {
     dataLifespanInSeconds = newTime;
+    chartA->changeDataLifespan(newTime);
+    chartG->changeDataLifespan(newTime);
+    chartM->changeDataLifespan(newTime);
 }
 
 void ChartManager::slotDataReceived(xyzCircuitData data)

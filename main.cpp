@@ -18,19 +18,19 @@ int main(int argc, char *argv[])
     p7Client->Share("MyChannel");
 
     // SERVER MODE
-    // Server server = Server(2323, 2424,QHostAddress("10.0.0.109"));
+    // Server server = Server(2323, 2424,QHostAddress("10.0.0.1"));
     // server.show();
 
     //CLIENT MODE
-    // Client client = Client(2323, 2424, QHostAddress("10.0.0.1"));
-    // client.show();
+    Client client = Client(2323, 2424, QHostAddress("10.0.0.1"));
+    client.show();
 
     //LOCAL MODE
-    Server server = Server(2323, 2424);
-    server.show();
+    // Server server = Server(2323, 2424);
+    // server.show();
 
-    Client client = Client(2323, 2424);
-    client.show();
+    // Client client = Client(2323, 2424);
+    // client.show();
 
     return a.exec();
 }

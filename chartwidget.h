@@ -39,12 +39,12 @@ private:
     int dataLifespan = 10;
 
     struct{
-        float Xmin = -8.192f;
-        float Xmax = 8.192f;
-        float Ymin = -8.192f;
-        float Ymax = 8.192f;
-        float Zmin = -8.192f;
-        float Zmax = 8.192f;
+        float Xmin =  0;
+        float Xmax = 0;
+        float Ymin =  0;
+        float Ymax = 0;
+        float Zmin =  0;
+        float Zmax = 0;
     } chartBoundries;
 
     void cleanSeries(QLineSeries* data, int timeInSeconds);
@@ -54,6 +54,7 @@ public:
     void setWindowResult(xyzAnalysisResult);
     void addChartDot(xyzCircuitData);
     void drawAllSeries(int timeInSeconds);
+    void changeDataLifespan(int newTime);
 private slots:
     void slotCleanDataListToTime();
 public slots:
