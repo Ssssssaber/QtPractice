@@ -9,36 +9,13 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
         mainwindow.h
         mainwindow.ui
-        server.h server.cpp
-        client.h client.cpp
-        dataprocessor.h dataprocessor.cpp
-        xyzcircuitdata.h
-        chartwidget.h chartwidget.cpp
-        chartmanager.h chartmanager.cpp
-        dataanalyzer.h dataanalyzer.cpp
-        windowworker.h windowworker.cpp
-        xyzworker.h xyzworker.cpp
-
-        xyzworkercontroller.h xyzworkercontroller.cpp
-
-
-        cmake/FindLibUdev.cmake cmake/FindUSB1.cmake
-        circuitdatareceiver.cpp
-        circuitdatareceiver.h
-
-        cdrworker.h cdrworker.cpp
-        linux-system-usage.hpp
-        perfomancechecker.h perfomancechecker.cpp
-        circuitconfiguratorwidget.h circuitconfiguratorwidget.cpp
-        CircuitConfiguration.h
-        collapseelement.h collapseelement.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -87,7 +64,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(QtPractice PRIVATE Qt6::Widgets)
+target_link_libraries(QtPractice PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

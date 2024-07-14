@@ -1,6 +1,4 @@
-#ifndef CLIENT_H
-#define CLIENT_H
-
+#pragma once
 
 
 #include "chartmanager.h"
@@ -71,4 +69,3 @@ signals:
     void signalReceivedAnalysis(xyzAnalysisResult analysis);
 
 };
-#endif

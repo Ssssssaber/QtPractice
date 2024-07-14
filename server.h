@@ -1,5 +1,4 @@
-#ifndef SERVER_H
-#define SERVER_H
+#pragma once
 
 #include <QtWidgets>
 #include <QUdpSocket>
@@ -62,4 +61,4 @@ signals:
     void signalConfigReceived(QList<cConfig> configsReceived);
 };
 
- #endif // UDPSERVER_H
+// #endif // UDPSERVER_H
