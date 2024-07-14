@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -17,8 +17,8 @@ set(PROJECT_SOURCES
         mainwindow.h
         mainwindow.ui
 )
-
-if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+message(STATUS ${QT_VERSION_MAJOR})
+if(6 GREATER_EQUAL 6)
     qt_add_executable(QtPractice
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
@@ -64,7 +64,7 @@ else()
     endif()
 endif()
 
-target_link_libraries(QtPractice PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(QtPractice PRIVATE Qt6::Widgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
@@ -113,10 +113,14 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBNII})
 include_directories(libnii/Headers)
 
 # adding network components
+#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Network)
+#target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 find_package(Qt6 REQUIRED COMPONENTS Network)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
 
 # adding charts
+#find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Charts)
+#target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Charts)
 find_package(Qt6 REQUIRED COMPONENTS Charts)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Charts)
 
