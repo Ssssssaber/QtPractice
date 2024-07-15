@@ -5,6 +5,7 @@
 #include <QTcpServer>
 #include "CircuitConfiguration.h"
 #include "P7_Trace.h"
+#include "circuitmanager.h"
 #include "dataprocessor.h"
 
 class Server : public QWidget
@@ -17,10 +18,11 @@ private:
     QHostAddress clientAddress;
 
     DataProcessor *dataProcessor;
+    CircuitManager *circuitManger;
+    QThread dataThread;
     // DataReceiver *dataReceiver;
     int udpPort;
     QUdpSocket* udpDataSocket;
-    QUdpSocket* udpAnalysisSocket;
 
     QTextEdit* receivedDataText;
     QTextEdit* sentDataText;
@@ -54,6 +56,7 @@ public slots:
     void slotClrearSentData(int toSize);
 signals:
     void signalWindowSizeChanged(int newSize);
+    void signalStartProcessingData();
     void signalTimeToClearChanged(int newTime);
     void signalAnalysisToggle(QString analysisType, bool isActive);
     void signalConfigReceived(QList<cConfig> configsReceived);

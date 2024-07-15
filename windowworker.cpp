@@ -2,7 +2,7 @@
 
 WindowWorker::WindowWorker()
 {
-
+    isEnabled = false;
 }
 
 xyzCircuitData WindowWorker::doWork(QList<xyzCircuitData> dataList)

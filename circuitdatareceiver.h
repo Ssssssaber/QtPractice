@@ -12,7 +12,6 @@
 
 #include <libusb-1.0/libusb.h>
 #include "libnii.h"
-#include "dataprocessor.h"
 #include "xyzcircuitdata.h"
 #include "CircuitConfiguration.h"
 

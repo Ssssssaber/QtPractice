@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     p7Client->Share("MyChannel");
 
     // SERVER MODE
-    // Server server = Server(2323, 2424,QHostAddress("10.0.0.1"));
+    // Server server = Server(2323, 2424,QHostAddress("10.0.0.2"));
     // server.show();
 
     //CLIENT MODE
