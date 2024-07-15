@@ -78,16 +78,10 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
     connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
     connect(this, &Server::signalConfigReceived, dataProcessor, &DataProcessor::slotConfigReceived);
     connect(dataProcessor, &DataProcessor::signalSendCircuitMessage, this, &Server::slotSendCircuitMessageToClient);
-
-    dataAnalyzer = new DataAnalyzer(dataProcessor);
-    connect(this, &Server::signalWindowSizeChanged, dataAnalyzer, &DataAnalyzer::slotWindowSizeChanged);
-    connect(this, &Server::signalTimeToClearChanged, dataAnalyzer, &DataAnalyzer::slotTimeToCleanChanged);
-    connect(this, &Server::signalAnalysisToggle, dataAnalyzer, &DataAnalyzer::slotAnalysisToggled);
-    connect(dataAnalyzer, &DataAnalyzer::signalAnalysisReady, this, &Server::slotAnalysisToSendAdded);
-    connect(dataAnalyzer, &DataAnalyzer::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
-
-    // DISABLE WHEN NOT DEBUGGING
-    // dataProcessor->readDataFromTestFile();
+    connect(this, &Server::signalWindowSizeChanged, dataProcessor, &DataProcessor::slotWindowSizeChanged);
+    connect(this, &Server::signalTimeToClearChanged, dataProcessor, &DataProcessor::slotTimeToCleanChanged);
+    connect(dataProcessor, &DataProcessor::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
+    connect(this, &Server::signalAnalysisToggle, dataProcessor, &DataProcessor::slotSetAnalysisActive);
 
     udpDataSocket = new QUdpSocket(this);
     QTimer* pTimer = new QTimer(this);
@@ -109,10 +103,6 @@ void Server::slotSendDatagram()
     {
         sendData();
     }
-    if (!cAnalysisToSendQueue.isEmpty())
-    {
-        sendAnalysis();
-    }
 }
 
 
@@ -132,20 +122,6 @@ void Server::sendData()
     p7Trace->P7_TRACE(moduleName, TM("Data sent: %s"), data.toString().toStdString().data());
 }
 
-void Server::sendAnalysis()
-{
-    QByteArray baDatagram;
-    QDataStream out(&baDatagram, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_12);
-    QDateTime dt = QDateTime::currentDateTime();
-
-    xyzAnalysisResult analysis = cAnalysisToSendQueue.dequeue();
-    sentDataText->append("Sent: " + dt.toString() + "\n" + analysis.toString());
-    out << dt << analysis.toString();
-    udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
-
-    p7Trace->P7_TRACE(moduleName, TM("Analysis sent: %s"), analysis.toString().toStdString().data());
-}
 
 void Server::slotSendCircuitMessageToClient(QString string)
 {
@@ -164,8 +140,7 @@ void Server::slotSendDeltaTime(xyzAnalysisResult analysis)
 void Server::slotClrearSentData(int toSize)
 {
     sentDataText->clear();
-    // QString data = sentDataText->toPlainText();
-    // QStringList strList = data.split(QRegExp("[\n]"), QString::SkipEmptyParts);
+
 }
 
 void Server::slotStringReceived(QString stringData)
@@ -240,12 +215,6 @@ void Server::slotDataToSendAdded(xyzCircuitData data)
     cDataToSendQueue.enqueue(data);
 }
 
-void Server::slotAnalysisToSendAdded(xyzAnalysisResult analysis)
-{
-    cAnalysisToSendQueue.enqueue(analysis);
-
-}
-
 void Server::sendToClient(QTcpSocket *socket, const QString& str)
 {
     if (!clientConnected) return;
@@ -283,13 +252,14 @@ bool Server::processClientResponse(QString messageType, QString message)
             emit signalTimeToClearChanged(newTime);
         }
     }
-    else if (messageType == "toggle analysis")
+    else if (messageType == "toggle")
     {
-        QString analysisType = message;
-        result = analysisType == "window"; // || analysisType == "filter";
+        QList<QString> tokens = message.simplified().split(' ');
+        result = tokens[0] == "window"; // || analysisType == "filter";
         if (result)
         {
-            emit signalAnalysisToggle(message);
+            bool isActive = tokens[1].toInt();
+            emit signalAnalysisToggle(tokens[0], isActive);
         }
     }
     else if (messageType == "config")

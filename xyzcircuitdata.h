@@ -14,7 +14,7 @@ struct xyzCircuitData {
 public:
     QString toString()
     {
-        return QString("data %1 %2 %3 %4 %5 %6").arg(group).arg(id).arg(x).arg(y).arg(z).arg(timestamp);
+        return QString("data %1 %2 %3 %4 %5 %6 %7").arg(group).arg(id).arg(x).arg(y).arg(z).arg(timestamp);
     }
 };
 

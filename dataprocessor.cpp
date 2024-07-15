@@ -1,4 +1,5 @@
 #include "dataprocessor.h"
+#include "cdrworker.h"
 #include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
@@ -49,10 +50,27 @@ DataProcessor::DataProcessor(QObject *parent)
     connect(errorTimer, &QTimer::timeout, this, &DataProcessor::readError);
     errorTimer->start();
 
-    fileTimer = new QTimer(this);
-    fileTimer->setSingleShot(false);
-    fileTimer->setInterval(0);
-    connect(fileTimer, &QTimer::timeout, this, &DataProcessor::readLine);
+    // fileTimer = new QTimer(this);
+    // fileTimer->setSingleShot(false);
+    // fileTimer->setInterval(0);
+    // connect(fileTimer, &QTimer::timeout, this, &DataProcessor::readLine);
+
+    // windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
+    windowWorker = new WindowWorker();
+    // connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataP::slotResultReceived);
+
+    cleanupTimer = new QTimer(this);
+    cleanupTimer->setSingleShot(false);
+    cleanupTimer->setInterval(timeToTimeout);
+    connect(cleanupTimer, &QTimer::timeout, this, &DataProcessor::slotCleanup);
+
+    cleanupTimer->start();
+
+    QTimer *deltaTimer = new QTimer(this);
+    deltaTimer->setSingleShot(false);
+    deltaTimer->setInterval(3000);
+    connect(deltaTimer, &QTimer::timeout, this, &DataProcessor::slotUpdateDeltaTime);
+    deltaTimer->start();
 }
 
 DataProcessor::~DataProcessor()
@@ -63,43 +81,6 @@ DataProcessor::~DataProcessor()
     }
     CircuitDataReceiver::disconnectCircuit();
 
-}
-
-void DataProcessor::readDataFromTestFile()
-{
-    QString appPath = QDir().absolutePath();
-    qInfo() << appPath;
-
-    QDir dir(appPath);
-
-    bool ok;
-    ok = dir.cdUp();
-    assert(ok);
-    ok = dir.cdUp();
-    assert(ok);
-
-    qInfo() << dir.path();
-    auto keke = dir.path() + "/circuit_data/all_data.txt";
-    file = new QFile(keke);
-    if (!file->open(QIODevice::ReadOnly)) return;
-
-    QString line = file->readLine().simplified();
-    processLine(line);
-
-
-    fileTimer->start();
-}
-
-void DataProcessor::readLine()
-{
-    if (file->canReadLine())
-    {
-        QString line = file->readLine().simplified();
-        if (line != "")
-        {
-            processLine(line);
-        }
-    }
 }
 
 void DataProcessor::setConfig()
@@ -117,35 +98,99 @@ void DataProcessor::setConfig()
     thread->start();
 }
 
-void DataProcessor::processLine(QString line)
+void DataProcessor::slotUpdateDeltaTime()
 {
-    try
-    {
-        QString processedLine = line.simplified();
-        emit signalLineReceived(processedLine);
-        QList<QString> tokens = line.simplified().split(' ');
+    xyzAnalysisResult deltaTimes = {
+        .x = getAverageDeltaTime(aData, aReceived) * 1000,
+        .y = getAverageDeltaTime(gData, gReceived) * 1000,
+        .z = getAverageDeltaTime(mData, mReceived) * 1000,
+    };
 
-        char dataSource = tokens.data()[0].toStdString().c_str()[0];
-        switch (dataMap[dataSource]) {
-        case 1:
-            emit signalLineProcessed(stringDataToStruct(tokens, aMap[currentConfig.aRange]));
+    aReceived = 0;
+    gReceived = 0;
+    mReceived = 0;
+
+    emit signalUpdatedDeltaTime(deltaTimes);
+}
+
+void DataProcessor::slotCleanup()
+{
+    cleanDataListToTime(&aData, dataLifespanInSeconds);
+    cleanDataListToTime(&gData, dataLifespanInSeconds);
+    cleanDataListToTime(&mData, dataLifespanInSeconds);
+}
+
+void DataProcessor::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds)
+{
+    if (dataToClean->isEmpty()) return;
+
+    int initial = dataToClean->length();
+    foreach (xyzCircuitData data, dataToClean->toList())
+    {
+        if (dataToClean->last().timestamp - data.timestamp <= timeInSeconds)
             break;
-        case 2:
-            emit signalLineProcessed(stringDataToStruct(tokens, gMap[currentConfig.gRange]));
-            break;
-        case 3:
-            emit signalLineProcessed(stringDataToStruct(tokens, mConstant));
-            break;
-        default:
-            break;
-        }
+        dataToClean->pop_front();
     }
-    catch (const std::exception& ex) {
-        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
+
+    // qDebug() << " before and after " << initial << dataToClean->length();
+    p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
+                      dataToClean->back().group,
+                      initial, dataToClean->length());
+}
+
+float DataProcessor::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
+{
+    int size = data.length();
+    if (amount <= 0 || amount > data.length()) return 0;
+
+    // if (amount == 1) return 0;
+    // float first = data.last().timestamp;
+    // float second = data[data.length() - 2].timestamp;
+
+    // float average = first - second;
+
+    float average = 0;
+
+    for(int i = size - amount; i < size - 1; i++)
+    {
+        average += data[i + 1].timestamp - data[i].timestamp;
     }
-    catch (...) {
-        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+    average /= (float) amount;
+    p7Trace->P7_DEBUG(moduleName, TM("Frequency %f for %c with %d amount"), average, data.first().group, amount);
+    return average;
+}
+
+void DataProcessor::addDataWithAnalysisCheck(QList<xyzCircuitData> *dataList, xyzCircuitData newData)
+{
+    dataList->append(newData);
+    inCount += 1;
+    if (windowWorker->isEnabled)
+    {
+        qDebug() << "window";
+        emit signalLineProcessed(windowWorker->doWork(createListSlice(dataList->toList(), windowSize)));
     }
+    else
+    {
+        emit signalLineProcessed(newData);
+    }
+}
+
+QList<xyzCircuitData> DataProcessor::createListSlice(QList<xyzCircuitData> dataList, int size)
+{
+    QList<xyzCircuitData> listSlice = QList<xyzCircuitData>();
+
+    if (size > dataList.length())
+    {
+        return dataList;
+    }
+    for (int i = dataList.length() - size;  i < dataList.length(); i++)
+    {
+        xyzCircuitData data = dataList[i];
+        listSlice.append(data);
+    }
+
+
+    return listSlice;
 }
 
 void DataProcessor::processReceivedData(xyzCircuitData data)
@@ -154,13 +199,13 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
     {
         switch (dataMap[data.group]) {
         case 1:
-            emit signalLineProcessed(transformXyzData(data, aMap[currentConfig.aRange]));
+            addDataWithAnalysisCheck(&aData, transformXyzData(data, aMap[currentConfig.aRange]));
             break;
         case 2:
-            emit signalLineProcessed(transformXyzData(data, gMap[currentConfig.gRange]));
+            addDataWithAnalysisCheck(&gData, transformXyzData(data, gMap[currentConfig.gRange]));
             break;
         case 3:
-            emit signalLineProcessed(transformXyzData(data, mConstant));
+            addDataWithAnalysisCheck(&mData, transformXyzData(data, mConstant));
             break;
         case 4:
             break;
@@ -174,51 +219,6 @@ void DataProcessor::processReceivedData(xyzCircuitData data)
     catch (...) {
         p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
     }
-}
-
-xyzCircuitData DataProcessor::stringDataToStruct(QList<QString> tokens, float transitionConst)
-{
-    xyzCircuitData data;
-    data.group = tokens[0].toStdString()[0];
-    data.id = tokens[1].toInt();
-    data.x = tokens[2].toInt() * transitionConst;
-    data.y = tokens[3].toInt() * transitionConst;
-    data.z = tokens[4].toInt() * transitionConst;
-    data.timestamp = (tokens[5].toLong() / timeConstant);
-
-    QString message;
-    if (lastReceivedId + 1 == data.id)
-    {
-        message =  QString("no packages lost");
-        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
-    }
-    else
-    {
-        message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
-
-        switch(data.group)
-        {
-        case 'A':
-            aLost += data.id - lastReceivedId;
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, aLost);
-            break;
-        case 'G':
-            gLost += data.id - lastReceivedId;
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, gLost);
-            break;
-        case 'M':
-            mLost += data.id - lastReceivedId;
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, mLost);
-            break;
-        }
-
-        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
-    }
-
-    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
-    lastReceivedId = data.id;
-
-    return data;
 }
 
 xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transitionConst)
@@ -290,6 +290,24 @@ void DataProcessor::slotConfigReceived(QList<cConfig> configsReceived)
     {
         setConfig();
         newConfig = conf;
+    }
+}
+
+void DataProcessor::slotWindowSizeChanged(int newSize)
+{
+    windowSize = newSize;
+}
+
+void DataProcessor::slotTimeToCleanChanged(int newTime)
+{
+    dataLifespanInSeconds = newTime;
+}
+
+void DataProcessor::slotSetAnalysisActive(QString analysisType, bool active)
+{
+    if (analysisType == "window")
+    {
+        windowWorker->isEnabled = active;
     }
 }
 

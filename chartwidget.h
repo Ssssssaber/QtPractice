@@ -51,7 +51,7 @@ private:
 
 public:
     ChartWidget(const QString title = "", QWidget* pwgt = 0);
-    void setWindowResult(xyzAnalysisResult);
+    void setWindowResult(xyzCircuitData);
     void addChartDot(xyzCircuitData);
     void drawAllSeries(int timeInSeconds);
     void changeDataLifespan(int newTime);

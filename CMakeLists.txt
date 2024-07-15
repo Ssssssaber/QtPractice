@@ -28,11 +28,11 @@ if(6 GREATER_EQUAL 6)
         xyzcircuitdata.h
         chartwidget.h chartwidget.cpp
         chartmanager.h chartmanager.cpp
-        dataanalyzer.h dataanalyzer.cpp
-        windowworker.h windowworker.cpp
-        xyzworker.h xyzworker.cpp
 
-        xyzworkercontroller.h xyzworkercontroller.cpp
+        windowworker.h windowworker.cpp
+        cdrworker.h cdrworker.cpp
+
+
 
 
         cmake/FindLibUdev.cmake cmake/FindUSB1.cmake
