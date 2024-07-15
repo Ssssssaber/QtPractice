@@ -77,10 +77,17 @@ DataProcessor::~DataProcessor()
 {
     if (!CircuitDataReceiver::checkForValidConfigParams(defaultConfig))
     {
-        setConfig();
-    }
-    CircuitDataReceiver::disconnectCircuit();
+        cdrworker = new CDRWorker();
+        thread = new QThread();
+        cdrworker->moveToThread(thread);
 
+        connect(thread, SIGNAL(started()), cdrworker, SLOT(disconnectCircuit()));
+        connect(cdrworker, SIGNAL(finished()), thread, SLOT(quit()));
+        connect(cdrworker, SIGNAL(finished()), cdrworker, SLOT(deleteLater()));
+        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+        thread->start();
+    }
 }
 
 void DataProcessor::setConfig()

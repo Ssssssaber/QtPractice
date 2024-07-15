@@ -17,3 +17,14 @@ void CDRWorker::process()
     emit finished(r);
     return;
 }
+
+void CDRWorker::disconnectCircuit()
+{
+    int r = cdr->setConfigParams();
+    emit finished();
+    if(r == LIBNII_SUCCESS)
+        qDebug() << "Default configuration is set";
+    else
+        qDebug() << "Failed to set default configuration";
+    cdr->disconnectCircuit();
+}

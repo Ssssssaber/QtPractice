@@ -19,9 +19,11 @@ public:
 
 public slots:
     void process();
+    void disconnectCircuit();
 
 signals:
     void finished(int);
+    void finished();
 };
 
 #endif // CDRWORKER_H

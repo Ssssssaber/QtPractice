@@ -30,6 +30,7 @@ private:
         .mFreq = 0,
         .mAvg = 8
     };
+
     fullConfig currentConfig = {
         .aFreq = 0,
         .aAvg = 8,
