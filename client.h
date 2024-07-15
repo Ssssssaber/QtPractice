@@ -19,6 +19,9 @@ private:
     QHostAddress serverAddress;
 
     ChartManager* chartManager;
+
+    bool windowActive = false;
+    QPushButton *windowToggleButton;
     // QTextEdit* receivedCircuitData;
 
     int udpPort;
@@ -66,6 +69,6 @@ private slots:
 
 signals:
     void signalReceivedData(xyzCircuitData data);
-    void signalReceivedAnalysis(xyzAnalysisResult analysis);
+    void signalReceivedAnalysis(xyzCircuitData analysis);
 
 };

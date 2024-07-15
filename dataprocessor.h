@@ -1,7 +1,7 @@
 #ifndef DATAPROCESSOR_H
 #define DATAPROCESSOR_H
 
-#pragma once
+#include "windowworker.h"
 
 #include <QFile>
 #include <QDebug>
@@ -9,24 +9,7 @@
 #include "xyzcircuitdata.h"
 
 #include "CircuitConfiguration.h"
-#include "circuitdatareceiver.h"
-#include "cdrworker.h"
 #include "P7_Trace.h"
-// struct libnii_params CircuitDataReceiver::params = {
-//     .accel_freq = 0,
-//     .accel_range = 2,
-//     .accel_avr = 8,
-//     .gyro_freq = 0,
-//     .gyro_range = 3,
-//     .gyro_avr = 8,
-//     .magnet_duty = 0,
-//     .magnet_avr = 8,
-//     .press_freq = 0,
-//     .press_filter = 0,
-//     .nv08c_freq = 0,
-//     .display_refresh = 2
-// };
-
 
 class CDRWorker;
 class DataProcessor : public QObject
@@ -37,20 +20,6 @@ private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
 
-    // struct libnii_params CircuitDataReceiver::params = {
-    //     .accel_freq = 0,
-    //     .accel_range = 2,
-    //     .accel_avr = 8,
-    //     .gyro_freq = 0,
-    //     .gyro_range = 3,
-    //     .gyro_avr = 8,
-    //     .magnet_duty = 0,
-    //     .magnet_avr = 8,
-    //     .press_freq = 0,
-    //     .press_filter = 0,
-    //     .nv08c_freq = 0,
-    //     .display_refresh = 2
-    // };
     fullConfig defaultConfig = {
         .aFreq = 0,
         .aAvg = 8,
@@ -93,8 +62,8 @@ private:
     qint64 lastReceivedTime;
 
 
-    QFile *file;
-    QTimer* fileTimer;
+    // QFile *file;
+    // QTimer* fileTimer;
 
     CDRWorker *cdrworker;
     QThread *thread;
@@ -102,10 +71,34 @@ private:
     int lastReceivedId = 0;
     QMap<char, int> dataMap;
 
-    void processLine(QString line);
+    // XyzWorkerController *windowWorkerController;
+    WindowWorker *windowWorker;
+    int windowSize = 10;
+    QList<xyzCircuitData> aData;
+    QList<xyzCircuitData> gData;
+    QList<xyzCircuitData> mData;
+
+    int aReceived;
+    int gReceived;
+    int mReceived;
+
+    int dataLifespanInSeconds = 10;
+    int analysisFrequency = 1;
+    int inCount = 0;
+
+    int timeToTimeout = 5000; // miliseconds
+    QTimer *cleanupTimer;
+
+    void cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds);
+    float getAverageDeltaTime(QList<xyzCircuitData> data, int amount = -1);
+
+    void addDataWithAnalysisCheck(QList<xyzCircuitData>* dataList, xyzCircuitData newData);
+    QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
+
+    // void processReceivedData(QString line);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
     void processReceivedData(xyzCircuitData data);
-    xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
+    // xyzCircuitData stringDataToStruct(QList<QString> tokens, float transitionConst);
     void readData();
     void readError();
     fullConfig setConfigParamsFromList(QList<cConfig> configs);
@@ -113,17 +106,25 @@ private:
 public:
     explicit DataProcessor(QObject *parent = nullptr);
     ~DataProcessor();
-    void readDataFromTestFile();
+    // void readDataFromTestFile();
     static void receiveDataFromDataReceiver(xyzCircuitData);
     static void receiveErrorFromDataReceiver(QString error);
-    void readLine();
+    // void readLine();
     void setConfig();
+
+private slots:
+    void slotUpdateDeltaTime();
+    void slotCleanup();
 
 public slots:
     void slotConfigCompleted(int);
     void slotConfigReceived(QList<cConfig> configsReceived);
+    void slotWindowSizeChanged(int newSize);
+    void slotTimeToCleanChanged(int newTime);
+    void slotSetAnalysisActive(QString analysisType, bool active);
 
-signals:
+signals:    
+    void signalUpdatedDeltaTime(xyzAnalysisResult deltaTimes);
     void signalLineReceived(QString data);
     void signalLineProcessed(xyzCircuitData data);
     void signalConfigError(QString);

@@ -1,14 +1,17 @@
 #ifndef WINDOWWORKER_H
 #define WINDOWWORKER_H
 
-#include "xyzworker.h"
+#include <QtCore>
+#include <xyzcircuitdata.h>
 
-class WindowWorker : public XyzWorker
+class WindowWorker : QObject
 {
+    Q_OBJECT
 public:
+    bool isEnabled = false;
     WindowWorker();
 public:
-    void slotDoWork(QList<xyzCircuitData> dataList) override;
+    xyzCircuitData doWork(QList<xyzCircuitData> dataList);
 };
 
 #endif // WINDOWWORKER_H

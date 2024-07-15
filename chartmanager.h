@@ -28,7 +28,7 @@ public:
     void changeDataLifeSpan(int newTime);
 public slots:
     void slotDataReceived(xyzCircuitData);
-    void slotAnalysisRecived(xyzAnalysisResult);
+    void slotAnalysisRecived(xyzCircuitData);
 
 signals:
 

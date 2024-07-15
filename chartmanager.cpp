@@ -80,17 +80,17 @@ void ChartManager::slotDataReceived(xyzCircuitData data)
     p7Trace->P7_TRACE(moduleName, TM("%c chart set data"), data.group);
 }
 
-void ChartManager::slotAnalysisRecived(xyzAnalysisResult data)
+void ChartManager::slotAnalysisRecived(xyzCircuitData data)
 {
-    if (data.group == "A")
+    if (data.group == 'A')
     {
         chartA->setWindowResult(data);
     }
-    else if (data.group == "G")
+    else if (data.group == 'G')
     {
         chartG->setWindowResult(data);
     }
-    else if (data.group == "M")
+    else if (data.group == 'M')
     {
         chartM->setWindowResult(data);
     }

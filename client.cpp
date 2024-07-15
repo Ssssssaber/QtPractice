@@ -73,12 +73,13 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     QPushButton *windowChangeButton = new QPushButton("&Send");
     connect(windowChangeButton, &QPushButton::clicked, this, &Client::slotServerChangeWindowSize);
 
-    QPushButton *windowToggleButton = new QPushButton("&Toggle windowing");
+    windowToggleButton = new QPushButton("&Enable windowing");
     connect(windowToggleButton, &QPushButton::clicked, this, &Client::slotServerToggleWindow);
 
     windowInput = new QLineEdit();
+    windowInput->setText("10");
 
-    windowGrid->addWidget(new QLabel("ChangeWindow"), 0, 0, 1, 2);
+    windowGrid->addWidget(new QLabel("Change Window"), 0, 0, 1, 2);
     windowGrid->addWidget(windowInput, 1, 0, 1, 2);
     windowGrid->addWidget(windowChangeButton, 1, 3, 1, 2);
     windowGrid->addWidget(windowToggleButton, 2, 3, 1, 2);
@@ -90,11 +91,12 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     QGridLayout *timeGrid = new QGridLayout;
 
     timeToClearInput = new QLineEdit();
+    timeToClearInput->setText("10");
 
     QPushButton *timeToClearChangeButton = new QPushButton("&Set new time");
     connect(timeToClearChangeButton, &QPushButton::clicked, this, &Client::slotServerChangeTimeToCleanup);
 
-    timeGrid->addWidget(new QLabel("Change time to cleanup"), 0, 0, 1, 2);
+    timeGrid->addWidget(new QLabel("Change time to cleanup in seconds"), 0, 0, 1, 2);
     timeGrid->addWidget(timeToClearInput, 1, 0, 1, 2);
     timeGrid->addWidget(timeToClearChangeButton, 1, 3, 1, 2);
 
@@ -185,17 +187,10 @@ void Client::parseStringData(QString stringData)
         data.timestamp = tokens[6].toFloat();
         p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
         emit signalReceivedData(data);
-    }
-    else if (tokens[0] == "analysis")
-    {
-        xyzAnalysisResult analysis;
-        analysis.method = tokens[1];
-        analysis.group = tokens[2];
-        analysis.x = tokens[3].toFloat();
-        analysis.y = tokens[4].toFloat();
-        analysis.z = tokens[5].toFloat();
-        p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), analysis.toString().toStdString().data());
-        emit signalReceivedAnalysis(analysis);
+        if (windowActive)
+        {
+            emit signalReceivedAnalysis(data);
+        }
     }
 }
 
@@ -291,7 +286,17 @@ void Client::slotServerChangeWindowSize()
 
 void Client::slotServerToggleWindow()
 {
-    sendToTcpServer("toggle analysis", "window");
+    windowActive = !windowActive;
+    if (!windowActive)
+    {
+        windowToggleButton->setText("&E&nable windowing");
+        //
+    }
+    else
+    {
+        windowToggleButton->setText("&D&i&sable windowing");
+    }
+    sendToTcpServer("toggle", "window " + QString::number(windowActive));
 }
 
 void Client::slotServerChangeTimeToCleanup()

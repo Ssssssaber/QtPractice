@@ -232,7 +232,7 @@ ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 }
 
 
-void ChartWidget::setWindowResult(xyzAnalysisResult data)
+void ChartWidget::setWindowResult(xyzCircuitData data)
 {
     resX->setText(QString::fromStdString("Windowing result: " + std::to_string(data.x)));
     resY->setText(QString::fromStdString("Windowing result: " + std::to_string(data.y)));

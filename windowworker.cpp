@@ -5,13 +5,19 @@ WindowWorker::WindowWorker()
 
 }
 
-void WindowWorker::slotDoWork(QList<xyzCircuitData> dataList)
+xyzCircuitData WindowWorker::doWork(QList<xyzCircuitData> dataList)
 {
-    if (dataList.length() == 0)
-    {
-        p7Trace->P7_ERROR(moduleName, TM("empty list on window analysis"));
-    }
-    xyzAnalysisResult result = {.method="window", .group = QString(dataList[0].group),.x = 0, .y = 0, .z = 0};
+    // if (dataList.length() == 0)
+    // {
+    //     p7Trace->P7_ERROR(moduleName, TM("empty list on window analysis"));
+    // }
+    xyzCircuitData result = {
+        .group = dataList[0].group,
+        .id = dataList[0].id,
+        .x = 0,
+        .y = 0,
+        .z = 0,
+        .timestamp = dataList.back().timestamp,};
     int length = dataList.length();
 
     foreach (xyzCircuitData data, dataList.toList())
@@ -25,5 +31,5 @@ void WindowWorker::slotDoWork(QList<xyzCircuitData> dataList)
     result.y /= length;
     result.z /= length;
 
-    emit signalResultReady(result);
+    return result;
 }
