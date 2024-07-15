@@ -19,7 +19,7 @@ private:
     QHostAddress serverAddress;
 
     ChartManager* chartManager;
-    QTextEdit* receivedCircuitData;
+    // QTextEdit* receivedCircuitData;
 
     int udpPort;
     QUdpSocket* udpDataSocket;
