@@ -4,6 +4,7 @@
 #include "CircuitConfiguration.h"
 #include "cdrworker.h"
 #include <QtCore>
+#include <vector>
 
 const bool noCircuit = false;
 // const bool noCircuit = true;
@@ -34,9 +35,9 @@ class CircuitManager : public QObject
 
     fullConfig newConfig;
 
-    QList<xyzCircuitData> aData;
-    QList<xyzCircuitData> gData;
-    QList<xyzCircuitData> mData;
+    std::vector<xyzCircuitData> aData;
+    std::vector<xyzCircuitData> gData;
+    std::vector<xyzCircuitData> mData;
 
     QMap<char, int> receivedMap;
 
@@ -58,14 +59,14 @@ public:
 
     fullConfig setConfigParamsFromList(QList<cConfig> configs);
     static void receiveErrorFromDataReceiver(QString error);
-    void cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds);
-    float getAverageDeltaTime(QList<xyzCircuitData> data, int amount = -1);
+    void cleanDataListToTime(std::vector<xyzCircuitData> *dataToClean, int timeInSeconds);
+    float getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount = -1);
     void setConfig();
 
     int getWindowSize();
     bool isWindowEnabled();
     fullConfig getFullConfig();
-    QList<xyzCircuitData> *getData(char group);
+    std::vector<xyzCircuitData> getData(char group);
     void addData(xyzCircuitData data);
 
 private slots:

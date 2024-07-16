@@ -3,7 +3,7 @@
 #include <QDir>
 #include <QtMath>
 
-std::vector<xyzCircuitData> DataProcessor::currentVector;
+std::queue<xyzCircuitData> DataProcessor::currentVector;
 
 
 DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, QObject *parent)
@@ -49,7 +49,7 @@ DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitMan
 
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
-    currentVector.push_back(data);
+    currentVector.push(data);
 }
 
 void DataProcessor::slotStart()
@@ -82,7 +82,7 @@ void DataProcessor::readData()
         queueSize = currentVector.size() > queueSize ? currentVector.size() : queueSize;
         qDebug() << "KEKE " << queueSize;
         processReceivedData(currentVector.back());
-        currentVector.pop_back();
+        currentVector.pop();
     }
 }
 
@@ -157,7 +157,7 @@ void DataProcessor::addDataWithAnalysisCheck(xyzCircuitData newData)
     if (manager->isWindowEnabled())
     {
         qDebug() << "window";
-        sendData(windowWorker->doWork(createListSlice(manager->getData(newData.group)->toList(), manager->getWindowSize())));
+        sendData(windowWorker->doWork(createListSlice(manager->getData(newData.group), manager->getWindowSize())));
     }
     else
     {
@@ -165,18 +165,18 @@ void DataProcessor::addDataWithAnalysisCheck(xyzCircuitData newData)
     }
 }
 
-QList<xyzCircuitData> DataProcessor::createListSlice(QList<xyzCircuitData> dataList, int size)
+std::vector<xyzCircuitData> DataProcessor::createListSlice(std::vector<xyzCircuitData> dataList, int size)
 {
-    QList<xyzCircuitData> listSlice = QList<xyzCircuitData>();
+    std::vector<xyzCircuitData> listSlice = std::vector<xyzCircuitData>();
 
-    if (size > dataList.length())
+    if (size > dataList.size())
     {
         return dataList;
     }
-    for (int i = dataList.length() - size;  i < dataList.length(); i++)
+    for (int i = dataList.size() - size;  i < dataList.size(); i++)
     {
         xyzCircuitData data = dataList[i];
-        listSlice.append(data);
+        listSlice.push_back(data);
     }
 
 

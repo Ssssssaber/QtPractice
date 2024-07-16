@@ -5,7 +5,7 @@ WindowWorker::WindowWorker()
     isEnabled = false;
 }
 
-xyzCircuitData WindowWorker::doWork(QList<xyzCircuitData> dataList)
+xyzCircuitData WindowWorker::doWork(std::vector<xyzCircuitData> dataList)
 {
     // if (dataList.length() == 0)
     // {
@@ -18,9 +18,9 @@ xyzCircuitData WindowWorker::doWork(QList<xyzCircuitData> dataList)
         .y = 0,
         .z = 0,
         .timestamp = dataList.back().timestamp,};
-    int length = dataList.length();
+    int length = dataList.size();
 
-    foreach (xyzCircuitData data, dataList.toList())
+    foreach (xyzCircuitData data, dataList)
     {
         result.x += data.x;
         result.y += data.y;

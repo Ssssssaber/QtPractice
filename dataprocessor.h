@@ -15,6 +15,7 @@
 
 #include "P7_Trace.h"
 #include <vector>
+#include<queue>
 
 
 class CDRWorker;
@@ -28,7 +29,7 @@ private:
 
     int queueSize = 0;
 
-    static std::vector<xyzCircuitData> currentVector;
+    static std::queue<xyzCircuitData> currentVector;
 
     CircuitManager *manager;
 
@@ -49,7 +50,7 @@ private:
     void checkLost(xyzCircuitData data);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
     void addDataWithAnalysisCheck(xyzCircuitData newData);
-    QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
+    std::vector <xyzCircuitData> createListSlice(std::vector<xyzCircuitData> dataList, int size);
     void sendData(xyzCircuitData);
     void readData();
 public:

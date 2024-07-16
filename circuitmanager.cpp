@@ -72,17 +72,17 @@ fullConfig CircuitManager::getFullConfig()
     return currentConfig;
 }
 
-QList<xyzCircuitData> *CircuitManager::getData(char group)
+std::vector<xyzCircuitData> CircuitManager::getData(char group)
 {
     switch (group) {
     case 'A':
-        return &aData;
+        return aData;
     case 'G':
-        return &gData;
+        return gData;
     case 'M':
-        return &mData;
+        return mData;
     default:
-        return new QList<xyzCircuitData>;
+        return std::vector<xyzCircuitData>();
     }
 }
 
@@ -90,15 +90,15 @@ void CircuitManager::addData(xyzCircuitData data)
 {
     switch (data.group) {
     case 'A':
-        aData.append(data);
+        aData.push_back(data);
         receivedMap['A'] += 1;
         break;
     case 'G':
-        gData.append(data);
+        gData.push_back(data);
         receivedMap['G'] += 1;
         break;
     case 'M':
-        mData.append(data);
+        mData.push_back(data);
         receivedMap['M'] += 1;
         break;
     default:
@@ -238,28 +238,21 @@ void CircuitManager::slotCleanup()
     cleanDataListToTime(&mData, dataLifespanInSeconds);
 }
 
-void CircuitManager::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds)
+void CircuitManager::cleanDataListToTime(std::vector<xyzCircuitData> *dataToClean, int timeInSeconds)
 {
-    if (dataToClean->isEmpty()) return;
-
-    int initial = dataToClean->length();
-    foreach (xyzCircuitData data, dataToClean->toList())
+    if (dataToClean->empty()) return;
+    foreach (xyzCircuitData data, *dataToClean)
     {
-        if (dataToClean->last().timestamp - data.timestamp <= timeInSeconds)
+        if (dataToClean->front().timestamp - data.timestamp <= timeInSeconds)
             break;
-        dataToClean->pop_front();
+        dataToClean->erase(dataToClean->begin());
     }
-
-    // qDebug() << " before and after " << initial << dataToClean->length();
-    // p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
-    //                   dataToClean->back().group,
-    //                   initial, dataToClean->length());
 }
 
-float CircuitManager::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
+float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount)
 {
-    int size = data.length();
-    if (amount <= 0 || amount > data.length()) return 0;
+    int size = data.size();
+    if (amount <= 0 || amount > data.size()) return 0;
 
     // if (amount == 1) return 0;
     // float first = data.last().timestamp;

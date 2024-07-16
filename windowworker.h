@@ -11,7 +11,7 @@ public:
     bool isEnabled = false;
     WindowWorker();
 public:
-    xyzCircuitData doWork(QList<xyzCircuitData> dataList);
+    xyzCircuitData doWork(std::vector<xyzCircuitData> dataList);
 };
 
 #endif // WINDOWWORKER_H
