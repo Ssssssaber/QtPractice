@@ -1,12 +1,9 @@
 #include "dataprocessor.h"
-#include "cdrworker.h"
-#include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
 #include <QtMath>
 
-QQueue<xyzCircuitData> DataProcessor::dataQueue;
-
+std::vector<xyzCircuitData> DataProcessor::currentVector;
 
 
 DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, QObject *parent)
@@ -45,29 +42,24 @@ DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitMan
     gMap[2] = 1.f / 24.f;
     gMap[3] = 1.f / 8.f;
 
-    CircuitDataReceiver::connectCircuit();
+    // CircuitDataReceiver::connectCircuit();
 
-
-    windowWorker = new WindowWorker();
-
-    udpDataSocket = new QUdpSocket();
 }
 
 
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
-    // currentData = data;
-    dataQueue.enqueue(data);
+    currentVector.push_back(data);
 }
 
-void DataProcessor::slotReadData()
+void DataProcessor::slotStart()
 {
-    while (1)
-    {
-        if (dataQueue.isEmpty()) continue;
-        processReceivedData(dataQueue.dequeue());
-    }
+    windowWorker = new WindowWorker();
+    udpDataSocket = new QUdpSocket();
+    readData();
 }
+
+
 
 void DataProcessor::sendData(xyzCircuitData data)
 {
@@ -80,6 +72,18 @@ void DataProcessor::sendData(xyzCircuitData data)
     out << dt << data1.toString();
 
     udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
+}
+
+void DataProcessor::readData()
+{
+    while (1)
+    {
+        if (currentVector.empty()) continue;
+        queueSize = currentVector.size() > queueSize ? currentVector.size() : queueSize;
+        qDebug() << "KEKE " << queueSize;
+        processReceivedData(currentVector.back());
+        currentVector.pop_back();
+    }
 }
 
 

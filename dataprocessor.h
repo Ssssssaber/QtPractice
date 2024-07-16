@@ -1,17 +1,20 @@
 #ifndef DATAPROCESSOR_H
 #define DATAPROCESSOR_H
 
+#include "CustomQueue.h"
 #include "qudpsocket.h"
 #include "windowworker.h"
 
 
 #include <QFile>
 #include <QDebug>
+#include <QLinkedList>
+
 #include "xyzcircuitdata.h"
 #include "circuitmanager.h"
 
 #include "P7_Trace.h"
-
+#include <vector>
 
 
 class CDRWorker;
@@ -23,7 +26,9 @@ private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
 
-    static QQueue<xyzCircuitData> dataQueue;
+    int queueSize = 0;
+
+    static std::vector<xyzCircuitData> currentVector;
 
     CircuitManager *manager;
 
@@ -46,11 +51,12 @@ private:
     void addDataWithAnalysisCheck(xyzCircuitData newData);
     QList<xyzCircuitData> createListSlice(QList<xyzCircuitData> dataList, int size);
     void sendData(xyzCircuitData);
+    void readData();
 public:
     explicit DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, QObject *parent = nullptr);
     static void receiveDataFromDataReceiver(xyzCircuitData);
 public slots:
-    void slotReadData();
+    void slotStart();
 
 };
 

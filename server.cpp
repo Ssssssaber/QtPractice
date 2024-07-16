@@ -84,7 +84,7 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
 
     dataProcessor = new DataProcessor(udpPort, clientAddress, circuitManger);
     connect(&dataThread, &QThread::finished, dataProcessor, &QObject::deleteLater);
-    connect(this, &Server::signalStartProcessingData, dataProcessor, &DataProcessor::slotReadData);
+    connect(this, &Server::signalStartProcessingData, dataProcessor, &DataProcessor::slotStart);
 
     dataProcessor->moveToThread(&dataThread);
 

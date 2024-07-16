@@ -46,6 +46,7 @@ if(6 GREATER_EQUAL 6)
         CircuitConfiguration.h
         collapseelement.h collapseelement.cpp
         circuitmanager.h circuitmanager.cpp
+        CustomQueue.h
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtPractice APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -118,6 +119,9 @@ include_directories(libnii/Headers)
 #target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Network)
 find_package(Qt6 REQUIRED COMPONENTS Network)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
+
+find_package(Qt6 REQUIRED COMPONENTS Core5Compat)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core5Compat)
 
 # adding charts
 #find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Charts)
