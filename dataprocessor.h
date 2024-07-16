@@ -16,6 +16,7 @@
 #include <vector>
 #include<queue>
 
+const int maxQueueSize = 100000;
 
 class CDRWorker;
 class DataProcessor : public QObject

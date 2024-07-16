@@ -7,6 +7,7 @@
 #include <vector>
 
 const bool noCircuit = false;
+const int maxVectorSize = 400000;
 // const bool noCircuit = true;
 
 class CircuitManager : public QObject

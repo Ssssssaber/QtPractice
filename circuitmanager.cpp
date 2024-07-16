@@ -14,7 +14,7 @@ CircuitManager::CircuitManager()
 
     QTimer *cleanupTimer = new QTimer();
     cleanupTimer->setSingleShot(false);
-    cleanupTimer->setInterval(5000);
+    cleanupTimer->setInterval(2000);
     connect(cleanupTimer, &QTimer::timeout, this, &CircuitManager::slotCleanup);
 
     cleanupTimer->start();
@@ -241,9 +241,10 @@ void CircuitManager::slotCleanup()
 void CircuitManager::cleanDataListToTime(std::vector<xyzCircuitData> *dataToClean, int timeInSeconds)
 {
     if (dataToClean->empty()) return;
-    foreach (xyzCircuitData data, *dataToClean)
+    int initial = dataToClean->size() > maxVectorSize ? dataToClean->size() - maxVectorSize : 0;
+    for (int i = initial; i < dataToClean->size(); i++)
     {
-        if (dataToClean->front().timestamp - data.timestamp <= timeInSeconds)
+        if (dataToClean->front().timestamp - dataToClean[i].data()->timestamp <= timeInSeconds)
             break;
         dataToClean->erase(dataToClean->begin());
     }

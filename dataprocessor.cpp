@@ -79,10 +79,15 @@ void DataProcessor::readData()
     while (1)
     {
         if (currentVector.empty()) continue;
-        queueSize = currentVector.size() > queueSize ? currentVector.size() : queueSize;
+        queueSize = currentVector.size();
         qDebug() << "KEKE " << queueSize;
         processReceivedData(currentVector.back());
         currentVector.pop();
+
+        if (queueSize > maxQueueSize)
+        {
+            currentVector = std::queue<xyzCircuitData>();
+        }
     }
 }
 
