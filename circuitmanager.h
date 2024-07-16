@@ -7,7 +7,7 @@
 #include <vector>
 
 const bool noCircuit = false;
-const int maxVectorSize = 400000;
+const int maxVectorSize = 2000;
 // const bool noCircuit = true;
 
 class CircuitManager : public QObject
@@ -62,7 +62,7 @@ public:
     static void receiveErrorFromDataReceiver(QString error);
     std::vector<xyzCircuitData> cleanDataListToTime(std::vector<xyzCircuitData> dataToClean, int timeInSeconds);
     std::vector<xyzCircuitData> createListSlice(std::vector<xyzCircuitData> dataList, int size);
-    float getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount = -1);
+    float getAverageDeltaTime(std::vector<xyzCircuitData> dataVector);
     void setConfig();
 
     int getWindowSize();

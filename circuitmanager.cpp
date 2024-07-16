@@ -219,9 +219,9 @@ fullConfig CircuitManager::setConfigParamsFromList(QList<cConfig> configs)
 void CircuitManager::slotUpdateDeltaTime()
 {
     xyzAnalysisResult deltaTimes = {
-        .x = getAverageDeltaTime(aData, receivedMap['A']) * 1000,
-        .y = getAverageDeltaTime(gData, receivedMap['G']) * 1000,
-        .z = getAverageDeltaTime(mData, receivedMap['M']) * 1000,
+        .x = getAverageDeltaTime(aData) * 1000,
+        .y = getAverageDeltaTime(gData) * 1000,
+        .z = getAverageDeltaTime(mData) * 1000,
     };
 
     receivedMap['A'] = 0;
@@ -273,25 +273,16 @@ std::vector<xyzCircuitData> CircuitManager::createListSlice(std::vector<xyzCircu
     return listSlice;
 }
 
-float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount)
+float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> dataVector)
 {
-    int size = data.size();
-    if (amount <= 0 || amount > data.size()) return 0;
-
-    // if (amount == 1) return 0;
-    // float first = data.last().timestamp;
-    // float second = data[data.length() - 2].timestamp;
-
-    // float average = first - second;
-
+    if (dataVector.empty()) return 0.f;
+    int size = dataVector.size();
     float average = 0;
-
-    for(int i = size - amount; i < size - 1; i++)
+    for(int i = 0; i < size - 1; i++)
     {
-        average += data[i + 1].timestamp - data[i].timestamp;
+        average += dataVector[i + 1].timestamp - dataVector[i].timestamp;
     }
-    average /= (float) amount;
-    // p7Trace->P7_DEBUG(moduleName, TM("Frequency %f for %c with %d amount"), average, data.first().group, amount);
+    average /= (float) size;
     return average;
 }
 
