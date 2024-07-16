@@ -5,7 +5,8 @@
 #include "cdrworker.h"
 #include <QtCore>
 
-const bool noCircuit = true;
+const bool noCircuit = false;
+// const bool noCircuit = true;
 
 class CircuitManager : public QObject
 {

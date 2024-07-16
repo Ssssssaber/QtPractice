@@ -76,20 +76,11 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
     circuitManger = new CircuitManager();
     connect(this, &Server::signalConfigReceived, circuitManger, &CircuitManager::slotConfigReceived);
     connect(this, &Server::signalAnalysisToggle, circuitManger, &CircuitManager::slotSetAnalysisActive);
+    connect(this, &Server::signalWindowSizeChanged, circuitManger, &CircuitManager::slotWindowSizeChanged);
     connect(this, &Server::signalTimeToClearChanged, circuitManger, &CircuitManager::slotTimeToCleanChanged);
 
     connect(circuitManger, &CircuitManager::signalSendCircuitMessage, this, &Server::slotSendCircuitMessageToClient);
     connect(circuitManger, &CircuitManager::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
-
-    // connect(dataProcessor, &DataProcessor::signalLineReceived, this, &Server::slotStringReceived);
-    // connect(dataProcessor, &DataProcessor::signalLineProcessed, this, &Server::slotDataToSendAdded);
-
-    // connect(this, &Server::signalWindowSizeChanged, dataProcessor, &DataProcessor::slotWindowSizeChanged);
-    // connect(this, &Server::signalTimeToClearChanged, dataProcessor, &DataProcessor::slotTimeToCleanChanged);
-    // connect(dataProcessor, &DataProcessor::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
-    // connect(this, &Server::signalAnalysisToggle, dataProcessor, &DataProcessor::slotSetAnalysisActive);
-
-
 
     dataProcessor = new DataProcessor(udpPort, clientAddress, circuitManger);
     connect(&dataThread, &QThread::finished, dataProcessor, &QObject::deleteLater);
@@ -99,48 +90,11 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
 
     dataThread.start();
 
-
-    // dataProcessor->sendData();
-
-    // udpDataSocket = new QUdpSocket(this);
-    // QTimer* pTimer = new QTimer(this);
-    // pTimer->setInterval(0);
-    // connect(pTimer, SIGNAL(timeout()), SLOT(slotSendDatagram()));
-    // pTimer->start();
-
     p7Trace->P7_TRACE(moduleName, TM("Server started"));
 
     PerfomanceChecker *pc = new PerfomanceChecker();
     pc->Start();
 }
-
-void Server::slotSendDatagram()
-{
-    if (!clientConnected) return;
-
-    if (!cDataToSendQueue.isEmpty())
-    {
-        sendData();
-    }
-}
-
-
-
-void Server::sendData()
-{
-    // QByteArray baDatagram;
-    // QDataStream out(&baDatagram, QIODevice::WriteOnly);
-    // out.setVersion(QDataStream::Qt_5_12);
-    // QDateTime dt = QDateTime::currentDateTime();
-
-    // xyzCircuitData data = cDataToSendQueue.dequeue();
-    // sentDataText->append("Sent: " + dt.toString() + "\n" + data.toString());
-    // out << dt << data.toString();
-    // udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
-
-    // p7Trace->P7_TRACE(moduleName, TM("Data sent: %s"), data.toString().toStdString().data());
-}
-
 
 void Server::slotSendCircuitMessageToClient(QString string)
 {
@@ -231,10 +185,6 @@ void Server::slotReadClient()
     }
 }
 
-void Server::slotDataToSendAdded(xyzCircuitData data)
-{
-    cDataToSendQueue.enqueue(data);
-}
 
 void Server::sendToClient(QTcpSocket *socket, const QString& str)
 {
