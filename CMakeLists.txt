@@ -120,9 +120,6 @@ include_directories(libnii/Headers)
 find_package(Qt6 REQUIRED COMPONENTS Network)
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Network)
 
-find_package(Qt6 REQUIRED COMPONENTS Core5Compat)
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core5Compat)
-
 # adding charts
 #find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Charts)
 #target_link_libraries(${PROJECT_NAME} PRIVATE Qt${QT_VERSION_MAJOR}::Charts)

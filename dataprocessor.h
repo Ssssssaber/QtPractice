@@ -8,7 +8,6 @@
 
 #include <QFile>
 #include <QDebug>
-#include <QLinkedList>
 
 #include "xyzcircuitdata.h"
 #include "circuitmanager.h"

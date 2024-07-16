@@ -241,43 +241,12 @@ void ChartWidget::setWindowResult(xyzCircuitData data)
 
 void ChartWidget::addChartDot(xyzCircuitData data)
 {
-    currentDataList.append(data);
-    // if (data.group != 'A') return;
-
-    // cViewX->chart()->removeSeries(serX); // removing series from view
-    // cViewY->chart()->removeSeries(serY);
-    // cViewZ->chart()->removeSeries(serZ);
-
-
-    // serX->append(data.timestamp, data.x); //adding new point to axis-line
-    // //axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
-    // //axisrn.xmin = data.x < axisrn.xmin ? data.x : axisrn.xmin;
-
-    // serY->append(data.timestamp, data.y);
-    // //axisrn.ymax = data.x > axisrn.ymax ? data.x : axisrn.ymax;
-    // //axisrn.ymin = data.x < axisrn.ymin ? data.x : axisrn.ymin;
-
-    // serZ->append(data.timestamp, data.z);
-    // //axisrn.zmax = data.x > axisrn.zmax ? data.x : axisrn.zmax;
-    // //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
-
-    // cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max); // setting chart axies range
-    // cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
-    // // serX->detachAxis(serXaxisX);
-    // cViewX->chart()->addSeries(serX); // restoring series
-
-    // cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
-    // cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
-    // cViewY->chart()->addSeries(serY);
-
-    // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
-    // cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
-    // cViewZ->chart()->addSeries(serZ);
+    currentDataList.push_back(data);
 }
 
 void ChartWidget::drawAllSeries(int timeInSeconds)
 {
-    if (currentDataList.isEmpty()) return;
+    if (currentDataList.empty()) return;
 
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
@@ -307,11 +276,10 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
         chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
     }
 
-    float time = currentDataList.last().timestamp;
+    float time = currentDataList.back().timestamp;
 
     cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Xmin,chartBoundries.Xmax); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(), time); // setting chart axies range
-    // serX->detachAxis(serXaxisX);
     cViewX->chart()->addSeries(serX); // restoring series
 
     cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(), time); // setting chart axies range
@@ -321,19 +289,6 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(), time); // setting chart axies range
     cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Zmin,chartBoundries.Zmax);
     cViewZ->chart()->addSeries(serZ);
-    // cViewX->chart()->addSeries(serX);
-    // serX->append()
-    // cViewX->chart()->removeSeries(serX); // removing series from view
-    // cViewY->chart()->removeSeries(serY);
-    // cViewZ->chart()->removeSeries(serZ);
-
-    // cleanSeries(serX, timeInSeconds); // clean first points (no relatable)
-    // cleanSeries(serY, timeInSeconds);
-    // cleanSeries(serZ, timeInSeconds);
-
-    // cViewX->chart()->addSeries(serX); // restoring series
-    // cViewY->chart()->addSeries(serY);
-    // cViewZ->chart()->addSeries(serZ);
 }
 
 void ChartWidget::changeDataLifespan(int newTime)
@@ -343,17 +298,17 @@ void ChartWidget::changeDataLifespan(int newTime)
 
 void ChartWidget::slotCleanDataListToTime()
 {
-    if (currentDataList.isEmpty()) return;
+    if (currentDataList.empty()) return;
 
-    int initial = currentDataList.length();
+    int initial = currentDataList.size();
     foreach (xyzCircuitData data, currentDataList)
     {
-        if (currentDataList.last().timestamp - data.timestamp <= dataLifespan)
+        if (currentDataList.back().timestamp - data.timestamp <= dataLifespan)
             break;
-        currentDataList.pop_front();
+        currentDataList.erase(currentDataList.begin());
     }
 
-    qDebug() << " before and after " << initial << currentDataList.length();
+    qDebug() << " before and after " << initial << currentDataList.size();
     // p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
     //                   dataToClean->back().group,
     //                   initial, dataToClean->length());
