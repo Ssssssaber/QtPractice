@@ -60,7 +60,8 @@ public:
 
     fullConfig setConfigParamsFromList(QList<cConfig> configs);
     static void receiveErrorFromDataReceiver(QString error);
-    void cleanDataListToTime(std::vector<xyzCircuitData> *dataToClean, int timeInSeconds);
+    std::vector<xyzCircuitData> cleanDataListToTime(std::vector<xyzCircuitData> dataToClean, int timeInSeconds);
+    std::vector<xyzCircuitData> createListSlice(std::vector<xyzCircuitData> dataList, int size);
     float getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount = -1);
     void setConfig();
 

@@ -233,21 +233,44 @@ void CircuitManager::slotUpdateDeltaTime()
 
 void CircuitManager::slotCleanup()
 {
-    cleanDataListToTime(&aData, dataLifespanInSeconds);
-    cleanDataListToTime(&gData, dataLifespanInSeconds);
-    cleanDataListToTime(&mData, dataLifespanInSeconds);
+    aData = cleanDataListToTime(aData, dataLifespanInSeconds);
+    gData = cleanDataListToTime(gData, dataLifespanInSeconds);
+    mData = cleanDataListToTime(mData, dataLifespanInSeconds);
 }
 
-void CircuitManager::cleanDataListToTime(std::vector<xyzCircuitData> *dataToClean, int timeInSeconds)
+std::vector<xyzCircuitData> CircuitManager::cleanDataListToTime(std::vector<xyzCircuitData> dataToClean, int timeInSeconds)
 {
-    if (dataToClean->empty()) return;
-    int initial = dataToClean->size() > maxVectorSize ? dataToClean->size() - maxVectorSize : 0;
-    for (int i = initial; i < dataToClean->size(); i++)
+    if (dataToClean.empty()) return std::vector<xyzCircuitData>();
+    if (dataToClean.size() > maxVectorSize)
     {
-        if (dataToClean->front().timestamp - dataToClean[i].data()->timestamp <= timeInSeconds)
-            break;
-        dataToClean->erase(dataToClean->begin());
+        dataToClean = (createListSlice(dataToClean, maxVectorSize));
     }
+
+    for (int i = 0; i < dataToClean.size(); i++)
+    {
+        if (dataToClean.front().timestamp - dataToClean[i].timestamp <= timeInSeconds)
+            break;
+        dataToClean.erase(dataToClean.begin());
+    }
+    return dataToClean;
+}
+
+std::vector<xyzCircuitData> CircuitManager::createListSlice(std::vector<xyzCircuitData> dataList, int size)
+{
+    std::vector<xyzCircuitData> listSlice = std::vector<xyzCircuitData>();
+
+    if (size > dataList.size())
+    {
+        return dataList;
+    }
+    for (int i = dataList.size() - size;  i < dataList.size(); i++)
+    {
+        xyzCircuitData data = dataList[i];
+        listSlice.push_back(data);
+    }
+
+
+    return listSlice;
 }
 
 float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> data, int amount)
