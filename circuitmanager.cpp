@@ -8,16 +8,11 @@
 
 QQueue<QString> CircuitManager::errorQueue;
 
-CircuitManager::CircuitManager()
+CircuitManager::CircuitManager(QObject *p) : QObject{p}
 {
     CircuitDataReceiver::connectCircuit();
 
-    QTimer *cleanupTimer = new QTimer();
-    cleanupTimer->setSingleShot(false);
-    cleanupTimer->setInterval(2000);
-    connect(cleanupTimer, &QTimer::timeout, this, &CircuitManager::slotCleanup);
-
-    cleanupTimer->start();
+    container = new DataContainer(this);
 
     QTimer *deltaTimer = new QTimer();
     deltaTimer->setSingleShot(false);
@@ -41,6 +36,8 @@ CircuitManager::CircuitManager()
         dataTimer->start();
     }
 }
+
+CircuitManager::~CircuitManager() {}
 
 void CircuitManager::setConfig()
 {
@@ -72,45 +69,13 @@ fullConfig CircuitManager::getFullConfig()
     return currentConfig;
 }
 
-std::vector<xyzCircuitData> CircuitManager::getData(char group)
-{
-    switch (group) {
-    case 'A':
-        return aData;
-    case 'G':
-        return gData;
-    case 'M':
-        return mData;
-    default:
-        return std::vector<xyzCircuitData>();
-    }
-}
-
-void CircuitManager::addData(xyzCircuitData data)
-{
-    switch (data.group) {
-    case 'A':
-        aData.push_back(data);
-        receivedMap['A'] += 1;
-        break;
-    case 'G':
-        gData.push_back(data);
-        receivedMap['G'] += 1;
-        break;
-    case 'M':
-        mData.push_back(data);
-        receivedMap['M'] += 1;
-        break;
-    default:
-        break;
-    }
-}
 
 void CircuitManager::slotConfigCompleted(int r)
 {
     if (r == LIBNII_SUCCESS)
     {
         currentConfig = newConfig;
+        container->clearData();
     }
 }
 
@@ -135,13 +100,26 @@ void CircuitManager::slotConfigReceived(QList<cConfig> configsReceived)
     }
 }
 
-CircuitManager::~CircuitManager()
+void CircuitManager::slotAddData(xyzCircuitData data)
+{
+    container->addData(data);
+}
+
+void CircuitManager::disconnectCircuit()
 {
     if (!CircuitDataReceiver::checkForValidConfigParams(defaultConfig))
     {
-        setConfig();
+        cdrworker = new CDRWorker();
+        thread = new QThread();
+        cdrworker->moveToThread(thread);
+
+        connect(thread, SIGNAL(started()), cdrworker, SLOT(disconnectCircuit()));
+        connect(cdrworker, SIGNAL(finished()), thread, SLOT(quit()));
+        connect(cdrworker, SIGNAL(finished()), cdrworker, SLOT(deleteLater()));
+        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+
+        thread->start();
     }
-    CircuitDataReceiver::disconnectCircuit();
 }
 
 void CircuitManager::slotReadError()
@@ -219,70 +197,37 @@ fullConfig CircuitManager::setConfigParamsFromList(QList<cConfig> configs)
 void CircuitManager::slotUpdateDeltaTime()
 {
     xyzAnalysisResult deltaTimes = {
-        .x = getAverageDeltaTime(aData) * 1000,
-        .y = getAverageDeltaTime(gData) * 1000,
-        .z = getAverageDeltaTime(mData) * 1000,
+        .x = getAverageDeltaTime(container->getData('A')),
+        .y = getAverageDeltaTime(container->getData('A')),
+        .z = getAverageDeltaTime(container->getData('A')),
     };
-
-    receivedMap['A'] = 0;
-    receivedMap['G'] = 0;
-    receivedMap['M'] = 0;
 
     emit signalUpdatedDeltaTime(deltaTimes);
 }
 
-void CircuitManager::slotCleanup()
+float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> dataList)
 {
-    aData = cleanDataListToTime(aData, dataLifespanInSeconds);
-    gData = cleanDataListToTime(gData, dataLifespanInSeconds);
-    mData = cleanDataListToTime(mData, dataLifespanInSeconds);
-}
+    if (dataList.empty()) return 0.f;
+    int size = dataList.size();
+    float res = 0;
 
-std::vector<xyzCircuitData> CircuitManager::cleanDataListToTime(std::vector<xyzCircuitData> dataToClean, int timeInSeconds)
-{
-    if (dataToClean.empty()) return std::vector<xyzCircuitData>();
-    if (dataToClean.size() > maxVectorSize)
+    std::vector<xyzCircuitData>::iterator it;
+    xyzCircuitData previous = {};
+    for (it = dataList.begin(); it != dataList.end(); it++)
     {
-        dataToClean = (createListSlice(dataToClean, maxVectorSize));
+        if (it == dataList.begin())
+        {
+            previous = *it;
+        }
+        else
+        {
+            res += it->timestamp - previous.timestamp;
+            previous = *it;
+        }
     }
 
-    for (int i = 0; i < dataToClean.size(); i++)
-    {
-        if (dataToClean.front().timestamp - dataToClean[i].timestamp <= timeInSeconds)
-            break;
-        dataToClean.erase(dataToClean.begin());
-    }
-    return dataToClean;
-}
-
-std::vector<xyzCircuitData> CircuitManager::createListSlice(std::vector<xyzCircuitData> dataList, int size)
-{
-    std::vector<xyzCircuitData> listSlice = std::vector<xyzCircuitData>();
-
-    if (size > dataList.size())
-    {
-        return dataList;
-    }
-    for (int i = dataList.size() - size;  i < dataList.size(); i++)
-    {
-        xyzCircuitData data = dataList[i];
-        listSlice.push_back(data);
-    }
-
-
-    return listSlice;
-}
-
-float CircuitManager::getAverageDeltaTime(std::vector<xyzCircuitData> dataVector)
-{
-    if (dataVector.empty()) return 0.f;
-    int size = dataVector.size();
-    float average = 0;
-    for(int i = 0; i < size - 1; i++)
-    {
-        average += dataVector[i + 1].timestamp - dataVector[i].timestamp;
-    }
-    average /= (float) size;
+    res /= (float) size;
+    float average = res / timeConstant;
     return average;
 }
 

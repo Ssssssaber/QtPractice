@@ -7,10 +7,8 @@ WindowWorker::WindowWorker()
 
 xyzCircuitData WindowWorker::doWork(std::vector<xyzCircuitData> dataList)
 {
-    // if (dataList.length() == 0)
-    // {
-    //     p7Trace->P7_ERROR(moduleName, TM("empty list on window analysis"));
-    // }
+    if (dataList.empty()) return {};
+
     xyzCircuitData result = {
         .group = dataList[0].group,
         .id = dataList[0].id,
@@ -20,11 +18,14 @@ xyzCircuitData WindowWorker::doWork(std::vector<xyzCircuitData> dataList)
         .timestamp = dataList.back().timestamp,};
     int length = dataList.size();
 
-    foreach (xyzCircuitData data, dataList)
+    int i = 0;
+
+    std::vector<xyzCircuitData>::iterator it;
+    for (it = dataList.begin(); it != dataList.end(); it++, i++)
     {
-        result.x += data.x;
-        result.y += data.y;
-        result.z += data.z;
+        result.x += it->x;
+        result.y += it->y;
+        result.z += it->z;
     }
 
     result.x /= length;

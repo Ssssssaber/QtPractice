@@ -6,7 +6,8 @@
 #include "CircuitConfiguration.h"
 #include "P7_Trace.h"
 #include "circuitmanager.h"
-#include "dataprocessor.h"
+
+class DataProcessor;
 
 class Server : public QWidget
 {
@@ -14,6 +15,8 @@ class Server : public QWidget
 private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
+
+    bool serverConnected;
 
     QHostAddress clientAddress;
 
@@ -38,8 +41,9 @@ private:
     void sendToClient(QTcpSocket* socket, const QString &str);
     bool processClientResponse(QString messageType, QString message);
 public:
+    bool isServerActive();
     Server(int tcpPort = 2323, int udpPort = 2424, QHostAddress hostAddress = QHostAddress::LocalHost, QWidget* pwgt = 0);
-
+    ~Server();
 public slots:
     void slotStringReceived(QString string);
     void slotNewConnection();

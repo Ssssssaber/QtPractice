@@ -5,6 +5,7 @@
 #include "perfomancechecker.h"
 #include <QTcpSocket>
 #include <QtCore>
+#include "dataprocessor.h"
 
 Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
 {
@@ -40,7 +41,7 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
         return;
     }
     connect(tcpServer, &QTcpServer::newConnection, this, &Server::slotNewConnection);
-
+    serverConnected = true;
 
 
     receivedDataText = new QTextEdit("Received data");
@@ -73,7 +74,7 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
     boxLayout->addWidget(clientResponseText, 1, 7, 2, 3);
     setLayout(boxLayout);
 
-    circuitManger = new CircuitManager();
+    circuitManger = new CircuitManager(this);
     connect(this, &Server::signalConfigReceived, circuitManger, &CircuitManager::slotConfigReceived);
     connect(this, &Server::signalAnalysisToggle, circuitManger, &CircuitManager::slotSetAnalysisActive);
     connect(this, &Server::signalWindowSizeChanged, circuitManger, &CircuitManager::slotWindowSizeChanged);
@@ -82,7 +83,9 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
     connect(circuitManger, &CircuitManager::signalSendCircuitMessage, this, &Server::slotSendCircuitMessageToClient);
     connect(circuitManger, &CircuitManager::signalUpdatedDeltaTime, this, &Server::slotSendDeltaTime);
 
-    dataProcessor = new DataProcessor(udpPort, clientAddress, circuitManger);
+    dataProcessor = new DataProcessor(udpPort, clientAddress, circuitManger, this);
+    connect(dataProcessor, &DataProcessor::signalDataProcessed, circuitManger, &CircuitManager::slotAddData);
+
     connect(&dataThread, &QThread::finished, dataProcessor, &QObject::deleteLater);
     connect(this, &Server::signalStartProcessingData, dataProcessor, &DataProcessor::slotStart);
 
@@ -94,6 +97,14 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
 
     PerfomanceChecker *pc = new PerfomanceChecker();
     pc->Start();
+}
+
+Server::~Server()
+{
+    serverConnected = false;
+    dataThread.quit();
+    dataThread.wait();
+    circuitManger->disconnectCircuit();
 }
 
 void Server::slotSendCircuitMessageToClient(QString string)
@@ -245,6 +256,11 @@ bool Server::processClientResponse(QString messageType, QString message)
         }
     }
     return result;
+}
+
+bool Server::isServerActive()
+{
+    return serverConnected;
 }
 
 

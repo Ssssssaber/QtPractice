@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     // Server server = Server(2323, 2424,QHostAddress("10.0.0.2"));
     // server.show();
 
-    //CLIENT MODE
+    // CLIENT MODE
     // Client client = Client(2323, 2424, QHostAddress("10.0.0.2"));
     // client.show();
 

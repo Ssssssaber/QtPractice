@@ -3,11 +3,13 @@
 
 #include "CircuitConfiguration.h"
 #include "cdrworker.h"
+#include "datacontainer.h"
 #include <QtCore>
 #include <vector>
 
 const bool noCircuit = false;
-const int maxVectorSize = 2000;
+
+const ulong timeConstant = 1e6;
 // const bool noCircuit = true;
 
 class CircuitManager : public QObject
@@ -36,11 +38,11 @@ class CircuitManager : public QObject
 
     fullConfig newConfig;
 
-    std::vector<xyzCircuitData> aData;
-    std::vector<xyzCircuitData> gData;
-    std::vector<xyzCircuitData> mData;
+    DataContainer *container;
 
-    QMap<char, int> receivedMap;
+    // std::vector<xyzCircuitData> aData;
+    // std::vector<xyzCircuitData> gData;
+    // std::vector<xyzCircuitData> mData;
 
     QElapsedTimer *elapsedTimer;
     QRandomGenerator prng1;
@@ -55,25 +57,23 @@ class CircuitManager : public QObject
 
     static QQueue<QString> errorQueue;
 public:
-    CircuitManager();
+    CircuitManager(QObject *p = 0);
     ~CircuitManager();
+    void disconnectCircuit();
 
     fullConfig setConfigParamsFromList(QList<cConfig> configs);
     static void receiveErrorFromDataReceiver(QString error);
-    std::vector<xyzCircuitData> cleanDataListToTime(std::vector<xyzCircuitData> dataToClean, int timeInSeconds);
-    std::vector<xyzCircuitData> createListSlice(std::vector<xyzCircuitData> dataList, int size);
     float getAverageDeltaTime(std::vector<xyzCircuitData> dataVector);
     void setConfig();
 
     int getWindowSize();
     bool isWindowEnabled();
     fullConfig getFullConfig();
-    std::vector<xyzCircuitData> getData(char group);
-    void addData(xyzCircuitData data);
+    std::vector<xyzCircuitData> *getData(char group);
+
 
 private slots:
     void slotUpdateDeltaTime();
-    void slotCleanup();
     void slotReadError();
     void slotGenerateFakeData();
 
@@ -83,7 +83,7 @@ public slots:
     void slotSetAnalysisActive(QString analysisType, bool active);
     void slotTimeToCleanChanged(int newTime);
     void slotConfigReceived(QList<cConfig> configsReceived);
-
+    void slotAddData(xyzCircuitData data);
 
 signals:
     void signalConfigError(QString);

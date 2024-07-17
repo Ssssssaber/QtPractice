@@ -2,11 +2,13 @@
 #include <QApplication>
 #include <QDir>
 #include <QtMath>
+#include "server.h"
+#include <iterator>
 
 std::queue<xyzCircuitData> DataProcessor::currentVector;
 
-
-DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, QObject *parent)
+// Server server;
+DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, Server *server,QObject *parent)
     : QObject{parent}
 {
     p7Trace = P7_Get_Shared_Trace("ServerChannel");
@@ -24,6 +26,7 @@ DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitMan
     this->clientAddress = clientAddress;
 
     this->manager = manager;
+    this->server = server;
 
     lostData['A'] = 0;
     lostData['G'] = 0;
@@ -42,6 +45,7 @@ DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitMan
     gMap[2] = 1.f / 24.f;
     gMap[3] = 1.f / 8.f;
 
+    container = new DataContainer(this);
     // CircuitDataReceiver::connectCircuit();
 
 }
@@ -61,13 +65,13 @@ void DataProcessor::slotStart()
 
 
 
-void DataProcessor::sendData(xyzCircuitData data)
+void DataProcessor::slotSendData(xyzCircuitData data)
 {
     QByteArray baDatagram;
     QDataStream out(&baDatagram, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_12);
     QDateTime dt = QDateTime::currentDateTime();
-
+    data.timestamp /= timeConstant;
     xyzCircuitData data1 = data;
     out << dt << data1.toString();
 
@@ -76,7 +80,7 @@ void DataProcessor::sendData(xyzCircuitData data)
 
 void DataProcessor::readData()
 {
-    while (1)
+    while (server->isServerActive())
     {
         if (currentVector.empty()) continue;
         queueSize = currentVector.size();
@@ -120,7 +124,7 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
     data.x *= transitionConst;
     data.y *= transitionConst;
     data.z *= transitionConst;
-    data.timestamp /= timeConstant;
+    // data.timestamp /= timeConstant;
     if (data.group == 'A')
     {
         qDebug() << "after: " << data.toString();
@@ -157,16 +161,21 @@ void DataProcessor::checkLost(xyzCircuitData data)
 
 void DataProcessor::addDataWithAnalysisCheck(xyzCircuitData newData)
 {
-    manager->addData(newData);
+    container->addData(newData);
+    emit signalDataProcessed(newData);
 
     if (manager->isWindowEnabled())
     {
-        qDebug() << "window";
-        sendData(windowWorker->doWork(createListSlice(manager->getData(newData.group), manager->getWindowSize())));
+        // qDebug() << "window";
+        // std::vector vec = *manager->getData(newData.group);
+        // vec = createListSlice(vec, manager->getWindowSize());
+        slotSendData(windowWorker->doWork(createListSlice(container->getData(newData.group), manager->getWindowSize())));
+        // slotSendData(newData);
+        // emit signalPerformWindowing(newData);
     }
     else
     {
-        sendData(newData);
+        slotSendData(newData);
     }
 }
 
@@ -178,12 +187,12 @@ std::vector<xyzCircuitData> DataProcessor::createListSlice(std::vector<xyzCircui
     {
         return dataList;
     }
-    for (int i = dataList.size() - size;  i < dataList.size(); i++)
+    std::vector<xyzCircuitData>::iterator it;
+    for (it = dataList.end() - size; it != dataList.end(); it++)
     {
-        xyzCircuitData data = dataList[i];
+        xyzCircuitData data = *it;
         listSlice.push_back(data);
     }
-
 
     return listSlice;
 }

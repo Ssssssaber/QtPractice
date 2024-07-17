@@ -259,22 +259,35 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     chartBoundries.Xmin = 1000;
     chartBoundries.Ymin = 1000;
     chartBoundries.Zmin = 1000;
-    chartBoundries.Xmax = 0;
-    chartBoundries.Ymax = 0;
-    chartBoundries.Zmax = 0;
-
-    foreach(xyzCircuitData data, currentDataList)
+    chartBoundries.Xmax = -1000;
+    chartBoundries.Ymax = -1000;
+    chartBoundries.Zmax = -1000;
+    std::vector<xyzCircuitData>::iterator it;
+    for (it = currentDataList.begin(); it != currentDataList.end(); it++)
     {
-        serX->append(data.timestamp, data.x);
-        serY->append(data.timestamp, data.y);
-        serZ->append(data.timestamp, data.z);
-        chartBoundries.Xmin = chartBoundries.Xmin < data.x ? chartBoundries.Xmin : data.x;
-        chartBoundries.Ymin = chartBoundries.Ymin < data.y ? chartBoundries.Ymin : data.y;
-        chartBoundries.Zmin = chartBoundries.Zmin < data.z ? chartBoundries.Zmin : data.z;
-        chartBoundries.Xmax = chartBoundries.Xmax > data.x ? chartBoundries.Xmax : data.x;
-        chartBoundries.Ymax = chartBoundries.Ymax > data.y ? chartBoundries.Ymax : data.y;
-        chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
+        serX->append(it->timestamp, it->x);
+        serY->append(it->timestamp, it->y);
+        serZ->append(it->timestamp, it->z);
+        chartBoundries.Xmin = chartBoundries.Xmin < it->x ? chartBoundries.Xmin : it->x;
+        chartBoundries.Ymin = chartBoundries.Ymin < it->y ? chartBoundries.Ymin : it->y;
+        chartBoundries.Zmin = chartBoundries.Zmin < it->z ? chartBoundries.Zmin : it->z;
+        chartBoundries.Xmax = chartBoundries.Xmax > it->x ? chartBoundries.Xmax : it->x;
+        chartBoundries.Ymax = chartBoundries.Ymax > it->y ? chartBoundries.Ymax : it->y;
+        chartBoundries.Zmax = chartBoundries.Zmax > it->z ? chartBoundries.Zmax : it->z;
     }
+
+    // foreach(xyzCircuitData data, currentDataList)
+    // {
+    //     serX->append(data.timestamp, data.x);
+    //     serY->append(data.timestamp, data.y);
+    //     serZ->append(data.timestamp, data.z);
+    //     chartBoundries.Xmin = chartBoundries.Xmin < data.x ? chartBoundries.Xmin : data.x;
+    //     chartBoundries.Ymin = chartBoundries.Ymin < data.y ? chartBoundries.Ymin : data.y;
+    //     chartBoundries.Zmin = chartBoundries.Zmin < data.z ? chartBoundries.Zmin : data.z;
+    //     chartBoundries.Xmax = chartBoundries.Xmax > data.x ? chartBoundries.Xmax : data.x;
+    //     chartBoundries.Ymax = chartBoundries.Ymax > data.y ? chartBoundries.Ymax : data.y;
+    //     chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
+    // }
 
     float time = currentDataList.back().timestamp;
 

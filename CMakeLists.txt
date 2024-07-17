@@ -47,6 +47,8 @@ if(6 GREATER_EQUAL 6)
         collapseelement.h collapseelement.cpp
         circuitmanager.h circuitmanager.cpp
         CustomQueue.h
+        datacontainer.h datacontainer.cpp
+
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QtPractice APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

@@ -1,10 +1,9 @@
 #ifndef DATAPROCESSOR_H
 #define DATAPROCESSOR_H
 
-#include "CustomQueue.h"
 #include "qudpsocket.h"
-#include "windowworker.h"
 
+#include "windowworker.h"
 
 #include <QFile>
 #include <QDebug>
@@ -14,9 +13,13 @@
 
 #include "P7_Trace.h"
 #include <vector>
-#include<queue>
+#include <queue>
+
+class Server;
+
 
 const int maxQueueSize = 100000;
+
 
 class CDRWorker;
 class DataProcessor : public QObject
@@ -32,11 +35,16 @@ private:
     static std::queue<xyzCircuitData> currentVector;
 
     CircuitManager *manager;
+    Server *server;
+
+    DataContainer *container;
+
+    WindowWorker *windowWorker;
 
     QMap<int, float> aMap;
     QMap<int, float> gMap;
     const float mConstant = .25f * .0001f; // mT
-    const float timeConstant = 1000000000;
+    const long timeConstant = 1e9;
 
     QMap<char, int> lostData;
     QMap<char, int> lastReceived;
@@ -45,19 +53,25 @@ private:
     QHostAddress clientAddress;
     QUdpSocket* udpDataSocket;
 
-    WindowWorker *windowWorker;
+    // WindowWorker *windowWorker;
     void processReceivedData(xyzCircuitData data);
     void checkLost(xyzCircuitData data);
     xyzCircuitData transformXyzData(xyzCircuitData data, float transitionConst);
     void addDataWithAnalysisCheck(xyzCircuitData newData);
     std::vector <xyzCircuitData> createListSlice(std::vector<xyzCircuitData> dataList, int size);
-    void sendData(xyzCircuitData);
+
     void readData();
 public:
-    explicit DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, QObject *parent = nullptr);
+
+    explicit DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, Server *server, QObject *parent = nullptr);
     static void receiveDataFromDataReceiver(xyzCircuitData);
 public slots:
     void slotStart();
+    void slotSendData(xyzCircuitData);
+signals:
+
+    void signalDataProcessed(xyzCircuitData data);
+    void signalPerformWindowing(xyzCircuitData data);
 
 };
 
