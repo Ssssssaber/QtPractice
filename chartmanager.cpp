@@ -50,7 +50,7 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     cleanupTimer->start();
 }
 
-void ChartManager::changeDataLifeSpan(int newTime)
+void ChartManager::slotDataLifespanChanged(int newTime)
 {
     dataLifespanInSeconds = newTime;
     chartA->changeDataLifespan(newTime);

@@ -18,6 +18,7 @@ private:
 
     QHostAddress serverAddress;
 
+    QThread chartThread;
     ChartManager* chartManager;
 
     bool windowActive = false;
@@ -55,6 +56,7 @@ private:
 
 public:
     Client(int tcpPort = 2323, int udpPort = 2424, QHostAddress serverAddress = QHostAddress::LocalHost, QWidget* pwgt = 0);
+    ~Client();
 
 private slots:
     void slotProcessDatagram();
@@ -70,5 +72,6 @@ private slots:
 signals:
     void signalReceivedData(xyzCircuitData data);
     void signalReceivedAnalysis(xyzCircuitData analysis);
+    void signalDataLifespanChanged(int newTime);
 
 };

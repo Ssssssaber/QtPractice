@@ -43,10 +43,18 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     dataSplitter->setStretchFactor(0, 1);
     dataSplitter->setStretchFactor(1, 0);
 
+
+
     // chart part
     chartManager = new ChartManager(this);
     connect(this, &Client::signalReceivedData, chartManager, &ChartManager::slotDataReceived);
+    connect(this, &Client::signalDataLifespanChanged, chartManager, &ChartManager::slotDataLifespanChanged);
     connect(this, &Client::signalReceivedAnalysis, chartManager, &ChartManager::slotAnalysisRecived);
+
+    connect(&chartThread, &QThread::finished, chartManager, &QObject::deleteLater);
+    chartManager->moveToThread(&chartThread);
+
+    chartThread.start();
     // dataVBox->addWidget(chartManager);
     dataSplitter->addWidget(chartManager);
 
@@ -153,6 +161,12 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     statTimer->start();
 
     qDebug() << mainSplitter->sizes();
+}
+
+Client::~Client()
+{
+    chartThread.quit();
+    chartThread.wait();
 }
 
 void Client::slotProcessDatagram()
@@ -305,7 +319,8 @@ void Client::slotServerChangeTimeToCleanup()
     int newTime = timeToClearInput->text().toInt();
     if (newTime >= 10 && newTime <= 60)
     {
-        chartManager->changeDataLifeSpan(newTime);
+        emit signalDataLifespanChanged(newTime);
+        // chartManager->slotDataLifespanChanged(newTime);
         sendToTcpServer("change cleanup time", timeToClearInput->text());
     }
 
