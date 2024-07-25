@@ -10,6 +10,18 @@ QQueue<QString> CircuitManager::errorQueue;
 
 CircuitManager::CircuitManager(QObject *p) : QObject{p}
 {
+    p7Trace = P7_Get_Shared_Trace("ServerChannel");
+
+    if (!p7Trace)
+    {
+        qDebug() << "circuit manager is not tracing";
+    }
+    else
+    {
+        p7Trace->Register_Module(TM("CMan"), &moduleName);
+    }
+
+
     CircuitDataReceiver::connectCircuit();
 
     container = new DataContainer(this);
@@ -76,17 +88,20 @@ void CircuitManager::slotConfigCompleted(int r)
     {
         currentConfig = newConfig;
         container->clearData();
+        p7Trace->P7_TRACE(moduleName, TM("Config changed"));;
     }
 }
 
 void CircuitManager::slotWindowSizeChanged(int newSize)
 {
     windowSize = newSize;
+    p7Trace->P7_TRACE(moduleName, TM("Window changed to %d"), windowSize);;
 }
 
 void CircuitManager::slotTimeToCleanChanged(int newTime)
 {
     dataLifespanInSeconds = newTime;
+    p7Trace->P7_TRACE(moduleName, TM("Data lifespan changed to %d"), dataLifespanInSeconds);;
 }
 
 void CircuitManager::slotConfigReceived(QList<cConfig> configsReceived)
@@ -198,8 +213,8 @@ void CircuitManager::slotUpdateDeltaTime()
 {
     xyzAnalysisResult deltaTimes = {
         .x = getAverageDeltaTime(container->getData('A')),
-        .y = getAverageDeltaTime(container->getData('A')),
-        .z = getAverageDeltaTime(container->getData('A')),
+        .y = getAverageDeltaTime(container->getData('G')),
+        .z = getAverageDeltaTime(container->getData('M')),
     };
 
     emit signalUpdatedDeltaTime(deltaTimes);

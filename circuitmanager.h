@@ -2,12 +2,13 @@
 #define CIRCUITMANAGER_H
 
 #include "CircuitConfiguration.h"
+#include "P7_Trace.h"
 #include "cdrworker.h"
 #include "datacontainer.h"
 #include <QtCore>
 #include <vector>
 
-const bool noCircuit = false;
+const bool noCircuit = true;
 
 const ulong timeConstant = 1e6;
 // const bool noCircuit = true;
@@ -15,6 +16,10 @@ const ulong timeConstant = 1e6;
 class CircuitManager : public QObject
 {
     Q_OBJECT
+
+    IP7_Trace *p7Trace;
+    IP7_Trace::hModule moduleName;
+
     fullConfig defaultConfig = {
         .aFreq = 0,
         .aAvg = 8,

@@ -21,7 +21,7 @@ class PerfomanceChecker : public QObject
     get_system_usage_linux::CPU_stats cpuStats;
 
 public:
-    PerfomanceChecker();
+    PerfomanceChecker(QString channelName, QObject *parent = 0);
     void Start();
     void Stop();
 private slots:

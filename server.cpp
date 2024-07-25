@@ -14,6 +14,10 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
     {
         p7Trace = P7_Create_Trace(p7Client, TM("ServerChannel"));
         p7Trace->Share("ServerChannel");
+
+        p7TraceData = P7_Create_Trace(p7Client, TM("ServerDataChannel"));
+        p7TraceData->Share("ServerDataChannel");
+
         p7Trace->Register_Module(TM("Server"), &moduleName);
     }
     else
@@ -95,7 +99,7 @@ Server::Server(int tcpPort, int udpPort, QHostAddress clientAddress, QWidget* pw
 
     p7Trace->P7_TRACE(moduleName, TM("Server started"));
 
-    PerfomanceChecker *pc = new PerfomanceChecker();
+    PerfomanceChecker *pc = new PerfomanceChecker("Telemetry server", this);
     pc->Start();
 }
 

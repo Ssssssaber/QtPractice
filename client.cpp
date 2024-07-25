@@ -1,5 +1,6 @@
 #include "client.h"
 #include "P7_Client.h"
+#include "perfomancechecker.h"
 
 
 Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pwgt) : QWidget(pwgt), nextBlockSize(0)
@@ -11,6 +12,8 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
 
         p7Trace = P7_Create_Trace(p7Client, TM("ClientChannel"));
         p7Trace->Share("ClientChannel");
+        p7TraceData = P7_Create_Trace(p7Client, TM("ClientDataChannel"));
+        p7TraceData->Share("ClientDataChannel");
         p7Trace->Register_Module(TM("Client"), &moduleName);
     }
     else
@@ -160,7 +163,8 @@ Client::Client(int tcpPort, int udpPort, QHostAddress serverAddress, QWidget* pw
     connect(statTimer, &QTimer::timeout, this, &Client::slotUpdateThreadInfo);
     statTimer->start();
 
-    qDebug() << mainSplitter->sizes();
+    PerfomanceChecker *pc = new PerfomanceChecker("Telemetry client", this);
+    pc->Start();
 }
 
 Client::~Client()
@@ -199,7 +203,7 @@ void Client::parseStringData(QString stringData)
         data.y = tokens[4].toFloat();
         data.z = tokens[5].toFloat();
         data.timestamp = tokens[6].toFloat();
-        p7Trace->P7_TRACE(moduleName, TM("Received data: %s"), data.toString().toStdString().data());
+        p7TraceData->P7_TRACE(moduleName, TM("Received data: %s"), data.toQString().toStdString().data());
         emit signalReceivedData(data);
         if (windowActive)
         {
@@ -232,12 +236,14 @@ void Client::processServerResponse(QString message)
         aConfig->resetConfig();
         gConfig->resetConfig();
         mConfig->resetConfig();
+        p7Trace->P7_WARNING(moduleName, TM("Resetting old config"));
     }
     else if (mTokens[2] == "success")
     {
         aConfig->keepConfig();
         gConfig->keepConfig();
         mConfig->keepConfig();
+        p7Trace->P7_INFO(moduleName, TM("Config set"));
     }
 }
 
@@ -246,6 +252,7 @@ void Client::slotUpdateThreadInfo()
     float current = currentThread / 3;
     serverResponseText->append(QDateTime::currentDateTime().toString() +
                                QString(" Client: Current thread - %1 bytes/s").arg(current));
+    p7Trace->P7_INFO(moduleName, TM("Client: Current thread - %d bytes/s"), current);
     currentThread = 0;
 }
 

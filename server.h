@@ -14,6 +14,7 @@ class Server : public QWidget
     Q_OBJECT
 private:
     IP7_Trace *p7Trace;
+    IP7_Trace *p7TraceData;
     IP7_Trace::hModule moduleName;
 
     bool serverConnected;

@@ -4,7 +4,7 @@
 
 ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 {
-    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+    p7Trace = P7_Get_Shared_Trace("ClientDataChannel");
 
     if (!p7Trace)
     {

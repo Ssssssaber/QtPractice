@@ -12,9 +12,32 @@ struct xyzCircuitData {
     float timestamp;
 
 public:
-    QString toString()
+    QString toQString()
     {
         return QString("data %1 %2 %3 %4 %5 %6 %7").arg(group).arg(id).arg(x).arg(y).arg(z).arg(timestamp);
+    }
+
+    QString serialize()
+    {
+        QByteArray byteArray;
+
+        QDataStream stream(&byteArray, QIODevice::WriteOnly);
+        stream.setVersion(QDataStream::Qt_4_5);
+
+        stream << group << id <<
+                x << y << z <<
+                timestamp;
+        return byteArray;
+    }
+
+    void deserialize(const QByteArray& byteArray)
+    {
+        QDataStream stream(byteArray);
+        stream.setVersion(QDataStream::Qt_4_5);
+
+        stream >> group >> id >>
+            x >> y >> z >>
+            timestamp;
     }
 };
 

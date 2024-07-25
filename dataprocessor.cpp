@@ -11,7 +11,7 @@ std::queue<xyzCircuitData> DataProcessor::currentVector;
 DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, Server *server,QObject *parent)
     : QObject{parent}
 {
-    p7Trace = P7_Get_Shared_Trace("ServerChannel");
+    p7Trace = P7_Get_Shared_Trace("ServerDataChannel");
 
     if (!p7Trace)
     {
@@ -73,7 +73,7 @@ void DataProcessor::slotSendData(xyzCircuitData data)
     QDateTime dt = QDateTime::currentDateTime();
     data.timestamp /= timeConstant;
     xyzCircuitData data1 = data;
-    out << dt << data1.toString();
+    out << dt << data1.toQString();
 
     udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
 }
@@ -118,7 +118,7 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
 {
     if (data.group == 'A')
     {
-        qDebug() << "before: " << data.toString();
+        qDebug() << "before: " << data.toQString();
     }
 
     data.x *= transitionConst;
@@ -127,7 +127,7 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
     // data.timestamp /= timeConstant;
     if (data.group == 'A')
     {
-        qDebug() << "after: " << data.toString();
+        qDebug() << "after: " << data.toQString();
     }
 
     checkLost(data);
@@ -142,7 +142,7 @@ void DataProcessor::checkLost(xyzCircuitData data)
     if (lastReceived[data.group] + 1 == data.id)
     {
         message =  QString("no packages lost");
-        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
+        p7Trace->P7_DEBUG(moduleName, TM("%s"), message.toStdString().data());
     }
     else
     {
@@ -150,12 +150,12 @@ void DataProcessor::checkLost(xyzCircuitData data)
 
         lostData[data.group] += qFabs(lastReceived[data.group] - data.id);
 
-        p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, lostData[data.group]);
+        // p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, lostData[data.group]);
         p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
     }
 
 
-    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
+    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toQString().toStdString().data());
     lastReceived[data.group] = data.id;
 }
 
@@ -176,6 +176,8 @@ void DataProcessor::addDataWithAnalysisCheck(xyzCircuitData newData)
     else
     {
         slotSendData(newData);
+
+        p7Trace->P7_TRACE(moduleName, TM("Data sent %s"), newData.toQString().toStdString().data());
     }
 }
 
