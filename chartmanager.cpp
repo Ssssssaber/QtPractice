@@ -3,7 +3,7 @@
 
 ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
 {
-    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+    p7Trace = P7_Get_Shared_Trace("ClientDataChannel");
 
     if (!p7Trace)
     {
@@ -50,7 +50,7 @@ ChartManager::ChartManager(QWidget* pwgt) : QWidget(pwgt)
     cleanupTimer->start();
 }
 
-void ChartManager::changeDataLifeSpan(int newTime)
+void ChartManager::slotDataLifespanChanged(int newTime)
 {
     dataLifespanInSeconds = newTime;
     chartA->changeDataLifespan(newTime);

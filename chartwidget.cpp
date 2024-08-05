@@ -4,7 +4,7 @@
 
 ChartWidget::ChartWidget(const QString title, QWidget* pwgt) : QWidget(pwgt)
 {
-    p7Trace = P7_Get_Shared_Trace("ClientChannel");
+    p7Trace = P7_Get_Shared_Trace("ClientDataChannel");
 
     if (!p7Trace)
     {
@@ -241,43 +241,12 @@ void ChartWidget::setWindowResult(xyzCircuitData data)
 
 void ChartWidget::addChartDot(xyzCircuitData data)
 {
-    currentDataList.append(data);
-    // if (data.group != 'A') return;
-
-    // cViewX->chart()->removeSeries(serX); // removing series from view
-    // cViewY->chart()->removeSeries(serY);
-    // cViewZ->chart()->removeSeries(serZ);
-
-
-    // serX->append(data.timestamp, data.x); //adding new point to axis-line
-    // //axisrn.xmax = data.x > axisrn.xmax ? data.x : axisrn.xmax;
-    // //axisrn.xmin = data.x < axisrn.xmin ? data.x : axisrn.xmin;
-
-    // serY->append(data.timestamp, data.y);
-    // //axisrn.ymax = data.x > axisrn.ymax ? data.x : axisrn.ymax;
-    // //axisrn.ymin = data.x < axisrn.ymin ? data.x : axisrn.ymin;
-
-    // serZ->append(data.timestamp, data.z);
-    // //axisrn.zmax = data.x > axisrn.zmax ? data.x : axisrn.zmax;
-    // //axisrn.zmin = data.x < axisrn.zmin ? data.x : axisrn.zmin;
-
-    // cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max); // setting chart axies range
-    // cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(),data.timestamp); // setting chart axies range
-    // // serX->detachAxis(serXaxisX);
-    // cViewX->chart()->addSeries(serX); // restoring series
-
-    // cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(),data.timestamp); // setting chart axies range
-    // cViewY->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
-    // cViewY->chart()->addSeries(serY);
-
-    // cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(),data.timestamp); // setting chart axies range
-    // cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.min,chartBoundries.max);
-    // cViewZ->chart()->addSeries(serZ);
+    currentDataList.push_back(data);
 }
 
 void ChartWidget::drawAllSeries(int timeInSeconds)
 {
-    if (currentDataList.isEmpty()) return;
+    if (currentDataList.empty()) return;
 
     cViewX->chart()->removeSeries(serX); // removing series from view
     cViewY->chart()->removeSeries(serY);
@@ -290,28 +259,40 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     chartBoundries.Xmin = 1000;
     chartBoundries.Ymin = 1000;
     chartBoundries.Zmin = 1000;
-    chartBoundries.Xmax = 0;
-    chartBoundries.Ymax = 0;
-    chartBoundries.Zmax = 0;
-
-    foreach(xyzCircuitData data, currentDataList)
+    chartBoundries.Xmax = -1000;
+    chartBoundries.Ymax = -1000;
+    chartBoundries.Zmax = -1000;
+    std::vector<xyzCircuitData>::iterator it;
+    for (it = currentDataList.begin(); it != currentDataList.end(); it++)
     {
-        serX->append(data.timestamp, data.x);
-        serY->append(data.timestamp, data.y);
-        serZ->append(data.timestamp, data.z);
-        chartBoundries.Xmin = chartBoundries.Xmin < data.x ? chartBoundries.Xmin : data.x;
-        chartBoundries.Ymin = chartBoundries.Ymin < data.y ? chartBoundries.Ymin : data.y;
-        chartBoundries.Zmin = chartBoundries.Zmin < data.z ? chartBoundries.Zmin : data.z;
-        chartBoundries.Xmax = chartBoundries.Xmax > data.x ? chartBoundries.Xmax : data.x;
-        chartBoundries.Ymax = chartBoundries.Ymax > data.y ? chartBoundries.Ymax : data.y;
-        chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
+        serX->append(it->timestamp, it->x);
+        serY->append(it->timestamp, it->y);
+        serZ->append(it->timestamp, it->z);
+        chartBoundries.Xmin = chartBoundries.Xmin < it->x ? chartBoundries.Xmin : it->x;
+        chartBoundries.Ymin = chartBoundries.Ymin < it->y ? chartBoundries.Ymin : it->y;
+        chartBoundries.Zmin = chartBoundries.Zmin < it->z ? chartBoundries.Zmin : it->z;
+        chartBoundries.Xmax = chartBoundries.Xmax > it->x ? chartBoundries.Xmax : it->x;
+        chartBoundries.Ymax = chartBoundries.Ymax > it->y ? chartBoundries.Ymax : it->y;
+        chartBoundries.Zmax = chartBoundries.Zmax > it->z ? chartBoundries.Zmax : it->z;
     }
 
-    float time = currentDataList.last().timestamp;
+    // foreach(xyzCircuitData data, currentDataList)
+    // {
+    //     serX->append(data.timestamp, data.x);
+    //     serY->append(data.timestamp, data.y);
+    //     serZ->append(data.timestamp, data.z);
+    //     chartBoundries.Xmin = chartBoundries.Xmin < data.x ? chartBoundries.Xmin : data.x;
+    //     chartBoundries.Ymin = chartBoundries.Ymin < data.y ? chartBoundries.Ymin : data.y;
+    //     chartBoundries.Zmin = chartBoundries.Zmin < data.z ? chartBoundries.Zmin : data.z;
+    //     chartBoundries.Xmax = chartBoundries.Xmax > data.x ? chartBoundries.Xmax : data.x;
+    //     chartBoundries.Ymax = chartBoundries.Ymax > data.y ? chartBoundries.Ymax : data.y;
+    //     chartBoundries.Zmax = chartBoundries.Zmax > data.z ? chartBoundries.Zmax : data.z;
+    // }
+
+    float time = currentDataList.back().timestamp;
 
     cViewX->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Xmin,chartBoundries.Xmax); // setting chart axies range
     cViewX->chart()->axes(Qt::Horizontal).back()->setRange(serX->points().first().rx(), time); // setting chart axies range
-    // serX->detachAxis(serXaxisX);
     cViewX->chart()->addSeries(serX); // restoring series
 
     cViewY->chart()->axes(Qt::Horizontal).back()->setRange(serY->points().first().rx(), time); // setting chart axies range
@@ -321,19 +302,6 @@ void ChartWidget::drawAllSeries(int timeInSeconds)
     cViewZ->chart()->axes(Qt::Horizontal).back()->setRange(serZ->points().first().rx(), time); // setting chart axies range
     cViewZ->chart()->axes(Qt::Vertical).back()->setRange(chartBoundries.Zmin,chartBoundries.Zmax);
     cViewZ->chart()->addSeries(serZ);
-    // cViewX->chart()->addSeries(serX);
-    // serX->append()
-    // cViewX->chart()->removeSeries(serX); // removing series from view
-    // cViewY->chart()->removeSeries(serY);
-    // cViewZ->chart()->removeSeries(serZ);
-
-    // cleanSeries(serX, timeInSeconds); // clean first points (no relatable)
-    // cleanSeries(serY, timeInSeconds);
-    // cleanSeries(serZ, timeInSeconds);
-
-    // cViewX->chart()->addSeries(serX); // restoring series
-    // cViewY->chart()->addSeries(serY);
-    // cViewZ->chart()->addSeries(serZ);
 }
 
 void ChartWidget::changeDataLifespan(int newTime)
@@ -343,17 +311,17 @@ void ChartWidget::changeDataLifespan(int newTime)
 
 void ChartWidget::slotCleanDataListToTime()
 {
-    if (currentDataList.isEmpty()) return;
+    if (currentDataList.empty()) return;
 
-    int initial = currentDataList.length();
+    int initial = currentDataList.size();
     foreach (xyzCircuitData data, currentDataList)
     {
-        if (currentDataList.last().timestamp - data.timestamp <= dataLifespan)
+        if (currentDataList.back().timestamp - data.timestamp <= dataLifespan)
             break;
-        currentDataList.pop_front();
+        currentDataList.erase(currentDataList.begin());
     }
 
-    qDebug() << " before and after " << initial << currentDataList.length();
+    qDebug() << " before and after " << initial << currentDataList.size();
     // p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
     //                   dataToClean->back().group,
     //                   initial, dataToClean->length());

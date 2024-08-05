@@ -13,11 +13,13 @@ class Client : public QWidget
     Q_OBJECT
 private:
     IP7_Trace *p7Trace;
+    IP7_Trace *p7TraceData;
     IP7_Telemetry *p7Telemetry;
     IP7_Trace::hModule moduleName;
 
     QHostAddress serverAddress;
 
+    QThread chartThread;
     ChartManager* chartManager;
 
     bool windowActive = false;
@@ -55,6 +57,7 @@ private:
 
 public:
     Client(int tcpPort = 2323, int udpPort = 2424, QHostAddress serverAddress = QHostAddress::LocalHost, QWidget* pwgt = 0);
+    ~Client();
 
 private slots:
     void slotProcessDatagram();
@@ -70,5 +73,6 @@ private slots:
 signals:
     void signalReceivedData(xyzCircuitData data);
     void signalReceivedAnalysis(xyzCircuitData analysis);
+    void signalDataLifespanChanged(int newTime);
 
 };

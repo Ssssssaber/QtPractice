@@ -19,7 +19,7 @@ private:
 
     bool isVisible = false;
 
-    QList<xyzCircuitData> currentDataList;
+    std::vector<xyzCircuitData> currentDataList;
 
 
     QChartView* cViewX; // creating chart with 1 axies

@@ -16,7 +16,6 @@ private:
 public:
     CDRWorker();
     ~CDRWorker();
-
 public slots:
     void process();
     void disconnectCircuit();

@@ -1,18 +1,17 @@
 #include "dataprocessor.h"
-#include "cdrworker.h"
-#include "circuitdatareceiver.h"
 #include <QApplication>
 #include <QDir>
 #include <QtMath>
+#include "server.h"
+#include <iterator>
 
-QQueue<xyzCircuitData> DataProcessor::dataQueue;
-QQueue<QString> DataProcessor::errorQueue;
-xyzCircuitData DataProcessor::currentData;
+std::queue<xyzCircuitData> DataProcessor::currentVector;
 
-DataProcessor::DataProcessor(QObject *parent)
+// Server server;
+DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitManager *manager, Server *server,QObject *parent)
     : QObject{parent}
 {
-    p7Trace = P7_Get_Shared_Trace("ServerChannel");
+    p7Trace = P7_Get_Shared_Trace("ServerDataChannel");
 
     if (!p7Trace)
     {
@@ -22,9 +21,20 @@ DataProcessor::DataProcessor(QObject *parent)
     {
         p7Trace->Register_Module(TM("DProc"), &moduleName);
     }
-    dataMap['A'] = 1;
-    dataMap['G'] = 2;
-    dataMap['M'] = 3;
+
+    this->udpPort = udpPort;
+    this->clientAddress = clientAddress;
+
+    this->manager = manager;
+    this->server = server;
+
+    lostData['A'] = 0;
+    lostData['G'] = 0;
+    lostData['M'] = 0;
+
+    lastReceived['A'] = 0;
+    lastReceived['G'] = 0;
+    lastReceived['M'] = 0;
 
     aMap[0] = 3.90625f * 1e-6 * 9.81f;
     aMap[1] = 7.8125f * 1e-6 * 9.81f;
@@ -35,196 +45,71 @@ DataProcessor::DataProcessor(QObject *parent)
     gMap[2] = 1.f / 24.f;
     gMap[3] = 1.f / 8.f;
 
-    CircuitDataReceiver::connectCircuit();
-    // setConfig();
+    container = new DataContainer(this);
+    // CircuitDataReceiver::connectCircuit();
 
-    dataTimer = new QTimer(this);
-    dataTimer->setSingleShot(false);
-    dataTimer->setInterval(0);
-    connect(dataTimer, &QTimer::timeout, this, &DataProcessor::readData);
-    dataTimer->start();
+}
 
-    errorTimer = new QTimer();
-    errorTimer->setSingleShot(false);
-    errorTimer->setInterval(0);
-    connect(errorTimer, &QTimer::timeout, this, &DataProcessor::readError);
-    errorTimer->start();
+void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
+{
+    currentVector.push(data);
+}
 
-    // fileTimer = new QTimer(this);
-    // fileTimer->setSingleShot(false);
-    // fileTimer->setInterval(0);
-    // connect(fileTimer, &QTimer::timeout, this, &DataProcessor::readLine);
-
-    // windowWorkerController = new XyzWorkerController(WorkerTypes::WindowWorker);
+void DataProcessor::slotStart()
+{
     windowWorker = new WindowWorker();
-    // connect(windowWorkerController, &XyzWorkerController::signalResultReady, this, &DataP::slotResultReceived);
-
-    cleanupTimer = new QTimer(this);
-    cleanupTimer->setSingleShot(false);
-    cleanupTimer->setInterval(timeToTimeout);
-    connect(cleanupTimer, &QTimer::timeout, this, &DataProcessor::slotCleanup);
-
-    cleanupTimer->start();
-
-    QTimer *deltaTimer = new QTimer(this);
-    deltaTimer->setSingleShot(false);
-    deltaTimer->setInterval(3000);
-    connect(deltaTimer, &QTimer::timeout, this, &DataProcessor::slotUpdateDeltaTime);
-    deltaTimer->start();
+    udpDataSocket = new QUdpSocket();
+    readData();
 }
 
-DataProcessor::~DataProcessor()
+
+
+void DataProcessor::slotSendData(xyzCircuitData data)
 {
-    if (!CircuitDataReceiver::checkForValidConfigParams(defaultConfig))
+    QByteArray baDatagram;
+    QDataStream out(&baDatagram, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_12);
+    QDateTime dt = QDateTime::currentDateTime();
+    data.timestamp /= timeConstant;
+    xyzCircuitData data1 = data;
+    out << dt << data1.toQString();
+
+    udpDataSocket->writeDatagram(baDatagram, clientAddress, udpPort);
+}
+
+void DataProcessor::readData()
+{
+    while (server->isServerActive())
     {
-        cdrworker = new CDRWorker();
-        thread = new QThread();
-        cdrworker->moveToThread(thread);
+        if (currentVector.empty()) continue;
+        queueSize = currentVector.size();
+        qDebug() << "KEKE " << queueSize;
+        processReceivedData(currentVector.back());
+        currentVector.pop();
 
-        connect(thread, SIGNAL(started()), cdrworker, SLOT(disconnectCircuit()));
-        connect(cdrworker, SIGNAL(finished()), thread, SLOT(quit()));
-        connect(cdrworker, SIGNAL(finished()), cdrworker, SLOT(deleteLater()));
-        connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-
-        thread->start();
+        if (queueSize > maxQueueSize)
+        {
+            currentVector = std::queue<xyzCircuitData>();
+        }
     }
 }
 
-void DataProcessor::setConfig()
-{
-    cdrworker = new CDRWorker();
-    thread = new QThread();
-    cdrworker->moveToThread(thread);
-
-    connect(thread, SIGNAL(started()), cdrworker, SLOT(process()));
-    connect(cdrworker, SIGNAL(finished(int)), thread, SLOT(quit()));
-    connect(cdrworker, SIGNAL(finished(int)), this, SLOT(slotConfigCompleted(int)));
-    connect(cdrworker, SIGNAL(finished(int)), cdrworker, SLOT(deleteLater()));
-    connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-
-    thread->start();
-}
-
-void DataProcessor::slotUpdateDeltaTime()
-{
-    xyzAnalysisResult deltaTimes = {
-        .x = getAverageDeltaTime(aData, aReceived) * 1000,
-        .y = getAverageDeltaTime(gData, gReceived) * 1000,
-        .z = getAverageDeltaTime(mData, mReceived) * 1000,
-    };
-
-    aReceived = 0;
-    gReceived = 0;
-    mReceived = 0;
-
-    emit signalUpdatedDeltaTime(deltaTimes);
-}
-
-void DataProcessor::slotCleanup()
-{
-    cleanDataListToTime(&aData, dataLifespanInSeconds);
-    cleanDataListToTime(&gData, dataLifespanInSeconds);
-    cleanDataListToTime(&mData, dataLifespanInSeconds);
-}
-
-void DataProcessor::cleanDataListToTime(QList<xyzCircuitData> *dataToClean, int timeInSeconds)
-{
-    if (dataToClean->isEmpty()) return;
-
-    int initial = dataToClean->length();
-    foreach (xyzCircuitData data, dataToClean->toList())
-    {
-        if (dataToClean->last().timestamp - data.timestamp <= timeInSeconds)
-            break;
-        dataToClean->pop_front();
-    }
-
-    // qDebug() << " before and after " << initial << dataToClean->length();
-    p7Trace->P7_TRACE(moduleName, TM("Cleared %c analyzer arrays: from %d to %d"),
-                      dataToClean->back().group,
-                      initial, dataToClean->length());
-}
-
-float DataProcessor::getAverageDeltaTime(QList<xyzCircuitData> data, int amount)
-{
-    int size = data.length();
-    if (amount <= 0 || amount > data.length()) return 0;
-
-    // if (amount == 1) return 0;
-    // float first = data.last().timestamp;
-    // float second = data[data.length() - 2].timestamp;
-
-    // float average = first - second;
-
-    float average = 0;
-
-    for(int i = size - amount; i < size - 1; i++)
-    {
-        average += data[i + 1].timestamp - data[i].timestamp;
-    }
-    average /= (float) amount;
-    p7Trace->P7_DEBUG(moduleName, TM("Frequency %f for %c with %d amount"), average, data.first().group, amount);
-    return average;
-}
-
-void DataProcessor::addDataWithAnalysisCheck(QList<xyzCircuitData> *dataList, xyzCircuitData newData)
-{
-    dataList->append(newData);
-    inCount += 1;
-    if (windowWorker->isEnabled)
-    {
-        qDebug() << "window";
-        emit signalLineProcessed(windowWorker->doWork(createListSlice(dataList->toList(), windowSize)));
-    }
-    else
-    {
-        emit signalLineProcessed(newData);
-    }
-}
-
-QList<xyzCircuitData> DataProcessor::createListSlice(QList<xyzCircuitData> dataList, int size)
-{
-    QList<xyzCircuitData> listSlice = QList<xyzCircuitData>();
-
-    if (size > dataList.length())
-    {
-        return dataList;
-    }
-    for (int i = dataList.length() - size;  i < dataList.length(); i++)
-    {
-        xyzCircuitData data = dataList[i];
-        listSlice.append(data);
-    }
-
-
-    return listSlice;
-}
 
 void DataProcessor::processReceivedData(xyzCircuitData data)
 {
-    try
-    {
-        switch (dataMap[data.group]) {
-        case 1:
-            addDataWithAnalysisCheck(&aData, transformXyzData(data, aMap[currentConfig.aRange]));
-            break;
-        case 2:
-            addDataWithAnalysisCheck(&gData, transformXyzData(data, gMap[currentConfig.gRange]));
-            break;
-        case 3:
-            addDataWithAnalysisCheck(&mData, transformXyzData(data, mConstant));
-            break;
-        case 4:
-            break;
-        default:
-            break;
-        }
-    }
-    catch (const std::exception& ex) {
-        p7Trace->P7_CRITICAL(moduleName, TM("&s"), ex.what());
-    }
-    catch (...) {
-        p7Trace->P7_CRITICAL(moduleName, TM("Unhandled exception in data processor"));
+
+    switch (data.group) {
+    case 'A':
+        addDataWithAnalysisCheck(transformXyzData(data, aMap[manager->getFullConfig().aRange]));
+        break;
+    case 'G':
+        addDataWithAnalysisCheck(transformXyzData(data, gMap[manager->getFullConfig().gRange]));
+        break;
+    case 'M':
+        addDataWithAnalysisCheck(transformXyzData(data, mConstant));
+        break;
+    default:
+        break;
     }
 }
 
@@ -232,149 +117,84 @@ xyzCircuitData DataProcessor::transformXyzData(xyzCircuitData data, float transi
 {
     if (data.group == 'A')
     {
-         qDebug() << "before: " << data.toString();
+        qDebug() << "before: " << data.toQString();
     }
 
     data.x *= transitionConst;
     data.y *= transitionConst;
     data.z *= transitionConst;
-    data.timestamp /= timeConstant;
+    // data.timestamp /= timeConstant;
     if (data.group == 'A')
     {
-        qDebug() << "after: " << data.toString();
+        qDebug() << "after: " << data.toQString();
     }
 
-
-    QString message;
-    if (lastReceivedId + 1 == data.id)
-    {
-        message =  QString("no packages lost");
-        p7Trace->P7_TRACE(moduleName, TM("%s"), message.toStdString().data());
-    }
-    else
-    {
-        message =  QString("lost: %1 to %2").arg(lastReceivedId).arg(data.id);
-
-        switch(data.group)
-        {
-        case 'A':
-            aLost += qFabs(data.id - lastReceivedId);
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, aLost);
-            break;
-        case 'G':
-            gLost += qFabs(data.id - lastReceivedId);
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, gLost);
-            break;
-        case 'M':
-            mLost += qFabs(data.id - lastReceivedId);
-            p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, mLost);
-            break;
-        }
-
-        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
-    }
-
-
-    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toString().toStdString().data());
-    lastReceivedId = data.id;
+    checkLost(data);
 
     return data;
 }
 
-void DataProcessor::slotConfigCompleted(int r)
+
+void DataProcessor::checkLost(xyzCircuitData data)
 {
-    if (r == LIBNII_SUCCESS)
+    QString message;
+    if (lastReceived[data.group] + 1 == data.id)
     {
-        currentConfig = newConfig;
+        message =  QString("no packages lost");
+        p7Trace->P7_DEBUG(moduleName, TM("%s"), message.toStdString().data());
+    }
+    else
+    {
+        message =  QString("lost: %1 to %2").arg(lastReceived[data.group]).arg(data.id);
+
+        lostData[data.group] += qFabs(lastReceived[data.group] - data.id);
+
+        // p7Trace->P7_CRITICAL(moduleName, TM("Lost %c : %ld"), data.group, lostData[data.group]);
+        p7Trace->P7_WARNING(moduleName, TM("%s"), message.toStdString().data());
+    }
+
+
+    p7Trace->P7_TRACE(moduleName, TM("Data received %s"), data.toQString().toStdString().data());
+    lastReceived[data.group] = data.id;
+}
+
+void DataProcessor::addDataWithAnalysisCheck(xyzCircuitData newData)
+{
+    container->addData(newData);
+    emit signalDataProcessed(newData);
+
+    if (manager->isWindowEnabled())
+    {
+        // qDebug() << "window";
+        // std::vector vec = *manager->getData(newData.group);
+        // vec = createListSlice(vec, manager->getWindowSize());
+        slotSendData(windowWorker->doWork(createListSlice(container->getData(newData.group), manager->getWindowSize())));
+        // slotSendData(newData);
+        // emit signalPerformWindowing(newData);
+    }
+    else
+    {
+        slotSendData(newData);
+
+        p7Trace->P7_TRACE(moduleName, TM("Data sent %s"), newData.toQString().toStdString().data());
     }
 }
 
-void DataProcessor::slotConfigReceived(QList<cConfig> configsReceived)
+std::vector<xyzCircuitData> DataProcessor::createListSlice(std::vector<xyzCircuitData> dataList, int size)
 {
-    fullConfig conf = defaultConfig;
-    conf = setConfigParamsFromList(configsReceived);
-    if (!CircuitDataReceiver::checkForValidConfigParams(conf))
+    std::vector<xyzCircuitData> listSlice = std::vector<xyzCircuitData>();
+
+    if (size > dataList.size())
     {
-        setConfig();
-        newConfig = conf;
+        return dataList;
     }
-}
-
-void DataProcessor::slotWindowSizeChanged(int newSize)
-{
-    windowSize = newSize;
-}
-
-void DataProcessor::slotTimeToCleanChanged(int newTime)
-{
-    dataLifespanInSeconds = newTime;
-}
-
-void DataProcessor::slotSetAnalysisActive(QString analysisType, bool active)
-{
-    if (analysisType == "window")
+    std::vector<xyzCircuitData>::iterator it;
+    for (it = dataList.end() - size; it != dataList.end(); it++)
     {
-        windowWorker->isEnabled = active;
-    }
-}
-
-void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
-{
-    currentData = data;
-}
-
-void DataProcessor::readData()
-{
-    if (currentData.group == 'N')
-    {
-        return;
-    }
-    else if (currentData.group == 'A' ||
-             currentData.group == 'G' ||
-             currentData.group == 'M')
-    {
-        processReceivedData(currentData);
-        currentData.group = 'N';
-    }
-}
-
-void DataProcessor::receiveErrorFromDataReceiver(QString error)
-{
-    errorQueue.enqueue(error);
-}
-
-void DataProcessor::readError()
-{
-    if(errorQueue.isEmpty())
-        return;
-
-    emit signalSendCircuitMessage(errorQueue.dequeue());
-}
-
-fullConfig DataProcessor::setConfigParamsFromList(QList<cConfig> configs)
-{
-    fullConfig full;
-
-    foreach (cConfig config, configs)
-    {
-        if (config.type == "A")
-        {
-            full.aAvg = config.avg;
-            full.aFreq = config.freq;
-            full.aRange = config.range;
-        }
-        else if (config.type == "G")
-        {
-            full.gAvg = config.avg;
-            full.gFreq = config.freq;
-            full.gRange = config.range;
-        }
-        else if (config.type == "M")
-        {
-            full.mAvg = config.avg;
-            full.mFreq = config.freq;
-        }
+        xyzCircuitData data = *it;
+        listSlice.push_back(data);
     }
 
-    return full;
+    return listSlice;
 }
+

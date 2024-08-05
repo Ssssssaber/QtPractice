@@ -1,4 +1,6 @@
 #include "circuitdatareceiver.h"
+#include "circuitmanager.h"
+#include "dataprocessor.h"
 
 libnii_device* CircuitDataReceiver::handle = NULL;
 uint64_t CircuitDataReceiver::accel_duration = 0,
@@ -78,7 +80,7 @@ void CircuitDataReceiver::printError(QString format, int error_code, const char 
 
 void CircuitDataReceiver::sendError(QString error)
 {
-    DataProcessor::receiveErrorFromDataReceiver(error);
+    CircuitManager::receiveErrorFromDataReceiver(error);
 }
 
 void CircuitDataReceiver::receiveData(void *user_ptr, enum libnii_data_type type, int packet_number, void *rawData)

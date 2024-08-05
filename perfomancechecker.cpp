@@ -4,12 +4,12 @@
 
 using namespace get_system_usage_linux;
 
-PerfomanceChecker::PerfomanceChecker()
+PerfomanceChecker::PerfomanceChecker(QString channelName, QObject *parent) : QObject(parent)
 {
     IP7_Client *p7Client = P7_Get_Shared("MyChannel");
     if (p7Client)
     {
-        p7Telemetry = P7_Create_Telemetry(p7Client, TM("Telemetry channel 1"), NULL);
+        p7Telemetry = P7_Create_Telemetry(p7Client, TM(channelName.toStdString().data()), NULL);
         p7Telemetry->Create(TM("System/CPU"), 0, -1, 100, 90, 1, &l_wCpuId);
         p7Telemetry->Create(TM("System/Mem(mb)"), 0, -1, 100, 90, 1, &l_wMemId);
     }
