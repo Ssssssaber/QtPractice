@@ -29,7 +29,7 @@ class DataProcessor : public QObject
 private:
     IP7_Trace *p7Trace;
     IP7_Trace::hModule moduleName;
-
+    
     int queueSize = 0;
 
     static std::queue<xyzCircuitData> currentVector;

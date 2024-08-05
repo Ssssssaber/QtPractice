@@ -50,7 +50,6 @@ DataProcessor::DataProcessor(int udpPort, QHostAddress clientAddress, CircuitMan
 
 }
 
-
 void DataProcessor::receiveDataFromDataReceiver(xyzCircuitData data)
 {
     currentVector.push(data);
